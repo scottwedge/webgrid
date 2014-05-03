@@ -28,4 +28,3 @@ class FlaskSQLAlchemyManager(object):
         return '/static/' + url_tail
 
 webgrid = Blueprint('webgrid', __name__, static_folder='static', static_url_path='/webgrid')
-print webgrid.static_folder, webgrid.static_url_path
