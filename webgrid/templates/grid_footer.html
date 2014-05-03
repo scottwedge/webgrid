@@ -1,0 +1,34 @@
+<div class="footer">
+    <p><a href="{{ renderer.xls_url()}}">export to Excel</a></p>
+
+    {% if grid.pager_on %}
+    <ul class="paging">
+        {%- if grid.on_page > 1 %}
+            <li>
+                <a class="first" href="{{ renderer.paging_url_first() }}">{{ renderer.paging_img_first() }}</a>
+                <a class="first" href="{{ renderer.paging_url_first() }}">first</a>
+            </li>
+            <li>
+                <a class="previous" href="{{ renderer.paging_url_prev() }}">{{ renderer.paging_img_prev() }}</a>
+                <a class="previous" href="{{ renderer.paging_url_prev() }}">previous</a>
+            </li>
+        {%- else %}
+            <li class="dead">{{ renderer.paging_img_first_dead() }} first</li>
+            <li class="dead">{{ renderer.paging_img_prev_dead() }} previous</li>
+        {%- endif -%}
+        {% if grid.on_page < grid.page_count %}
+             <li>
+                <a class="next" href="{{ renderer.paging_url_next() }}">{{ renderer.paging_img_next() }}</a>
+                <a class="next" href="{{ renderer.paging_url_next() }}">next</a>
+            </li>
+            <li>
+                <a class="last" href="{{ renderer.paging_url_last() }}">{{ renderer.paging_img_last() }}</a>
+                <a class="last" href="{{ renderer.paging_url_last() }}">last</a>
+            </li>
+        {%- else -%}
+            <li class="dead">{{ renderer.paging_img_next_dead() }} next</li>
+            <li class="dead">{{ renderer.paging_img_last_dead() }} last</li>
+        {%- endif %}
+    </ul>
+    {% endif %}
+</div>

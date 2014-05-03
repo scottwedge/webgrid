@@ -1,0 +1,12 @@
+<script type="text/javascript">
+    var datagrid_data = {{ renderer.filtering_json_data()|safe }};
+</script>
+{{ renderer.grid_otag() }}
+    {{ renderer.header() }}
+    {% if grid.record_count %}
+        {{ renderer.table() }}
+    {% else %}
+        {{ renderer.no_records() }}
+    {% endif %}
+    {{ renderer.footer() }}
+{{ renderer.grid_ctag() }}

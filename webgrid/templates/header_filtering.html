@@ -1,0 +1,16 @@
+{% if renderer.grid.filtered_cols -%}
+{{renderer.filtering_table_otag(class='filters')}}
+{{renderer.filtering_session_key()}}
+    <tbody>
+        {{ renderer.filtering_fields() }}
+        <tr class="add-filter">
+            <th>
+                Add Filter:
+            </th>
+            <td colspan="3">
+                {{ renderer.filtering_add_filter_select() }}
+            </td>
+        </tr>
+    </tbody>
+</table>
+{%- endif %}

@@ -1,0 +1,10 @@
+{{ renderer.table_otag() }}
+    <thead>
+        <tr>
+            {{ renderer.table_column_headings().lstrip() }}
+        </tr>
+    </thead>
+    <tbody>
+        {{ renderer.table_rows().lstrip() }}
+    </tbody>
+</table>

@@ -1,0 +1,28 @@
+<table class="paging">
+    <tr>
+        <td class="record-count">
+            {{ grid.record_count }}
+        </td>
+        {% if grid.pager_on %}
+        <td class="page">
+            {{ renderer.paging_select() }}
+        </td>
+        <td class="perpage">
+            {{ renderer.paging_input() }}
+        </td>
+        {% endif %}
+    </tr>
+    <tr>
+        <th class="record-count">
+            Records
+        </th>
+        {% if grid.pager_on %}
+        <th class="page">
+            Page
+        </th>
+        <th class="perpage">
+            Per Page
+        </th>
+        {% endif %}
+    </tr>
+</table>

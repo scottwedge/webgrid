@@ -1,0 +1,9 @@
+{{ renderer.header_form_otag(class='header') }}
+    {{ renderer.header_filtering() }}
+    {{ renderer.header_sorting() }}
+    {{ renderer.header_paging() }}
+    <div class="links">
+        <input type="submit" value="Apply" />
+        <a href="{{renderer.reset_url()}}">reset</a>
+    </div>
+</form>
