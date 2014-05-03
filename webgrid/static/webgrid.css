@@ -170,3 +170,123 @@ select.datagrid-filteronop {
 div.filterfor-wrapper {
     float: left;
 }
+
+
+/*
+
+###
+### DatagridBWP Controls
+###
+
+*/
+
+form.datagrid-form input,
+form.datagrid-form select {
+    margin-bottom: 1px;
+}
+
+.manage-add-link {
+    float: right;
+    margin-top: 0.8em;
+}
+
+/*
+
+###
+### datagrid tables
+###
+
+*/
+
+.datagrid table.records,
+table.datagrid {
+    margin-top: 1em;
+}
+
+.datagrid table.records th,
+.datagrid table.records td,
+table.datagrid th,
+table.datagrid td {
+    padding: .5em 1em;
+    margin: 0px;
+    text-align: center;
+}
+
+.datagrid table.records td.ta-left,
+table.datagrid td.ta-left {
+    text-align: left;
+}
+
+.datagrid table.records th,
+table.datagrid th {
+    font-weight: bold;
+    color: #ececec;
+    background-color: #31527C;
+    text-align: center;
+    border-bottom: solid 1px white;
+    border-right: solid 1px white;
+    border-top: solid 1px white;
+}
+
+.datagrid table.records th a,
+table.datagrid th a {
+    color: #ececec;
+}
+
+.datagrid table.records th a.sort-asc,
+table.datagrid th a.sort-asc {
+    padding-right: 40px;
+    background: url(../icons/th_arrow_up.png) no-repeat right -7px;
+}
+
+.datagrid table.records th a.sort-desc,
+table.datagrid th a.sort-desc {
+    padding-right: 40px;
+    background: url(../icons/th_arrow_down.png) no-repeat right -7px;
+}
+
+.datagrid table.records td,
+table.datagrid td {
+    border-bottom: solid 1px white;
+    border-right: solid 1px white;
+}
+
+.datagrid table.records tr.even td,
+table.datagrid tr.even td{
+    background-color: #d5d5d5;
+}
+
+.datagrid table.records td,
+.datagrid table.records tr.odd td,
+table.datagrid td,
+table.datagrid tr.odd td{
+    background-color: #e5e5e5;
+}
+
+.datagrid table.records td a.edit_link,
+.datagrid table.records td a.delete_link,
+table.datagrid td a.edit_link,
+table.datagrid td a.delete_link {
+    float: left;
+    height: 16px;
+    width: 16px;
+    text-indent: -1200px;
+}
+
+.datagrid table.records td a.edit_link:focus,
+.datagrid table.records td a.delete_link:focus,
+table.datagrid td a.edit_link:focus,
+table.datagrid td a.delete_link:focus {
+    outline: 0;
+}
+
+.datagrid table.records td a.edit_link,
+table.datagrid td a.edit_link {
+    background: url(../icons/application_form_edit.png);
+    margin-left: 1em;
+}
+
+.datagrid table.records td a.delete_link,
+table.datagrid td a.delete_link {
+    background: url(../icons/delete.png);
+}

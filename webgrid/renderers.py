@@ -75,7 +75,7 @@ class HTML(object):
 
     def filtering_table_row(self, col):
         return _HTML.tr(
-            _HTML.th(self.filtering_col_label(col), class_='label')
+            _HTML.th(self.filtering_col_label(col), class_='filter-label')
             + _HTML.td(self.filtering_col_op_select(col), class_='operator')
             + _HTML.td(
                 _HTML.div(self.filtering_col_inputs1(col), class_='inputs1')

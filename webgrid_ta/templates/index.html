@@ -9,6 +9,13 @@
 {% endblock %}
 
 {% block content %}
+    <div class="container">
     <h2>Manage People</h2>
     {{ people_grid.html()|safe}}
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    {{super()}}
+    <script src="{{url_for('webgrid.static', filename='webgrid.js')}}"></script>
 {% endblock %}

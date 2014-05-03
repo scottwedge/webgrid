@@ -11,7 +11,7 @@ $(document).ready(function() {
     datagrid_prep_filters();
     $('.datagrid .filters .operator select').change(datagrid_on_operator_change);
     $('.datagrid .filters .add-filter select').change(datagrid_add_filter);
-    $('.datagrid .filters .toggle-button').click(datagrid_toggle_mselect);
+    //$('.datagrid .filters .toggle-button').click(datagrid_toggle_mselect);
 
 });
 
@@ -151,7 +151,7 @@ function datagrid_toggle_filter_inputs(jq_filter_tr) {
 
     if( op_key == '') {
         // destroy any multi-selects that have been created
-        fields1.multiselect('destroy');
+        //fields1.multiselect('destroy');
         fields1.hide();
         fields1.val('');
 

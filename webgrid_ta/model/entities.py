@@ -6,6 +6,7 @@ from ..model import db
 
 from .helpers import DefaultMixin
 
+
 class Radio(db.Model, DefaultMixin):
     __tablename__ = 'sabwp_radios'
 

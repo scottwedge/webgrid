@@ -15,7 +15,7 @@ def index():
         CurrencyCol('Currency', Person.numericcol, format_as='percent', places=5)
         CurrencyCol('C2', Person.numericcol.label('n2'), format_as='accounting')
 
-    pg = PeopleGrid()
+    pg = PeopleGrid(class_='datagrid')
     pg.apply_qs_args()
     if pg.export_to == 'xls':
         pg.xls.as_response()
