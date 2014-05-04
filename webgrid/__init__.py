@@ -425,6 +425,7 @@ class BaseGrid(object):
     pager_on = True
     per_page = 50
     on_page = 1
+    render_controls_box = True
     # enables keyed session store of grid arguments
     session_on = False
     # enables page/grand subtotals: none|page|grand|all

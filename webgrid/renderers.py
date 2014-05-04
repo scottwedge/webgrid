@@ -44,6 +44,8 @@ class HTML(object):
         return literal('</div>')
 
     def header(self):
+        if not self.grid.render_controls_box:
+            return ''
         return self.load_content('datagrid:grid_header.html')
 
     def header_form_otag(self, **kwargs):
