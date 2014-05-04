@@ -1,10 +1,11 @@
 from __future__ import absolute_import
 from flask import request, session, flash, Blueprint
 
+
 class FlaskSQLAlchemyManager(object):
 
-    def __init__(self):
-        self.db = None
+    def __init__(self, db=None):
+        self.db = db
 
     def init_db(self, db):
         self.db = db
