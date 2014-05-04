@@ -1,24 +1,27 @@
+import os
 from os import path as osp
 from sys import argv
 
 import nose
 
-tests_dir = osp.join(osp.dirname(__file__), 'webgrid', 'tests')
+package_dir = osp.dirname(__file__)
+tests_dir = osp.join(package_dir, 'webgrid', 'tests')
 
 
 def run_nose():
     nose.main(argv, defaultTest=tests_dir)
 
 
-class InitAppPlugin(nose.plugins.Plugin):
-    enabled = True
+class WebGridNosePlugin(nose.plugins.Plugin):
+    enabled = False
 
     def configure(self, options, config):
         """Configure the plugin"""
-        self.enabled = True
+        curdir = osp.realpath(os.curdir)
+        if curdir.startswith(package_dir):
+            self.enabled = True
 
     def begin(self):
-        print 'starting'
         from webgrid_ta.app import create_app
         app = create_app(config='Test')
         app.test_request_context().push()
