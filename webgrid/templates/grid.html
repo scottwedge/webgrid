@@ -1,12 +1,12 @@
 <script type="text/javascript">
     var datagrid_data = {{ renderer.filtering_json_data()|safe }};
 </script>
-{{ renderer.grid_otag() }}
-    {{ renderer.header() }}
+{{ renderer.grid_otag()|safe }}
+    {{ renderer.header()|safe }}
     {% if grid.record_count %}
-        {{ renderer.table() }}
+        {{ renderer.table()|safe }}
     {% else %}
-        {{ renderer.no_records() }}
+        {{ renderer.no_records()|safe }}
     {% endif %}
-    {{ renderer.footer() }}
-{{ renderer.grid_ctag() }}
+    {{ renderer.footer()|safe }}
+{{ renderer.grid_ctag()|safe }}

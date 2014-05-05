@@ -1,5 +1,7 @@
 <div class="footer">
-    <p><a href="{{ renderer.xls_url()}}">export to Excel</a></p>
+    {% if not grid.hide_excel_link %}
+        <p><a href="{{ renderer.xls_url()}}">export to Excel</a></p>
+    {% endif %}
 
     {% if grid.pager_on %}
     <ul class="paging">

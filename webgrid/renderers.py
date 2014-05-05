@@ -29,7 +29,10 @@ class HTML(object):
     def __init__(self, grid):
         self.grid = grid
         self.manager = grid.manager
-        self.jinja_env = jinja.Environment(loader=jinja.PackageLoader('webgrid', 'templates'))
+        self.jinja_env = jinja.Environment(
+            loader=jinja.PackageLoader('webgrid', 'templates'),
+            autoescape=True,
+        )
 
     def __call__(self):
         return self.render()
@@ -44,7 +47,7 @@ class HTML(object):
         return literal('</div>')
 
     def header(self):
-        if not self.grid.render_controls_box:
+        if self.grid.hide_controls_box:
             return ''
         return self.load_content('datagrid:grid_header.html')
 

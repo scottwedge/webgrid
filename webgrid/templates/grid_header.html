@@ -1,7 +1,7 @@
-{{ renderer.header_form_otag(class='header') }}
-    {{ renderer.header_filtering() }}
-    {{ renderer.header_sorting() }}
-    {{ renderer.header_paging() }}
+{{ renderer.header_form_otag(class='header')|safe }}
+    {{ renderer.header_filtering()|safe }}
+    {{ renderer.header_sorting()|safe }}
+    {{ renderer.header_paging()|safe }}
     <div class="links">
         <input type="submit" value="Apply" />
         <a href="{{renderer.reset_url()}}">reset</a>
