@@ -236,13 +236,13 @@ table.datagrid th a {
 .datagrid table.records th a.sort-asc,
 table.datagrid th a.sort-asc {
     padding-right: 40px;
-    background: url(../icons/th_arrow_up.png) no-repeat right -7px;
+    background: url(th_arrow_up.png) no-repeat right -7px;
 }
 
 .datagrid table.records th a.sort-desc,
 table.datagrid th a.sort-desc {
     padding-right: 40px;
-    background: url(../icons/th_arrow_down.png) no-repeat right -7px;
+    background: url(th_arrow_down.png) no-repeat right -7px;
 }
 
 .datagrid table.records td,
@@ -282,11 +282,11 @@ table.datagrid td a.delete_link:focus {
 
 .datagrid table.records td a.edit_link,
 table.datagrid td a.edit_link {
-    background: url(../icons/application_form_edit.png);
+    background: url(application_form_edit.png);
     margin-left: 1em;
 }
 
 .datagrid table.records td a.delete_link,
 table.datagrid td a.delete_link {
-    background: url(../icons/delete.png);
+    background: url(delete.png);
 }
