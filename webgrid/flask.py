@@ -1,5 +1,5 @@
 from __future__ import absolute_import
-from flask import request, session, flash, Blueprint
+from flask import request, session, flash, Blueprint, url_for
 
 
 class FlaskSQLAlchemyManager(object):
@@ -26,6 +26,6 @@ class FlaskSQLAlchemyManager(object):
         return request
 
     def static_url(self, url_tail):
-        return '/static/' + url_tail
+        return url_for('webgrid.static', filename=url_tail)
 
-webgrid = Blueprint('webgrid', __name__, static_folder='static', static_url_path='/webgrid')
+webgrid = Blueprint('webgrid', __name__, static_folder='static', static_url_path='/webgrid/static')

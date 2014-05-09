@@ -133,7 +133,7 @@ class HTML(object):
         return inputs
 
     def filtering_toggle_image(self):
-        img_url = self.manager.static_url('component/datagrid/bullet_toggle_plus.png')
+        img_url = self.manager.static_url('bullet_toggle_plus.png')
         img_tag = tags.image(img_url, 'multi-select toggle', 16, 16, class_='toggle-button')
         return img_tag
 
@@ -223,11 +223,11 @@ class HTML(object):
         return self.current_url(onpage=1, perpage=self.grid.per_page)
 
     def paging_img_first(self):
-        img_url = self.manager.static_url('component/datagrid/b_firstpage.png')
+        img_url = self.manager.static_url('b_firstpage.png')
         return _HTML.img(src=img_url, width=16, height=13, alt='<<')
 
     def paging_img_first_dead(self):
-        img_url = self.manager.static_url('component/datagrid/bd_firstpage.png')
+        img_url = self.manager.static_url('bd_firstpage.png')
         return _HTML.img(src=img_url, width=16, height=13, alt='<<')
 
     def paging_url_prev(self):
@@ -235,11 +235,11 @@ class HTML(object):
         return self.current_url(onpage=prev_page, perpage=self.grid.per_page)
 
     def paging_img_prev(self):
-        img_url = self.manager.static_url('component/datagrid/b_prevpage.png')
+        img_url = self.manager.static_url('b_prevpage.png')
         return _HTML.img(src=img_url, width=8, height=13, alt='<')
 
     def paging_img_prev_dead(self):
-        img_url = self.manager.static_url('component/datagrid/bd_prevpage.png')
+        img_url = self.manager.static_url('bd_prevpage.png')
         return _HTML.img(src=img_url, width=8, height=13, alt='<')
 
     def paging_url_next(self):
@@ -247,22 +247,22 @@ class HTML(object):
         return self.current_url(onpage=next_page, perpage=self.grid.per_page)
 
     def paging_img_next(self):
-        img_url = self.manager.static_url('component/datagrid/b_nextpage.png')
+        img_url = self.manager.static_url('b_nextpage.png')
         return _HTML.img(src=img_url, width=8, height=13, alt='>')
 
     def paging_img_next_dead(self):
-        img_url = self.manager.static_url('component/datagrid/bd_nextpage.png')
+        img_url = self.manager.static_url('bd_nextpage.png')
         return _HTML.img(src=img_url, width=8, height=13, alt='>')
 
     def paging_url_last(self):
         return self.current_url(onpage=self.grid.page_count, perpage=self.grid.per_page)
 
     def paging_img_last(self):
-        img_url = self.manager.static_url('component/datagrid/b_lastpage.png')
+        img_url = self.manager.static_url('b_lastpage.png')
         return _HTML.img(src=img_url, width=16, height=13, alt='>>')
 
     def paging_img_last_dead(self):
-        img_url = self.manager.static_url('component/datagrid/bd_lastpage.png')
+        img_url = self.manager.static_url('bd_lastpage.png')
         return _HTML.img(src=img_url, width=16, height=13, alt='>>')
 
     def table(self):
