@@ -480,6 +480,18 @@ class BaseGrid(object):
                     new_col
                 )
 
+    def before_query_hook(self):
+        """ Just a hook to give subclasses a chance to change things before executing the query """
+        pass
+
+    def build(self):
+        self.apply_qs_args()
+        self.before_query_hook()
+        # this will force the query to execute.  We used to wait to evaluate this but it ended
+        # up causing AttributeErrors to be hidden when the grid was used in Jinja.
+        # Calling build is now preferred over calling .apply_qs_args() and then .html()
+        self.record_count
+
     def column(self, ident):
         if isinstance(ident, basestring):
             return self.key_column_map[ident]
