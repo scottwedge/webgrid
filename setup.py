@@ -15,7 +15,6 @@ develop_requires = [
 ]
 
 
-
 cdir = osp.abspath(osp.dirname(__file__))
 README = open(osp.join(cdir, 'readme.rst')).read()
 CHANGELOG = open(osp.join(cdir, 'changelog.rst')).read()
@@ -28,7 +27,7 @@ setup(
     long_description='\n\n'.join((README, CHANGELOG)),
     author="Randy Syring",
     author_email="randy@thesyrings.us",
-    url='http://bitbucket.org/blazelibs/webgrid/',
+    url='https://bitbucket.org/rsyring/webgrid',
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
