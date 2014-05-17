@@ -158,7 +158,10 @@ class Column(object):
         column.head.hah = HTMLAttributes(self.kwargs)
         column.body = BlankObject()
         column.body.hah = HTMLAttributes(self.kwargs)
-        column.xlwt_stymat = self.xlwt_stymat_init()
+        if xlwt is not None:
+            column.xlwt_stymat = self.xlwt_stymat_init()
+        else:
+            column.xlwt_stymat = None
 
         # try to be smart about which attributes should get copied to the
         # new instance by looking for attributes on the class that have the
@@ -504,7 +507,10 @@ class BaseGrid(object):
 
     def set_renderers(self):
         self.html = HTML(self)
-        self.xls = XLS(self)
+        if xlwt is not None:
+            self.xls = XLS(self)
+        else:
+            self.xls = None
 
     def set_filter(self, key, op, value):
         self.clear_record_cache()
