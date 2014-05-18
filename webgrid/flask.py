@@ -2,10 +2,10 @@ from __future__ import absolute_import
 from flask import request, session, flash, Blueprint, url_for
 
 
-class FlaskSQLAlchemyManager(object):
+class WebGrid(object):
 
     def __init__(self, db=None):
-        self.db = db
+        self.init_db(db)
 
     def init_db(self, db):
         self.db = db
@@ -28,4 +28,11 @@ class FlaskSQLAlchemyManager(object):
     def static_url(self, url_tail):
         return url_for('webgrid.static', filename=url_tail)
 
-webgrid = Blueprint('webgrid', __name__, static_folder='static', static_url_path='/webgrid/static')
+    def init_app(self, app):
+        bp = Blueprint(
+            'webgrid',
+            __name__,
+            static_folder='static',
+            static_url_path=app.static_url_path + '/webgrid'
+        )
+        app.register_blueprint(bp)
