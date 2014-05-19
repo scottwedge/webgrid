@@ -344,9 +344,9 @@ class HTML(object):
 
     def table_tr_output(self, cells, row_hah):
         # do some formatting so that the source code is properly indented
-        tds_str = '\n'.join(cells)
+        tds_str = u'\n'.join(cells)
         tds_str = reindent(tds_str, 12)
-        tds_str = '\n{0}\n        '.format(tds_str)
+        tds_str = u'\n{0}\n        '.format(tds_str)
 
         return _HTML.tr(literal(tds_str), **row_hah)
 

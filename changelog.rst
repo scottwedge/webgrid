@@ -1,6 +1,16 @@
 Changelog
 ---------
 
+0.1.5 released ???
+=========================
+
+ -
+
+0.1.4 released 2014-05-18
+=========================
+
+  - fix string/unicode handling to avoid coercion of unicode to ascii
+
 0.1.3 released 2014-05-18
 =========================
 
