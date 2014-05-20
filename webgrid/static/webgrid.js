@@ -240,6 +240,6 @@ function disable_sort(sb) {
     if ($(sb).val() == '') return;
     var sbval = $(sb).val().replace(/^-/, "");
     $('dl.sorting select[id!="'+$(sb).attr('id')+'"]').find(
-        'option[value="'+sbval+'"], option=[value="-'+sbval+'"]'
+        'option[value="'+sbval+'"], option[value="-'+sbval+'"]'
     ).attr('disabled', 'disabled');
 }
