@@ -283,9 +283,9 @@ class TextFilter(FilterBase):
 
     def apply(self, query):
         if self.op == 'contains':
-            return query.filter(self.sa_col.like('%{0}%'.format(self.value1)))
+            return query.filter(self.sa_col.like(u'%{0}%'.format(self.value1)))
         if self.op == '!contains':
-            return query.filter(~self.sa_col.like('%{0}%'.format(self.value1)))
+            return query.filter(~self.sa_col.like(u'%{0}%'.format(self.value1)))
         if self.op == 'empty':
             return query.filter(or_(
                 self.sa_col == None,
