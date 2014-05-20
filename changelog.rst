@@ -6,6 +6,7 @@ Changelog
 
  - fix nose plugin setup to avoid warning message
  - fix javascript bug related to sorting & newer jQuery libraries
+ - fix SA expression test to avoid boolean ambiguity
 
 0.1.4 released 2014-05-18
 =========================

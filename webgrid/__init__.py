@@ -139,7 +139,7 @@ class Column(object):
 
         # filters can be sent in as a class (not class instance) if needed
         if inspect.isclass(filter):
-            if not self.expr:
+            if self.expr is None:
                 raise ValueError('the filter was a class type, but no'
                     ' column-like object is available from "key" to pass in as'
                     ' as the first argument')
