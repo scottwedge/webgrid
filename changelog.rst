@@ -1,7 +1,7 @@
 Changelog
 ---------
 
-0.1.5 released ???
+0.1.5 released 2014-05-20
 =========================
 
  - fix nose plugin setup to avoid warning message
