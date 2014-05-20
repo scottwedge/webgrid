@@ -55,7 +55,7 @@ setup(
         webgrid_ta = webgrid_ta.manage:script_entry
 
         [nose.plugins]
-        wegbridta_initapp = webgrid_nose:InitAppPlugin
+        wegbridta_initapp = webgrid_nose:WebGridNosePlugin
     """,
 )
 
