@@ -2,6 +2,11 @@ Changelog
 ---------
 
 
+0.1.7 released ???
+==================
+
+ - updated filter tests to work with SA0.9
+
 0.1.6 released 2014-05-20
 =========================
 

@@ -16,7 +16,7 @@ class CheckFilterBase(ModelBase):
 
     def assert_in_query(self, query, test_for):
         query_str = query_to_str(query)
-        assert test_for in query_str, query_str
+        assert test_for in query_str, '{} not found in {}'.format(test_for, query_str)
 
     def assert_filter_query(self, filter, test_for):
         query = filter.apply(db.session.query(Person.id))
@@ -178,7 +178,7 @@ class TestDateFilter(CheckFilterBase):
     def test_not_between(self):
         filter = DateFilter(Person.due_date)
         filter.set('!between', '1/31/2010', '12/31/2010')
-        self.assert_filter_query(filter, "WHERE NOT (persons.due_date BETWEEN '2010-01-31' AND '2010-12-31')")
+        self.assert_filter_query(filter, "WHERE persons.due_date NOT BETWEEN '2010-01-31' AND '2010-12-31'")
 
     def test_days_ago(self):
         filter = DateFilter(Person.due_date, _now=dt.date(2012,1,1))
@@ -256,7 +256,7 @@ class TestDateTimeFilter(CheckFilterBase):
     def test_not_eq(self):
         filter = DateTimeFilter(Person.createdts)
         filter.set('!eq', '12/31/2010')
-        self.assert_filter_query(filter, "WHERE NOT (persons.createdts BETWEEN '2010-12-31 00:00:00.000000' AND '2010-12-31 23:59:59.999999')")
+        self.assert_filter_query(filter, "WHERE persons.createdts NOT BETWEEN '2010-12-31 00:00:00.000000' AND '2010-12-31 23:59:59.999999'")
 
     def test_not_eq_with_time(self):
         filter = DateTimeFilter(Person.createdts)
@@ -311,7 +311,7 @@ class TestDateTimeFilter(CheckFilterBase):
     def test_not_between(self):
         filter = DateTimeFilter(Person.createdts)
         filter.set('!between', '1/31/2010', '12/31/2010')
-        self.assert_filter_query(filter, "WHERE NOT (persons.createdts BETWEEN '2010-01-31 00:00:00.000000' AND '2010-12-31 23:59:59.999999')")
+        self.assert_filter_query(filter, "WHERE persons.createdts NOT BETWEEN '2010-01-31 00:00:00.000000' AND '2010-12-31 23:59:59.999999'")
 
     def test_days_ago(self):
         filter = DateTimeFilter(Person.createdts, _now=dt.date(2012,1,1))
