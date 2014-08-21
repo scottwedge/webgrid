@@ -572,34 +572,34 @@ class BaseGrid(object):
             self._records = query.all()
         return self._records
 
+    def _totals_col_results(self, page_totals_only):
+        SUB = self.build_query(for_count=(not page_totals_only)).subquery()
+
+        cols = []
+        for colname, coltuple in self.subtotal_cols.iteritems():
+            sa_aggregate_func, colobj = coltuple
+
+            # column may have a label. If it does, use it
+            if isinstance(colobj.expr, sasql.expression._Label):
+                aggregate_this = sasql.text(colobj.key)
+            else:
+                aggregate_this = colobj.expr
+
+            labeled_aggregate_col = sa_aggregate_func(aggregate_this).label(colname)
+            cols.append(labeled_aggregate_col)
+
+        return db.sess.query(*cols).select_entity_from(SUB).first()
+
     @property
     def page_totals(self):
         if self._page_totals is None:
-            SUB = self.build_query().subquery()
-            # column may have a label. If it does, use it
-            cols = [
-                v[0](
-                    sasql.text(v[1].key) if isinstance(
-                        v[1].expr,sasql.expression._Label
-                    ) else v[1].expr
-                ).label(k) for k,v in self.subtotal_cols.iteritems()
-            ]
-            self._page_totals = self.manager.sa_query(*cols).select_from(SUB).first()
+            self._page_totals = self._totals_col_results(page_totals_only=True)
         return self._page_totals
 
     @property
     def grand_totals(self):
         if self._grand_totals is None:
-            SUB = self.build_query(for_count=True).subquery()
-            # column may have a label. If it does, use it
-            cols = [
-                v[0](
-                    sasql.text(v[1].key) if isinstance(
-                        v[1].expr,sasql.expression._Label
-                    ) else v[1].expr
-                ).label(k) for k,v in self.subtotal_cols.iteritems()
-            ]
-            self._grand_totals = self.manager.sa_query(*cols).select_from(SUB).first()
+            self._grand_totals = self._totals_col_results(page_totals_only=False)
         return self._grand_totals
 
     @property
