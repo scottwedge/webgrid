@@ -214,28 +214,28 @@ class TestHtmlRenderer(object):
         eq_(input_html, '<input name="perpage" type="text" value="1" />')
 
         img_html = g.html.paging_img_first()
-        eq_(img_html, '<img alt="&lt;&lt;" height="13" src="/static/component/datagrid/b_firstpage.png" width="16" />')
+        eq_(img_html, '<img alt="&lt;&lt;" height="13" src="/static/webgrid/b_firstpage.png" width="16" />')
 
         img_html = g.html.paging_img_first_dead()
-        eq_(img_html, '<img alt="&lt;&lt;" height="13" src="/static/component/datagrid/bd_firstpage.png" width="16" />')
+        eq_(img_html, '<img alt="&lt;&lt;" height="13" src="/static/webgrid/bd_firstpage.png" width="16" />')
 
         img_html = g.html.paging_img_prev()
-        eq_(img_html, '<img alt="&lt;" height="13" src="/static/component/datagrid/b_prevpage.png" width="8" />')
+        eq_(img_html, '<img alt="&lt;" height="13" src="/static/webgrid/b_prevpage.png" width="8" />')
 
         img_html = g.html.paging_img_prev_dead()
-        eq_(img_html, '<img alt="&lt;" height="13" src="/static/component/datagrid/bd_prevpage.png" width="8" />')
+        eq_(img_html, '<img alt="&lt;" height="13" src="/static/webgrid/bd_prevpage.png" width="8" />')
 
         img_html = g.html.paging_img_next()
-        eq_(img_html, '<img alt="&gt;" height="13" src="/static/component/datagrid/b_nextpage.png" width="8" />')
+        eq_(img_html, '<img alt="&gt;" height="13" src="/static/webgrid/b_nextpage.png" width="8" />')
 
         img_html = g.html.paging_img_next_dead()
-        eq_(img_html, '<img alt="&gt;" height="13" src="/static/component/datagrid/bd_nextpage.png" width="8" />')
+        eq_(img_html, '<img alt="&gt;" height="13" src="/static/webgrid/bd_nextpage.png" width="8" />')
 
         img_html = g.html.paging_img_last()
-        eq_(img_html, '<img alt="&gt;&gt;" height="13" src="/static/component/datagrid/b_lastpage.png" width="16" />')
+        eq_(img_html, '<img alt="&gt;&gt;" height="13" src="/static/webgrid/b_lastpage.png" width="16" />')
 
         img_html = g.html.paging_img_last_dead()
-        eq_(img_html, '<img alt="&gt;&gt;" height="13" src="/static/component/datagrid/bd_lastpage.png" width="16" />')
+        eq_(img_html, '<img alt="&gt;&gt;" height="13" src="/static/webgrid/bd_lastpage.png" width="16" />')
 
         # since we are on page 2, all links should be live
         footer_html = g.html.footer()
