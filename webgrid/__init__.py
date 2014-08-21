@@ -588,7 +588,7 @@ class BaseGrid(object):
             labeled_aggregate_col = sa_aggregate_func(aggregate_this).label(colname)
             cols.append(labeled_aggregate_col)
 
-        return db.sess.query(*cols).select_entity_from(SUB).first()
+        return self.manager.sa_query(*cols).select_entity_from(SUB).first()
 
     @property
     def page_totals(self):
