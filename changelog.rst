@@ -10,6 +10,7 @@ Changelog
  - adjustments for SQLAlchemy 0.9+ (we now support 0.8+)
  - workaround for dateutils parsing bug
  - testing fixes
+ - completed dev requirements list
 
 0.1.6 released 2014-05-20
 =========================

@@ -8,12 +8,16 @@ except ImportError:
 
 # pip install -e .[develop]
 develop_requires = [
+    'mock',
     'nose',
     'Flask',
+    'Flask-Bootstrap',
+    'Flask-SQLAlchemy',
+    'Flask-WebTest',
     'wrapt',
+    'xlrd',
     'xlwt',
 ]
-
 
 cdir = osp.abspath(osp.dirname(__file__))
 README = open(osp.join(cdir, 'readme.rst')).read()
