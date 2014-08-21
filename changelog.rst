@@ -12,6 +12,9 @@ Changelog
  - testing fixes
  - completed dev requirements list
  - fixed nose plugin bug, must not assume pathname case consistency (Windows)
+ - added BlazeWeb adapter
+ - xls_as_response now an adapter method, called by XLS renderer
+ - render_template now an optional adapter method, falls back to Jinja2 call
 
 0.1.6 released 2014-05-20
 =========================

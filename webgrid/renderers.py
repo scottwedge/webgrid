@@ -38,7 +38,7 @@ class HTML(object):
         return self.render()
 
     def render(self):
-        return self.load_content('datagrid:grid.html')
+        return self.load_content('grid.html')
 
     def grid_otag(self):
         return _HTML.div(_closed=False, **self.grid.hah)
@@ -49,7 +49,7 @@ class HTML(object):
     def header(self):
         if self.grid.hide_controls_box:
             return ''
-        return self.load_content('datagrid:grid_header.html')
+        return self.load_content('grid_header.html')
 
     def header_form_otag(self, **kwargs):
         return _HTML.form(_closed=False, method='get', action=self.form_action_url(), **kwargs)
@@ -58,7 +58,7 @@ class HTML(object):
         return self.reset_url(session_reset=False)
 
     def header_filtering(self):
-        return self.load_content('datagrid:header_filtering.html')
+        return self.load_content('header_filtering.html')
 
     def filtering_table_otag(self, **kwargs):
         kwargs.setdefault('cellpadding', 1)
@@ -170,7 +170,7 @@ class HTML(object):
         return jsonmod.dumps(for_js)
 
     def header_sorting(self):
-        return self.load_content('datagrid:header_sorting.html')
+        return self.load_content('header_sorting.html')
 
     def sorting_select_options(self):
         options = [('',literal('&nbsp;'))]
@@ -202,7 +202,7 @@ class HTML(object):
         return self.sorting_select(3)
 
     def header_paging(self):
-        return self.load_content('datagrid:header_paging.html')
+        return self.load_content('header_paging.html')
 
     def paging_select_options(self):
         options = []
@@ -266,7 +266,7 @@ class HTML(object):
         return _HTML.img(src=img_url, width=16, height=13, alt='>>')
 
     def table(self):
-        return self.load_content('datagrid:grid_table.html')
+        return self.load_content('grid_table.html')
 
     def no_records(self):
         return _HTML.p('No records to display', class_='no-records')
@@ -424,13 +424,21 @@ class HTML(object):
         return _HTML.td(styled_value, **col_hah)
 
     def footer(self):
-        return self.load_content('datagrid:grid_footer.html')
+        return self.load_content('grid_footer.html')
 
     def load_content(self, endpoint, **kwargs):
         kwargs['renderer'] = self
         kwargs['grid'] = self.grid
-        # hack for now, need to figure out how to tie this into the framework later
-        endpoint = endpoint.replace('datagrid:', '', 1)
+
+        try:
+            # give the adapter a chance to render
+            if hasattr(self.grid.manager, 'render_template'):
+                return self.grid.manager.render_template(endpoint, **kwargs)
+        except jinja.exceptions.TemplateNotFound:
+            # fail silently, will fail on the next step if there's really a problem
+            pass
+
+        # if the adapter doesn't want it, default to raw Jinja2
         template = self.jinja_env.get_template(endpoint)
         return template.render(**kwargs)
 
@@ -616,10 +624,4 @@ class XLS(object):
 
     def as_response(self, wb=None, sheet_name=None):
         wb = self.build_sheet(wb, sheet_name)
-        rp = StreamResponse()
-        rp.headers['Content-Type'] = 'application/vnd.ms-excel'
-        rp.headers['Content-Disposition'] = 'attachment; filename={0}'.format(
-            self.file_name()
-        )
-        wb.save(rp.stream)
-        abort(rp)
+        self.grid.manager.xls_as_response(wb, self.file_name())
