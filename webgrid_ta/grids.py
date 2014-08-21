@@ -4,11 +4,11 @@ from webgrid.filters import TextFilter, OptionsFilterBase, Operator, \
     DateTimeFilter, ops
 from .model.entities import Person, Status
 
-from .app import fsam
+from .app import webgrid
 
 
 class Grid(BaseGrid):
-    manager = fsam
+    manager = webgrid
 
 
 class FirstNameColumn(LinkColumnBase):
