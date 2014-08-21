@@ -11,6 +11,7 @@ Changelog
  - workaround for dateutils parsing bug
  - testing fixes
  - completed dev requirements list
+ - fixed nose plugin bug, must not assume pathname case consistency (Windows)
 
 0.1.6 released 2014-05-20
 =========================

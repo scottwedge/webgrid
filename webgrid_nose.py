@@ -18,7 +18,7 @@ class WebGridNosePlugin(nose.plugins.Plugin):
     def configure(self, options, config):
         """Configure the plugin"""
         curdir = osp.realpath(os.curdir)
-        if curdir.startswith(package_dir):
+        if curdir.lower().startswith(package_dir.lower()):
             self.enabled = True
 
     def begin(self):
