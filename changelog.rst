@@ -8,6 +8,7 @@ Changelog
  - updated filter tests to work with SA0.9
  - refactoring related to subtotaling feature
  - adjustments for SQLAlchemy 0.9+ (we now support 0.8+)
+ - workaround for dateutils parsing bug
 
 0.1.6 released 2014-05-20
 =========================

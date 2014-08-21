@@ -230,6 +230,18 @@ class TestDateFilter(CheckFilterBase):
         filter.set('thisweek', None)
         self.assert_filter_query(filter, "WHERE persons.due_date BETWEEN '2012-01-01' AND '2012-01-07'")
 
+    @raises(formencode.Invalid, 'invalid date')
+    def test_invalid_date(self):
+        filter = DateFilter(Person.due_date)
+        filter.set('eq', '7/45/2007')
+
+    @raises(formencode.Invalid, 'invalid date (parsing exception)')
+    def test_parser_error(self):
+        # can probably be removed if this ever gets fixed:
+        # https://bugs.launchpad.net/dateutil/+bug/1257985
+        filter = DateFilter(Person.due_date)
+        filter.set('eq', 'samwise gamgee')
+
     @raises(formencode.Invalid, 'Please enter a value')
     def test_days_operator_with_blank_value(self):
         filter = DateFilter(Person.due_date, _now=dt.date(2012,1,1))
@@ -362,6 +374,13 @@ class TestDateTimeFilter(CheckFilterBase):
         filter = DateTimeFilter(Person.createdts, _now=dt.datetime(2012,1,1,23,59,59,999999))
         filter.set('thisweek', None)
         self.assert_filter_query(filter, "WHERE persons.createdts BETWEEN '2012-01-01 00:00:00.000000' AND '2012-01-07 23:59:59.999999'")
+
+    @raises(formencode.Invalid, 'invalid date (parsing exception)')
+    def test_parser_error(self):
+        # can probably be removed if this ever gets fixed:
+        # https://bugs.launchpad.net/dateutil/+bug/1257985
+        filter = DateTimeFilter(Person.createdts)
+        filter.set('eq', 'samwise gamgee')
 
     @raises(formencode.Invalid, 'Please enter a value')
     def test_days_operator_with_empty_value(self):
