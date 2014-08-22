@@ -1,0 +1,7 @@
+{% set jquery_ui_includes = ['base', 'multiselect'] %}
+{% extends 'templating:admin/layout.html' %}
+{% block title %}Manage People{% endblock%}
+{% block body %}
+    <h2>Manage People</h2>
+    {{ people_grid.html()|content }}
+{% endblock body%}

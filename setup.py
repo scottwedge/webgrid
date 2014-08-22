@@ -8,6 +8,8 @@ except ImportError:
 
 # pip install -e .[develop]
 develop_requires = [
+    'BlazeWeb',
+    'SQLAlchemyBWC',
     'mock',
     'nose',
     'Flask',
