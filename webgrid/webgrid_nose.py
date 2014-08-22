@@ -1,15 +1,9 @@
 import os
 from os import path as osp
-from sys import argv
 
 import nose
 
-package_dir = osp.dirname(__file__)
-tests_dir = osp.join(package_dir, 'webgrid', 'tests')
-
-
-def run_nose():
-    nose.main(argv, defaultTest=tests_dir)
+package_dir = osp.dirname(osp.dirname(__file__))
 
 
 class WebGridNosePlugin(nose.plugins.Plugin):
