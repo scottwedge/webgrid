@@ -1,6 +1,7 @@
 
 var datagrid_active_filters = [];
 var datagrid_multiselect_tracker = [];
+var _datagrid_is_loaded = false;
 
 $(document).ready(function() {
     // sorting
@@ -11,8 +12,12 @@ $(document).ready(function() {
     datagrid_prep_filters();
     $('.datagrid .filters .operator select').change(datagrid_on_operator_change);
     $('.datagrid .filters .add-filter select').change(datagrid_add_filter);
-    //$('.datagrid .filters .toggle-button').click(datagrid_toggle_mselect);
+    $('.datagrid .filters .toggle-button').click(datagrid_toggle_mselect);
 
+    $('.inputs1 select').change(function() {
+        $(this).siblings('input').val($(this).val());
+    });
+    _datagrid_is_loaded = true;
 });
 
 /*
@@ -148,10 +153,11 @@ function datagrid_toggle_filter_inputs(jq_filter_tr) {
     op_key = jq_filter_tr.find('.operator select').val();
     fields1 =  jq_filter_tr.find('.inputs1').children();
     fields2 = jq_filter_tr.find('.inputs2').children();
+    v1name = 'v1('+filter_key+')';
 
     if( op_key == '') {
         // destroy any multi-selects that have been created
-        //fields1.multiselect('destroy');
+        fields1.multiselect('destroy');
         fields1.hide();
         fields1.val('');
 
@@ -171,8 +177,29 @@ function datagrid_toggle_filter_inputs(jq_filter_tr) {
             jq_filter_tr.find('.inputs1 select[multiple]').hide().each(function(){
                 datagrid_activate_mselect_ui($(this));
             });
+            if ( field_type.substring(0,6) == 'select' ) {
+                jq_filter_tr.find('.inputs1 input').hide();
+                jq_filter_tr.find('.inputs1 select:not([multiple])').show();
+                jq_filter_tr.find('.inputs1 input').val(
+                    jq_filter_tr.find('.inputs1 select').val()
+                );
+                if ( field_type == 'select+input' ) {
+                    jq_filter_tr.find('.inputs1 .toggle-button').hide();
+                    jq_filter_tr.find('.inputs1 input').removeAttr('name');
+                    jq_filter_tr.find('.inputs1 select').attr('name',v1name);
+                }
+            } else {
+                if (_datagrid_is_loaded) {
+                    jq_filter_tr.find('.inputs1 input').val('');
+                }
+                jq_filter_tr.find('.inputs1 input').show();
+                jq_filter_tr.find('.inputs1 select').hide();
+                jq_filter_tr.find('.inputs1 .toggle-button').hide();
+                jq_filter_tr.find('.inputs1 input').attr('name',v1name);
+                jq_filter_tr.find('.inputs1 select').removeAttr('name');
+            }
         }
-        if( field_type == '2inputs' ) {
+        if( field_type == '2inputs' || field_type == 'select+input' ) {
             fields2.show();
         } else {
             fields2.hide();
