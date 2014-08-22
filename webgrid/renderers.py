@@ -33,6 +33,7 @@ class HTML(object):
             loader=jinja.PackageLoader('webgrid', 'templates'),
             autoescape=True,
         )
+        self.jinja_env.filters['wg_safe'] = jinja.filters.do_mark_safe
 
     def __call__(self):
         return self.render()

@@ -1,18 +1,22 @@
 from __future__ import absolute_import
 
 from blazeweb.content import getcontent
-from blazeweb.globals import rg, user
+from blazeweb.globals import ag, rg, user
 from blazeweb.routing import abs_static_url
+from blazeweb.templating.jinja import content_filter
 from blazeweb.utils import abort
 from blazeweb.wrappers import StreamResponse
+from jinja2.exceptions import TemplateNotFound
 from sqlalchemybwc import db as sabwc_db
 from webgrid import BaseGrid
 
 
 class WebGrid(object):
 
-    def __init__(self, db=None):
+    def __init__(self, db=None, component='webgrid'):
         self.init_db(db or sabwc_db)
+        self.component = component
+        ag.tplengine.env.filters['wg_safe'] = content_filter
 
     def init_db(self, db):
         self.db = db
@@ -43,8 +47,14 @@ class WebGrid(object):
         abort(rp)
 
     def render_template(self, endpoint, **kwargs):
-        return getcontent(endpoint, **kwargs)
+        try:
+            return getcontent(endpoint, **kwargs)
+        except TemplateNotFound:
+            if ':' in endpoint:
+                raise
+            return getcontent('{0}:{1}'.format(self.component, endpoint), **kwargs)
+wg_blaze_manager = WebGrid()
 
 
 class Grid(BaseGrid):
-    manager = WebGrid()
+    manager = wg_blaze_manager
