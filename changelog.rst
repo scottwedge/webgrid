@@ -1,9 +1,13 @@
 Changelog
 ---------
 
+0.1.7 released <in development>
+=========================
 
-0.1.7 released ???
-==================
+-
+
+0.1.6 released 2014-08-22
+=========================
 
  - updated filter tests to work with SA0.9
  - refactoring related to subtotaling feature
@@ -15,11 +19,6 @@ Changelog
  - added BlazeWeb adapter
  - xls_as_response now an adapter method, called by XLS renderer
  - render_template now an optional adapter method, falls back to Jinja2 call
-
-0.1.6 released 2014-05-20
-=========================
-
- -
 
 0.1.5 released 2014-05-20
 =========================

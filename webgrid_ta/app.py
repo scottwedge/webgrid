@@ -1,4 +1,5 @@
 import warnings
+
 from flask import Flask
 from flask.ext.bootstrap import Bootstrap
 
@@ -6,6 +7,7 @@ from webgrid.flask import WebGrid
 
 # ignore warning about Decimal lossy conversion with SQLite from SA
 warnings.filterwarnings('ignore', '.*support Decimal objects natively.*')
+
 webgrid = WebGrid()
 
 
@@ -23,9 +25,10 @@ def create_app(config):
     db.init_app(app)
     webgrid.init_db(db)
     Bootstrap(app)
-
     webgrid.init_app(app)
+
     from .views import main
     app.register_blueprint(main)
 
     return app
+

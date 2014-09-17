@@ -9,6 +9,8 @@ except ImportError:
 # pip install -e .[develop]
 develop_requires = [
     'BlazeWeb',
+    # tests rely on SQL string comparison which fails with SA < 0.9
+    'SQLAlchemy>=0.9.0'
     'SQLAlchemyBWC',
     'mock',
     'nose',
