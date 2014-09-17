@@ -172,14 +172,6 @@ div.filterfor-wrapper {
 }
 
 
-/*
-
-###
-### DatagridBWP Controls
-###
-
-*/
-
 form.datagrid-form input,
 form.datagrid-form select {
     margin-bottom: 1px;
@@ -189,14 +181,6 @@ form.datagrid-form select {
     float: right;
     margin-top: 0.8em;
 }
-
-/*
-
-###
-### datagrid tables
-###
-
-*/
 
 .datagrid table.records,
 table.datagrid {
@@ -289,4 +273,27 @@ table.datagrid td a.edit_link {
 .datagrid table.records td a.delete_link,
 table.datagrid td a.delete_link {
     background: url(delete.png);
+}
+
+/* multipleselect style overrides */
+div.ms-parent input[type="checkbox"] {
+    top: auto;
+}
+
+.ms-choice {
+    height: 20px;
+    line-height: 1.5;
+    -webkit-border-radius: 0;
+    -moz-border-radius: 0;
+    border-radius: 0;
+}
+
+.ms-choice > div {
+    height: 19px;
+}
+
+.ms-drop {
+    -webkit-border-radius: 0;
+    -moz-border-radius: 0;
+    border-radius: 0;
 }

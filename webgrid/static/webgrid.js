@@ -1,6 +1,5 @@
 
 var datagrid_active_filters = [];
-var datagrid_multiselect_tracker = [];
 var _datagrid_is_loaded = false;
 
 $(document).ready(function() {
@@ -35,11 +34,11 @@ function datagrid_toggle_mselect(){
     jq_img = $(this);
     jq_select = jq_img.siblings('select');
     select_name = jq_select.attr('name');
-    tracker_idx = $.inArray(select_name, datagrid_multiselect_tracker)
     multiple_attr = jq_select.attr('multiple')
     if (typeof multiple_attr !== 'undefined' && multiple_attr !== false) {
         jq_select.removeAttr('multiple');
-        jq_select.multiselect('destroy');
+        jq_select.siblings('.ms-parent').hide();
+        jq_select.show();
     } else {
         datagrid_activate_mselect_ui(jq_select);
     }
@@ -57,9 +56,18 @@ function datagrid_activate_mselect_ui(jq_select) {
     if ( use_all_opt ) {
         $(all_opt).detach();
     }
-    jq_select.multiselect({
-        selectedList: 4
-    });
+    if (jq_select.siblings('.ms-parent').length > 0) {
+        jq_select.hide();
+        jq_select.siblings('.ms-parent').show();
+    } else {
+        jq_select.multipleSelect({
+            onOpen: function() {
+                $('.ms-drop input').show();
+            },
+            minumimCountSelected: 2,
+            filter: true
+        });
+    }
     jq_select.attr('multiple', 'multiple');
     if ( use_all_opt ) {
         $(all_opt).prependTo(jq_select);
@@ -157,7 +165,8 @@ function datagrid_toggle_filter_inputs(jq_filter_tr) {
 
     if( op_key == '') {
         // destroy any multi-selects that have been created
-        fields1.multiselect('destroy');
+        fields1.removeAttr('multiple');
+        fields1.siblings('.ms-parent').hide();
         fields1.hide();
         fields1.val('');
 
@@ -174,7 +183,8 @@ function datagrid_toggle_filter_inputs(jq_filter_tr) {
             // turn on multi-select for a select field that has multiple
             // set.  The selector is for the toggle-button img, so that
             // datagrid_toggle_mselect() works correctly.
-            jq_filter_tr.find('.inputs1 select[multiple]').hide().each(function(){
+            fields1.siblings('.ms-parent').hide();
+            jq_filter_tr.find('.inputs1 select[multiple]').each(function(){
                 datagrid_activate_mselect_ui($(this));
             });
             if ( field_type.substring(0,6) == 'select' ) {
