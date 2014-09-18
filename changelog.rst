@@ -4,7 +4,9 @@ Changelog
 0.1.7 released <in development>
 =========================
 
--
+ - BC break: replaced MultiSelect widget with multipleSelect plugin
+   related JS and CSS must be included (available in webgrid static)
+ - included missing images referenced by webgrid CSS
 
 0.1.6 released 2014-08-22
 =========================
