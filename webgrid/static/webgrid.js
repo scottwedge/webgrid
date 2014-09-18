@@ -67,6 +67,9 @@ function datagrid_activate_mselect_ui(jq_select) {
             minumimCountSelected: 2,
             filter: true
         });
+        jq_select.parent().find('.ms-parent > button, .ms-drop').each(function() {
+            $(this).css('width', $(this).width() + 60);
+        });
     }
     jq_select.attr('multiple', 'multiple');
     if ( use_all_opt ) {
