@@ -53,6 +53,7 @@ setup(
     install_requires=[
         'BlazeUtils',
         'FormEncode',
+        'jinja2',
         'SQLAlchemy',
         'webhelpers',
         'python-dateutil',
