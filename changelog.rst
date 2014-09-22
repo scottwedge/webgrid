@@ -1,10 +1,10 @@
 Changelog
 ---------
 
-0.1.9 released <in development>
+0.1.9 released 2014-09-22
 =========================
 
- - ?
+ - bug fix: corrected default_op processing on TextFilter
 
 0.1.8 released 2014-09-22
 =========================
