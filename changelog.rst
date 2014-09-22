@@ -4,7 +4,7 @@ Changelog
 0.1.8 released <in development>
 =========================
 
--
+ - enable default_op processing for all filter types
 
 0.1.7 released 2014-09-18
 =========================

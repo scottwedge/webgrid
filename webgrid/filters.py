@@ -107,6 +107,8 @@ class FilterBase(object):
         raise UnrecognizedOperator('unrecognized operator: {0}'.format(self.op))
 
     def apply(self, query):
+        if self.op == self.default_op and self.value1 is None:
+            return query
         if self.op == 'eq':
             return query.filter(self.sa_col == self.value1)
         if self.op == '!eq':
@@ -303,6 +305,8 @@ class NumberFilterBase(FilterBase):
                     ops.greater_than_equal, ops.empty, ops.not_empty)
 
     def process(self, value, is_value2):
+        if self.op == self.default_op and not value:
+            return None
         if self.op in ('eq','!eq','lte','gte') and not is_value2:
             return self.validator(not_empty=True).to_python(value)
         return self.validator.to_python(value)
@@ -354,6 +358,9 @@ class DateFilter(FilterBase):
     def apply(self, query):
         today = self._get_today()
 
+        if self.op == self.default_op and self.value1 is None:
+            return query
+
         if self.op in ('between', '!between'):
             if self.value1 <= self.value2:
                 left_side = self.value1
@@ -404,6 +411,9 @@ class DateFilter(FilterBase):
         if value is None:
             return None
 
+        if self.op == self.default_op and not value:
+            return None
+
         if self.op in self.days_operators:
             return feval.Int(not_empty=True).to_python(value)
 
@@ -423,6 +433,9 @@ class DateTimeFilter(DateFilter):
 
     def process(self, value, is_value2):
         if value is None:
+            return None
+
+        if self.op == self.default_op and not value:
             return None
 
         if self.op in self.days_operators:
@@ -455,6 +468,9 @@ class DateTimeFilter(DateFilter):
 
     def apply(self, query):
         today = self._get_today()
+
+        if self.op == self.default_op and self.value1 is None:
+            return query
 
         if self.op in ('da', 'ltda', 'mtda'):
             target_date = today - dt.timedelta(days=self.value1)
