@@ -412,3 +412,14 @@ class TestExcelRenderer(object):
         wb = g.xls()
         wb.save(buffer)
         buffer.seek(0)
+
+
+class TestHideSection(object):
+    @inrequest('/')
+    def test_controlls_hidden(self):
+        class NoControlBoxGrid(PG):
+            hide_controls_box = True
+        g = NoControlBoxGrid()
+        assert '<tr class="status"' not in g.html()
+        assert '<div class="footer">' not in g.html()
+
