@@ -1,10 +1,10 @@
 Changelog
 ---------
 
-0.1.10 released <in development>
+0.1.10 released 2014-10-02
 ==========================
 
- - ?
+ - bug fix: hide_controls_box grid attribute used in rendering
 
 0.1.9 released 2014-09-22
 =========================
