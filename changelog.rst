@@ -1,10 +1,10 @@
 Changelog
 ---------
 
-0.1.11 released <in development>
+0.1.11 released 2014-10-09
 ==========================
 
- - ?
+ - fixed setup to include only webgrid in install, without the test apps
 
 0.1.10 released 2014-10-02
 ==========================
