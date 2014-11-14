@@ -81,7 +81,6 @@ class HTML(object):
 
     def filtering_table_row(self, col):
         extra = getattr(col.filter, 'html_extra', {})
-        extra['class_'] = ' '.join([col.key, extra.get('class_', '')]).strip()
         return _HTML.tr(
             _HTML.th(self.filtering_col_label(col), class_='filter-label')
             + _HTML.td(self.filtering_col_op_select(col), class_='operator')
@@ -89,6 +88,7 @@ class HTML(object):
                 _HTML.div(self.filtering_col_inputs1(col), class_='inputs1')
                 + _HTML.div(self.filtering_col_inputs2(col), class_='inputs2')
             ),
+            class_=col.key,
             **extra
         )
 
