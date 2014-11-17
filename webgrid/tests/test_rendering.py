@@ -326,6 +326,13 @@ class TestHtmlRenderer(object):
         assert '<input id="firstname_input1" name="v1(firstname)" type="text" />' in filter_html, filter_html
 
     @inrequest('/thepage')
+    def test_extra_filter_attrs(self):
+        g = PeopleGrid()
+        g.key_column_map['firstname'].filter.html_extra = {'data-special-attr': 'foo'}
+        filter_html = g.html.filtering_table_row(g.key_column_map['firstname'])
+        assert '<tr class="firstname" data-special-attr="foo">' in filter_html, filter_html
+
+    @inrequest('/thepage')
     def test_grid_rendering(self):
         g = PeopleGrid()
         # really just making sure no exceptions come through at this point
