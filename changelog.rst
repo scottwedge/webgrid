@@ -1,10 +1,10 @@
 Changelog
 ---------
 
-0.1.12 released <in development>
+0.1.12 released 2014-11-18
 ==========================
 
- - ?
+ - allow filters to set additional html attributes on their table rows
 
 0.1.11 released 2014-10-09
 ==========================
