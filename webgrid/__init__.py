@@ -582,6 +582,8 @@ class BaseGrid(object):
             # column may have a label. If it does, use it
             if isinstance(colobj.expr, sasql.expression._Label):
                 aggregate_this = sasql.text(colobj.key)
+            elif colobj.expr is None:
+                aggregate_this = sasql.literal_column(colobj.key)
             else:
                 aggregate_this = colobj.expr
 

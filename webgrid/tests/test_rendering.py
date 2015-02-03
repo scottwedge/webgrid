@@ -391,6 +391,26 @@ class TestAllTotals(object):
         #assert '<td>6.39</td>' in html, html
         assert '<td class="totals-label" colspan="7">Page Totals (3 records):</td>' in html
 
+
+class PGTotalsStringExpr(PeopleGrid):
+    subtotals = 'all'
+    Column('FloatCol', 'float_col', has_subtotal=True)
+
+    def query_prep(self, query, has_sort, has_filters):
+        query = super(PGTotalsStringExpr, self).query_prep(query, has_sort, has_filters)
+        return query.add_columns(Person.floatcol.label('float_col'))
+
+
+class TestStringExprTotals(PeopleGrid):
+    @inrequest('/')
+    def test_people_html(self):
+        g = PGTotalsStringExpr()
+        html = g.html()
+        assert '<td class="totals-label" colspan="7">Grand Totals (3 records):</td>' in html
+        #assert '<td>6.39</td>' in html, html
+        assert '<td class="totals-label" colspan="7">Page Totals (3 records):</td>' in html
+
+
 class TestExcelRenderer(object):
 
     def test_some_basics(self):
