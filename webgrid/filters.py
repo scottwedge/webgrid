@@ -3,6 +3,7 @@ import datetime as dt
 from decimal import Decimal as D
 import inspect
 
+from blazeutils import tolist
 from blazeutils.dates import ensure_date, ensure_datetime
 from dateutil.parser import parse
 from dateutil.relativedelta import relativedelta, SU
@@ -54,10 +55,12 @@ class FilterBase(object):
     # does this filter take a list of values in it's set() method
     receives_list = False
 
-    def __init__(self, sa_col, default_op=None):
+    def __init__(self, sa_col, default_op=None, default_value1=None, default_value2=None):
         # attributes from static instance
         self.sa_col = sa_col
         self.default_op = default_op
+        self.default_value1 = default_value1
+        self.default_value2 = default_value2
 
         # attributes that will start fresh for each instance
         self.op = None
@@ -88,6 +91,11 @@ class FilterBase(object):
             self.using_default_op = (self.default_op is not None)
             if self.op is None:
                 return
+
+        if not op and self.using_default_op:
+            value1 = self.default_value1
+            value2 = self.default_value2
+
 
         # set values used in display first, since processing validation may
         #   raise exceptions
@@ -139,7 +147,8 @@ class FilterBase(object):
 
     def new_instance(self):
         cls = self.__class__
-        filter = cls(self.sa_col, default_op=self.default_op)
+        filter = cls(self.sa_col, default_op=self.default_op, default_value1=None,
+                     default_value2=None)
 
         # try to be smart about which attributes should get copied to the
         # new instance
@@ -163,8 +172,10 @@ class OptionsFilterBase(FilterBase):
     receives_list = True
     options_from = ()
 
-    def __init__(self, sa_col, value_modifier='auto', default_op=None):
-        FilterBase.__init__(self, sa_col, default_op=default_op)
+    def __init__(self, sa_col, value_modifier='auto', default_op=None, default_value1=None,
+                 default_value2=None):
+        FilterBase.__init__(self, sa_col, default_op=default_op, default_value1=default_value1,
+                            default_value2=default_value2)
         # attributes from static instance
         self.value_modifier = value_modifier
 
@@ -187,7 +198,7 @@ class OptionsFilterBase(FilterBase):
                     raise
                 self._options_seq = self.options_from
             if self.default_op:
-                self._options_seq = [(-1,'-- All --')]+self._options_seq
+                self._options_seq = [(-1,'-- All --')]+list(self._options_seq)
         return self._options_seq
 
     @property
@@ -231,6 +242,10 @@ class OptionsFilterBase(FilterBase):
             return
         self.op = op or self.default_op
         self.using_default_op = (self.default_op is not None)
+
+        if self.using_default_op and op is None and self.default_value1 is not None:
+            values = tolist(self.default_value1)
+
         self.value1 = []
         if values is not None:
             for v in values:
@@ -341,8 +356,10 @@ class DateFilter(FilterBase):
     days_operators = 'da', 'ltda', 'mtda', 'iltd', 'imtd', 'ind'
     input_types = 'input', 'input2'
 
-    def __init__(self, sa_col, _now=None, default_op=None):
-        FilterBase.__init__(self, sa_col, default_op=default_op)
+    def __init__(self, sa_col, _now=None, default_op=None, default_value1=None,
+                 default_value2=None):
+        FilterBase.__init__(self, sa_col, default_op=default_op, default_value1=default_value1,
+                            default_value2=default_value2)
         # attributes from static instance
         self._now = _now
 

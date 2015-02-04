@@ -60,6 +60,12 @@ class TestTextFilter(CheckFilterBase):
         query = tf.apply(db.session.query(Person.id))
         self.assert_in_query(query, "WHERE persons.firstname NOT LIKE '%foo%'")
 
+    def test_default(self):
+        tf = TextFilter(Person.firstname, default_op='contains', default_value1='foo')
+        tf.set(None, None)
+        query = tf.apply(db.session.query(Person.id))
+        self.assert_in_query(query, "WHERE persons.firstname LIKE '%foo%'")
+
 class TestNumberFilters(CheckFilterBase):
     """
         Testing IntFilter mostly because the other classes inherit from the same base,
@@ -132,6 +138,10 @@ class TestNumberFilters(CheckFilterBase):
         filter = NumberFilter(Person.numericcol)
         filter.set('!empty', '')
 
+    def test_default(self):
+        tf = NumberFilter(Person.numericcol, default_op='eq', default_value1='1.5')
+        tf.set(None, None)
+        self.assert_filter_query(tf, "WHERE persons.numericcol = 1.5")
 
 class TestDateFilter(CheckFilterBase):
 
@@ -251,6 +261,12 @@ class TestDateFilter(CheckFilterBase):
     def test_days_operator_with_invalid_value(self):
         filter = DateFilter(Person.due_date, _now=dt.date(2012,1,1))
         filter.set('ind', 'a')
+
+    def test_default(self):
+        filter = DateFilter(Person.due_date, default_op='between', default_value1='1/31/2010',
+                            default_value2='12/31/2010')
+        filter.set(None, None)
+        self.assert_filter_query(filter, "WHERE persons.due_date BETWEEN '2010-01-31' AND '2010-12-31'")
 
 
 class TestDateTimeFilter(CheckFilterBase):
@@ -393,6 +409,12 @@ class TestDateTimeFilter(CheckFilterBase):
         filter.set('', '')
         assert filter.op is None
 
+    def test_default(self):
+        filter = DateFilter(Person.createdts, default_op='between', default_value1='1/31/2010',
+                            default_value2='12/31/2010')
+        filter.set(None, None)
+        self.assert_filter_query(filter, "WHERE persons.createdts BETWEEN '2010-01-31' AND '2010-12-31'")
+
 
 class StateFilter(OptionsFilterBase):
     options_from = (('in', 'IN'), ('ky', 'KY'))
@@ -495,3 +517,9 @@ class TestOptionsFilter(CheckFilterBase):
     @raises(TypeError, 'value_modifier must be the string "auto", have a "to_python" attribute, or be a callable')
     def test_modifier_wrong_type(self):
         filter = StateFilter(Person.state, value_modifier=1).new_instance()
+
+    def test_default(self):
+        filter = SortOrderFilter(Person.sortorder, default_op='is',
+                                 default_value1=['1', '2', '3', 'foo']).new_instance()
+        filter.set(None, None)
+        self.assert_filter_query(filter, "WHERE persons.sortorder IN (1, 2)")
