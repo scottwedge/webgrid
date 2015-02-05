@@ -3,10 +3,11 @@ from decimal import Decimal as D
 
 from blazeutils.testing import raises
 import formencode
+from nose.tools import eq_
 from .helpers import query_to_str
 
 from webgrid.filters import OptionsFilterBase, TextFilter, IntFilter, NumberFilter, DateFilter, \
-    DateTimeFilter
+    DateTimeFilter, FilterBase
 from webgrid_ta.model.entities import Person, db
 
 from .helpers import ModelBase
@@ -523,3 +524,29 @@ class TestOptionsFilter(CheckFilterBase):
                                  default_value1=['1', '2', '3', 'foo']).new_instance()
         filter.set(None, None)
         self.assert_filter_query(filter, "WHERE persons.sortorder IN (1, 2)")
+
+
+class TestIntrospect(CheckFilterBase):
+    def test_new_instance(self):
+        class TestFilter(FilterBase):
+            def __init__(self, a, b, *vargs, **kwargs):
+                super(TestFilter, self).__init__(a)
+                self.a = a
+                self.b = b
+                self.vargs = vargs
+                self.kwargs = kwargs
+
+        tf1 = TestFilter(Person.firstname, 'foo', 'bar', 'baz', x=1, y=2)
+        eq_(tf1.a, Person.firstname)
+        eq_(tf1.b, 'foo')
+        eq_(tf1.vargs, ('bar', 'baz'))
+        eq_(tf1.kwargs, {'x': 1, 'y': 2})
+
+        tf2 = tf1.new_instance()
+        eq_(tf2.a, Person.firstname)
+        eq_(tf2.b, 'foo')
+        eq_(tf2.vargs, ('bar', 'baz'))
+        eq_(tf2.kwargs, {'x': 1, 'y': 2})
+
+
+

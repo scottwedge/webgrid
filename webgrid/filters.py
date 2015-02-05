@@ -71,6 +71,24 @@ class FilterBase(object):
         self._op_keys = None
         self.error = False
 
+        # find the outermost call to a subclass's init method so we can store the exact arguments
+        # used to construct it
+        outermost = None
+        frame = inspect.currentframe()
+        # Can't use inspect.stack() here because when called from within a Jinja template,
+        # inspect.getframeinfo raises an exception
+        while frame:
+            if frame.f_code.co_name != '__init__' or \
+                    not isinstance(frame.f_locals.get('self'), FilterBase):
+                break
+            outermost = inspect.getargvalues(frame)
+            frame = frame.f_back
+
+        self._vargs = [outermost.locals[a] for a in outermost.args[1:]] + \
+            list(outermost.locals[outermost.varargs] if outermost.varargs else [])
+
+        self._kwargs = outermost.locals[outermost.keywords] if outermost.keywords else {}
+
     @property
     def is_active(self):
         return self.op is not None and not self.error
@@ -147,21 +165,8 @@ class FilterBase(object):
 
     def new_instance(self):
         cls = self.__class__
-        filter = cls(self.sa_col, default_op=self.default_op, default_value1=None,
-                     default_value2=None)
-
-        # try to be smart about which attributes should get copied to the
-        # new instance
-        for argname in inspect.getargspec(self.__init__).args:
-            if argname != 'self' and hasattr(self, argname):
-                setattr(filter, argname, getattr(self, argname))
-
-        # if we aren't smart enough, let the class define explicitly
-        # attributes that need to be copied over
-        for attr_name in self.init_attrs_for_instance:
-            setattr(filter, attr_name, getattr(self, attr_name))
-
-        return filter
+        print self._vargs, self._kwargs
+        return cls(*self._vargs, **self._kwargs)
 
 class _NoValue(object):
     pass
