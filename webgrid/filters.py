@@ -165,7 +165,6 @@ class FilterBase(object):
 
     def new_instance(self):
         cls = self.__class__
-        print self._vargs, self._kwargs
         return cls(*self._vargs, **self._kwargs)
 
 class _NoValue(object):
