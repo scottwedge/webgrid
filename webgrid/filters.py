@@ -103,6 +103,12 @@ class FilterBase(object):
             self._op_keys = [op.key for op in self.operators]
         return self._op_keys
 
+    def _default_value(self, value):
+        if callable(value):
+            return value()
+        return value
+
+
     def set(self, op, value1, value2=None):
         if not op:
             self.op = self.default_op
@@ -111,8 +117,8 @@ class FilterBase(object):
                 return
 
         if not op and self.using_default_op:
-            value1 = self.default_value1
-            value2 = self.default_value2
+            value1 = self._default_value(self.default_value1)
+            value2 = self._default_value(self.default_value2)
 
 
         # set values used in display first, since processing validation may
@@ -248,7 +254,7 @@ class OptionsFilterBase(FilterBase):
         self.using_default_op = (self.default_op is not None)
 
         if self.using_default_op and op is None and self.default_value1 is not None:
-            values = tolist(self.default_value1)
+            values = tolist(self._default_value(self.default_value1))
 
         self.value1 = []
         if values is not None:

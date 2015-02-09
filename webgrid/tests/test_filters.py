@@ -67,6 +67,13 @@ class TestTextFilter(CheckFilterBase):
         query = tf.apply(db.session.query(Person.id))
         self.assert_in_query(query, "WHERE persons.firstname LIKE '%foo%'")
 
+    def test_default_callable(self):
+        def_val = lambda: 'bar'
+        tf = TextFilter(Person.firstname, default_op='contains', default_value1=def_val)
+        tf.set(None, None)
+        query = tf.apply(db.session.query(Person.id))
+        self.assert_in_query(query, "WHERE persons.firstname LIKE '%bar%'")
+
 class TestNumberFilters(CheckFilterBase):
     """
         Testing IntFilter mostly because the other classes inherit from the same base,
@@ -525,6 +532,13 @@ class TestOptionsFilter(CheckFilterBase):
         filter.set(None, None)
         self.assert_filter_query(filter, "WHERE persons.sortorder IN (1, 2)")
 
+    def test_default_callable(self):
+        def_val = lambda: map(str, range(1, 4))
+        filter = SortOrderFilter(Person.sortorder, default_op='is',
+                                 default_value1=def_val).new_instance()
+        filter.set(None, None)
+        self.assert_filter_query(filter, "WHERE persons.sortorder IN (1, 2)")
+
 
 class TestIntrospect(CheckFilterBase):
     def test_new_instance(self):
@@ -548,5 +562,4 @@ class TestIntrospect(CheckFilterBase):
         eq_(tf2.vargs, ('bar', 'baz'))
         eq_(tf2.kwargs, {'x': 1, 'y': 2})
 
-
-
+        assert tf1 is not tf2
