@@ -1,11 +1,11 @@
 Changelog
 ---------
 
-0.1.13 released <in development>
+0.1.13 released 2015-02-12
 ==========================
 
- - ?
-
+ - attempt to use column label for subtotaling if no SA expression is provided
+ - allow callers to specify default arguments to filters
 
 0.1.12 released 2014-11-18
 ==========================
