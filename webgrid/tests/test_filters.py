@@ -228,6 +228,11 @@ class TestDateFilter(CheckFilterBase):
         filter.set('ind', '10')
         self.assert_filter_query(filter, "WHERE persons.due_date = '2012-01-11'")
 
+    def test_in_days_empty_value2(self):
+        filter = DateFilter(Person.due_date, _now=dt.date(2012,1,1))
+        filter.set('ind', '10', '')
+        self.assert_filter_query(filter, "WHERE persons.due_date = '2012-01-11'")
+
     def test_today(self):
         filter = DateFilter(Person.due_date, _now=dt.date(2012,1,1))
         filter.set('today', None)

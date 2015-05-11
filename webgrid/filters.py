@@ -444,6 +444,8 @@ class DateFilter(FilterBase):
             return None
 
         if self.op in self.days_operators:
+            if is_value2:
+                return None
             return feval.Int(not_empty=True).to_python(value)
 
         try:
