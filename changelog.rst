@@ -1,10 +1,10 @@
 Changelog
 ---------
 
-0.1.14 released <in development>
+0.1.14 released 2015-05-11
 ==========================
 
- - ?
+ - fix problem where empty strings passed to set as a non-required value 2 causes validation error
 
 0.1.13 released 2015-02-12
 ==========================
