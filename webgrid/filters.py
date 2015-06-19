@@ -10,6 +10,7 @@ from dateutil.relativedelta import relativedelta, SU
 import formencode
 import formencode.validators as feval
 from sqlalchemy.sql import or_, and_
+import sqlalchemy as sa
 
 class UnrecognizedOperator(ValueError):
     pass
@@ -573,5 +574,52 @@ class DateTimeFilter(DateFilter):
             else:
                 return query.filter(~between_clause)
 
-
         return DateFilter.apply(self, query)
+
+
+class TimeFilter(FilterBase):
+    operators = (ops.eq, ops.not_eq, ops.less_than_equal, ops.greater_than_equal, ops.between,
+                 ops.not_between, ops.empty, ops.not_empty)
+    input_types = 'input', 'input2'
+
+    time_format = '%I:%M %p'
+
+    def apply(self, query):
+        if self.op == self.default_op and self.value1 is None:
+            return query
+
+        if self.op in ('between', '!between'):
+            left = min(self.value1, self.value2)
+            right = max(self.value1, self.value2)
+            cond = self.sa_col.between(sa.cast(left, sa.Time), sa.cast(right, sa.Time))
+            if self.op == '!between':
+                cond = ~cond
+            return query.filter(cond)
+
+        # Casting this because some SQLAlchemy dialects (MSSQL) convert the value to datetime
+        # before binding.
+        val = sa.cast(self.value1, sa.Time)
+
+        if self.op == 'eq':
+            query = query.filter(self.sa_col == val)
+        elif self.op == '!eq':
+            query = query.filter(self.sa_col != val)
+        elif self.op == 'lte':
+            query = query.filter(self.sa_col <= val)
+        elif self.op == 'gte':
+            query = query.filter(self.sa_col >= val)
+        else:
+            query = super(TimeFilter, self).apply(query)
+        return query
+
+    def process(self, value, is_value2):
+        if value in (None, ''):
+            return None
+
+        if self.op == self.default_op and not value:
+            return None
+
+        try:
+            return dt.datetime.strptime(value, self.time_format).time()
+        except ValueError:
+            raise formencode.Invalid('invalid time', value, self)

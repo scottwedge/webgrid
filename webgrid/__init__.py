@@ -347,6 +347,12 @@ class DateTimeColumn(DateColumnBase):
     html_format='%m/%d/%Y %I:%M %p'
     xls_num_format = 'mm/dd/yyyy hh:mm am/pm'
 
+
+class TimeColumn(DateColumnBase):
+    html_format = '%I:%M %p'
+    xls_num_format = 'hh:mm am/pm'
+
+
 class NumericColumn(Column):
     xls_fmt_general = '#,##0{dec_places};{neg_prefix}-#,##0{dec_places}'
     xls_fmt_accounting = '_($* #,##0{dec_places}_);{neg_prefix}_($* (#,##0{dec_places});_($* "-"??_);_(@_)'

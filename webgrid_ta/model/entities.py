@@ -45,6 +45,7 @@ class Person(db.Model, DefaultMixin):
     numericcol = sa.Column(sa.Numeric)
     boolcol = sa.Column(sa.Boolean)
     due_date = sa.Column(sa.Date)
+    start_time = sa.Column(sa.Time)
     legacycol1 = sa.Column('LegacyColumn1', sa.String(50), key='legacycolumn')
     legacycol2 = sa.Column('LegacyColumn2', sa.String(50))
 

@@ -7,7 +7,7 @@ from nose.tools import eq_
 from .helpers import query_to_str
 
 from webgrid.filters import OptionsFilterBase, TextFilter, IntFilter, NumberFilter, DateFilter, \
-    DateTimeFilter, FilterBase
+    DateTimeFilter, FilterBase, TimeFilter
 from webgrid_ta.model.entities import Person, db
 
 from .helpers import ModelBase
@@ -427,6 +427,48 @@ class TestDateTimeFilter(CheckFilterBase):
                             default_value2='12/31/2010')
         filter.set(None, None)
         self.assert_filter_query(filter, "WHERE persons.createdts BETWEEN '2010-01-31' AND '2010-12-31'")
+
+
+class TestTimeFilter(CheckFilterBase):
+    def test_eq(self):
+        filter = TimeFilter(Person.start_time)
+        filter.set('eq', '11:30 am')
+        self.assert_filter_query(filter, "WHERE persons.start_time = CAST('11:30:00.000000' AS TIME)")
+
+    def test_not_eq(self):
+        filter = TimeFilter(Person.start_time)
+        filter.set('!eq', '11:30 pm')
+        self.assert_filter_query(filter, "WHERE persons.start_time != CAST('23:30:00.000000' AS TIME)")
+
+    def test_lte(self):
+        filter = TimeFilter(Person.start_time)
+        filter.set('lte', '9:00 am')
+        self.assert_filter_query(filter, "WHERE persons.start_time <= CAST('09:00:00.000000' AS TIME)")
+
+    def test_gte(self):
+        filter = TimeFilter(Person.start_time)
+        filter.set('gte', '10:15 am')
+        self.assert_filter_query(filter, "WHERE persons.start_time >= CAST('10:15:00.000000' AS TIME)")
+
+    def test_between(self):
+        filter = TimeFilter(Person.start_time)
+        filter.set('between', '9:00 am', '5:00 pm')
+        self.assert_filter_query(filter, "WHERE persons.start_time BETWEEN CAST('09:00:00.000000' AS TIME) AND CAST('17:00:00.000000' AS TIME)")
+
+    def test_not_between(self):
+        filter = TimeFilter(Person.start_time)
+        filter.set('!between', '9:00 am', '5:00 pm')
+        self.assert_filter_query(filter, "WHERE persons.start_time NOT BETWEEN CAST('09:00:00.000000' AS TIME) AND CAST('17:00:00.000000' AS TIME)")
+
+    def test_empty(self):
+        filter = TimeFilter(Person.start_time)
+        filter.set('empty', None)
+        self.assert_filter_query(filter, "WHERE persons.start_time IS NULL")
+
+    def test_not_empty(self):
+        filter = TimeFilter(Person.start_time)
+        filter.set('!empty', None)
+        self.assert_filter_query(filter, "WHERE persons.start_time IS NOT NULL")
 
 
 class StateFilter(OptionsFilterBase):
