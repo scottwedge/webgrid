@@ -1,10 +1,10 @@
 Changelog
 ---------
 
-0.1.15 released <in development>
+0.1.15 released 2015-07-02
 ==========================
 
- - ?
+ - add time column and filter
 
 0.1.14 released 2015-05-11
 ==========================
