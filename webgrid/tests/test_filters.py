@@ -203,6 +203,11 @@ class TestDateFilter(CheckFilterBase):
         filter.set('da', '10')
         self.assert_filter_query(filter, "WHERE persons.due_date = '2011-12-22'")
 
+    @raises(formencode.Invalid, 'date filter given is out of range')
+    def test_days_ago_overflow(self):
+        filter = DateFilter(Person.due_date, _now=dt.date(2012,1,1))
+        filter.set('da', '10142015')
+
     def test_less_than_days_ago(self):
         filter = DateFilter(Person.due_date, _now=dt.date(2012,1,1))
         filter.set('ltda', '10')
@@ -227,6 +232,11 @@ class TestDateFilter(CheckFilterBase):
         filter = DateFilter(Person.due_date, _now=dt.date(2012,1,1))
         filter.set('ind', '10')
         self.assert_filter_query(filter, "WHERE persons.due_date = '2012-01-11'")
+
+    @raises(formencode.Invalid, 'date filter given is out of range')
+    def test_in_days_overflow(self):
+        filter = DateFilter(Person.due_date, _now=dt.date(2012,1,1))
+        filter.set('ind', '10000000')
 
     def test_in_days_empty_value2(self):
         filter = DateFilter(Person.due_date, _now=dt.date(2012,1,1))
@@ -359,6 +369,11 @@ class TestDateTimeFilter(CheckFilterBase):
         filter.set('da', '10')
         self.assert_filter_query(filter, "WHERE persons.createdts BETWEEN '2011-12-22 00:00:00.000000' AND '2011-12-22 23:59:59.999999'")
 
+    @raises(formencode.Invalid, 'date filter given is out of range')
+    def test_days_ago_overflow(self):
+        filter = DateTimeFilter(Person.due_date, _now=dt.date(2012,1,1))
+        filter.set('da', '10000000')
+
     def test_less_than_days_ago(self):
         filter = DateTimeFilter(Person.createdts, _now=dt.date(2012,1,1))
         filter.set('ltda', '10')
@@ -383,6 +398,11 @@ class TestDateTimeFilter(CheckFilterBase):
         filter = DateTimeFilter(Person.createdts, _now=dt.datetime(2012,1,1,12,35))
         filter.set('ind', '10')
         self.assert_filter_query(filter, "WHERE persons.createdts BETWEEN '2012-01-11 00:00:00.000000' AND '2012-01-11 23:59:59.999999'")
+
+    @raises(formencode.Invalid, 'date filter given is out of range')
+    def test_in_days_overflow(self):
+        filter = DateTimeFilter(Person.due_date, _now=dt.date(2012,1,1))
+        filter.set('ind', '10000000')
 
     def test_today(self):
         filter = DateTimeFilter(Person.createdts, _now=dt.datetime(2012,1,1,12,35))

@@ -1,10 +1,10 @@
 Changelog
 ---------
 
-0.1.16 released <in development>
+0.1.16 released 2015-10-15
 ==========================
 
- - ?
+ - fixed problem with possible date/datetime filter overflows
 
 0.1.15 released 2015-07-02
 ==========================

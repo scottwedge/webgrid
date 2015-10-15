@@ -447,7 +447,21 @@ class DateFilter(FilterBase):
         if self.op in self.days_operators:
             if is_value2:
                 return None
-            return feval.Int(not_empty=True).to_python(value)
+            filter_value = feval.Int(not_empty=True).to_python(value)
+
+            if self.op in ('da', 'ltda', 'mtda'):
+                try:
+                    self._get_today() - dt.timedelta(days=filter_value)
+                except OverflowError:
+                    raise formencode.Invalid('date filter given is out of range', value, self)
+
+            if self.op in ('ind', 'iltd', 'imtd'):
+                try:
+                    self._get_today() + dt.timedelta(days=filter_value)
+                except OverflowError:
+                    raise formencode.Invalid('date filter given is out of range', value, self)
+
+            return filter_value
 
         try:
             return ensure_date(parse(value))
@@ -471,7 +485,21 @@ class DateTimeFilter(DateFilter):
             return None
 
         if self.op in self.days_operators:
-            return feval.Int(not_empty=True).to_python(value)
+            filter_value = feval.Int(not_empty=True).to_python(value)
+
+            if self.op in ('da', 'ltda', 'mtda'):
+                try:
+                    self._get_today() - dt.timedelta(days=filter_value)
+                except OverflowError:
+                    raise formencode.Invalid('date filter given is out of range', value, self)
+
+            if self.op in ('ind', 'iltd', 'imtd'):
+                try:
+                    self._get_today() + dt.timedelta(days=filter_value)
+                except OverflowError:
+                    raise formencode.Invalid('date filter given is out of range', value, self)
+
+            return filter_value
 
         try:
             dt_value = parse(value)
