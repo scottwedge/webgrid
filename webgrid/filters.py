@@ -43,6 +43,10 @@ class ops(object):
     in_less_than_days = Operator('iltd', 'in less than days', 'input', 'days')
     in_more_than_days = Operator('imtd', 'in more than days', 'input', 'days')
     in_days = Operator('ind', 'in days', 'input', 'days')
+    this_month = Operator('thismonth', 'this month', None)
+    last_month = Operator('lastmonth', 'last month', None)
+    select_month = Operator('selmonth', 'select month', 'select+input')
+    this_year = Operator('thisyear', 'this year', None)
 
 
 class FilterBase(object):
@@ -364,17 +368,144 @@ class NumberFilter(NumberFilterBase):
             return None
         return D(value)
 
-class DateFilter(FilterBase):
+
+class _DateMixin(object):
+    options_from = [
+        (1, '01-Jan'), (2, '02-Feb'), (3, '03-Mar'), (4, '04-Apr'),
+        (5, '05-May'), (6, '06-Jun'), (7, '07-Jul'), (8, '08-Aug'),
+        (9, '09-Sep'), (10, '10-Oct'), (11, '11-Nov'), (12, '12-Dec'),
+    ]
+
+    @property
+    def options_seq(self):
+        _options_seq = self.options_from
+        if self.default_op:
+            _options_seq = [(-1, '-- All --')] + _options_seq
+        return _options_seq
+
+    def format_display_vals(self):
+        if isinstance(self.value1, dt.date) and self.op in (
+            ops.eq.key,
+            ops.not_eq.key,
+            ops.less_than_equal.key,
+            ops.greater_than_equal.key,
+            ops.between.key,
+            ops.not_between.key
+        ):
+            self.value1_set_with = self.value1.strftime('%m/%d/%Y')
+        if isinstance(self.value2, dt.date) and self.op in (
+            ops.between.key,
+            ops.not_between.key
+        ):
+            self.value2_set_with = self.value2.strftime('%m/%d/%Y')
+
+    """
+        String description of the filter operation and values
+        - Useful for Excel reports
+    """
+    @property
+    def description(self):
+        today = self._get_today()
+        last_day = first_day = None
+        prefix = ''
+
+        if self.error:
+            return 'invalid'
+
+        if not self.op or (
+            self.default_op == self.op and (
+                self.value2 is None and self.value1 is None
+            )
+        ):
+            return 'all'
+
+        # ops with both dates populated
+        if self.op == 'thismonth':
+            last_day = today + relativedelta(day=1, months=+1, days=-1)
+            first_day = today + relativedelta(day=1)
+        elif self.op == 'lastmonth':
+            last_day = today + relativedelta(day=1, days=-1)
+            first_day = today + relativedelta(day=1, months=-1)
+        elif self.op == 'selmonth':
+            if not (
+                isinstance(self.value1, int) and isinstance(self.value2, int)
+            ):
+                return 'All'
+            if self.value1 < 1 or self.value1 > 12:
+                return self.value2
+            return dt.date(self.value2, self.value1, 1).strftime('%b %Y')
+        elif self.op == 'thisyear':
+            last_day = dt.date(today.year, 12, 31)
+            first_day = dt.date(today.year, 1, 1)
+        elif self.op in ('between', '!between'):
+            if self.value1 <= self.value2:
+                first_day = self.value1
+                last_day = self.value2
+            else:
+                first_day = self.value2
+                last_day = self.value1
+            if self.op == '!between':
+                prefix = 'excluding '
+        elif self.op == 'ltda':
+            first_day = today - dt.timedelta(days=self.value1)
+            last_day = today
+        elif self.op == 'iltd':
+            last_day = today + dt.timedelta(days=self.value1)
+            first_day = today
+        elif self.op == 'thisweek':
+            first_day = today - relativedelta(weekday=SU(-1))
+            last_day = today + relativedelta(weekday=calendar.SATURDAY)
+
+        if last_day and first_day:
+            return '{0}{1} - {2}'.format(
+                prefix,
+                first_day.strftime('%m/%d/%Y'),
+                last_day.strftime('%m/%d/%Y')
+            )
+
+        # ops with single date populated
+        if self.op in ('da', 'mtda'):
+            first_day = today - dt.timedelta(days=self.value1)
+            if self.op == 'mtda':
+                prefix = 'before '
+        elif self.op in ('ind', 'imtd'):
+            first_day = today + dt.timedelta(days=self.value1)
+            if self.op == 'imtd':
+                prefix = 'after '
+        elif self.op == 'today':
+            first_day = today
+        elif self.op == 'empty':
+            return 'date not specified'
+        elif self.op == '!empty':
+            return 'any date'
+        elif self.op in ('eq', '!eq', 'lte', 'gte'):
+            first_day = self.value1
+            if self.op == '!eq':
+                prefix = 'excluding '
+            elif self.op == 'lte':
+                prefix = 'up to '
+            elif self.op == 'gte':
+                prefix = 'beginning '
+        return '{0}{1}'.format(
+            prefix,
+            first_day.strftime('%m/%d/%Y')
+        )
+
+
+class DateFilter(FilterBase, _DateMixin):
     operators =  (ops.eq, ops.not_eq, ops.less_than_equal,
                     ops.greater_than_equal, ops.between, ops.not_between,
                     ops.days_ago, ops.less_than_days_ago, ops.more_than_days_ago,
                     ops.today, ops.this_week, ops.in_days, ops.in_less_than_days,
-                    ops.in_more_than_days, ops.empty, ops.not_empty)
+                    ops.in_more_than_days, ops.empty, ops.not_empty, ops.this_month,
+                    ops.last_month, ops.select_month, ops.this_year)
     days_operators = 'da', 'ltda', 'mtda', 'iltd', 'imtd', 'ind'
-    input_types = 'input', 'input2'
+    input_types = 'input', 'select', 'input2'
 
     def __init__(self, sa_col, _now=None, default_op=None, default_value1=None,
                  default_value2=None):
+        self.first_day = None
+        self.last_day = None
         FilterBase.__init__(self, sa_col, default_op=default_op, default_value1=default_value1,
                             default_value2=default_value2)
         # attributes from static instance
@@ -390,6 +521,60 @@ class DateFilter(FilterBase):
     def _get_today(self):
         # this filter is date-only, so our "now" is a date without time
         return ensure_date(self._get_now())
+
+    def set(self, op, value1, value2=None):
+        super(DateFilter, self).set(op, value1, value2)
+        self.format_display_vals()
+
+        # store first/last day for customized usage
+        today = self._get_today()
+        first_day = last_day = None
+        if self.op == 'thismonth':
+            last_day = today + relativedelta(day=1, months=+1, days=-1)
+            first_day = today + relativedelta(day=1)
+        elif self.op == 'lastmonth':
+            last_day = today + relativedelta(day=1, days=-1)
+            first_day = today + relativedelta(day=1, months=-1)
+        elif self.op == 'selmonth':
+            if not self.value2:
+                return
+            month = self.value1 if self.value1 > 0 else 1
+            first_day = dt.date(self.value2, month, 1)
+            last_day = first_day + relativedelta(day=1, months=+1, days=-1)
+            if self.value1 == -1:
+                last_day = dt.date(self.value2, 12, 31)
+        elif self.op == 'thisyear':
+            last_day = dt.date(today.year, 12, 31)
+            first_day = dt.date(today.year, 1, 1)
+        elif self.op in ('between', '!between'):
+            if self.value1 <= self.value2:
+                first_day = self.value1
+                last_day = self.value2
+            else:
+                first_day = self.value2
+                last_day = self.value1
+        elif self.op in ('da', 'ltda', 'mtda'):
+            target_date = today - dt.timedelta(days=self.value1)
+            if self.op == 'ltda':
+                first_day = target_date
+                last_day = today
+            elif self.op == 'mtda':
+                first_day = None
+                last_day = target_date
+            elif self.op == 'da':
+                first_day = last_day = target_date
+        elif self.op == 'today':
+            first_day = last_day = today
+        elif self.op == 'thisweek':
+            sunday = today - relativedelta(weekday=SU(-1))
+            saturday = today + relativedelta(weekday=calendar.SATURDAY)
+            first_day = sunday
+            last_day = saturday
+        elif self.op == 'eq':
+            first_day = last_day = self.value1
+
+        self.first_day = first_day
+        self.last_day = last_day
 
     def apply(self, query):
         today = self._get_today()
@@ -441,6 +626,15 @@ class DateFilter(FilterBase):
             saturday = today + relativedelta(weekday=calendar.SATURDAY)
             return query.filter(self.sa_col.between(sunday, saturday))
 
+        if self.op == 'selmonth' and not self.value2:
+            return query
+
+        if self.op in ('thismonth', 'lastmonth', 'selmonth', 'thisyear',):
+            return query.filter(self.sa_col.between(
+                self.first_day,
+                self.last_day
+            ))
+
         return FilterBase.apply(self, query)
 
     def process(self, value, is_value2):
@@ -449,6 +643,11 @@ class DateFilter(FilterBase):
 
         if self.op == self.default_op and not value:
             return None
+
+        if self.op == 'selmonth':
+            if is_value2:
+                return feval.Int(not_empty=False, min=1900, max=9999).to_python(value)
+            return feval.Int(not_empty=False).to_python(value)
 
         if self.op in self.days_operators:
             if is_value2:
@@ -470,7 +669,12 @@ class DateFilter(FilterBase):
             return filter_value
 
         try:
-            return ensure_date(parse(value))
+            d = ensure_date(parse(value))
+
+            if isinstance(d, (dt.date, dt.datetime)) and d.year < 1900:
+                return feval.Int(min=1900).to_python(d.year)
+
+            return d
         except ValueError:
             raise formencode.Invalid('invalid date', value, self)
         except TypeError, e:
@@ -482,6 +686,21 @@ class DateFilter(FilterBase):
 
 
 class DateTimeFilter(DateFilter):
+    def format_display_vals(self):
+        if isinstance(self.value1, dt.datetime) and self.op in (
+            ops.eq.key,
+            ops.not_eq.key,
+            ops.less_than_equal.key,
+            ops.greater_than_equal.key,
+            ops.between.key,
+            ops.not_between.key
+        ):
+            self.value1_set_with = self.value1.strftime('%m/%d/%Y %I:%M %p')
+        if isinstance(self.value2, dt.datetime) and self.op in (
+            ops.between.key,
+            ops.not_between.key
+        ):
+            self.value2_set_with = self.value2.strftime('%m/%d/%Y %I:%M %p')
 
     def process(self, value, is_value2):
         if value is None:
@@ -489,6 +708,11 @@ class DateTimeFilter(DateFilter):
 
         if self.op == self.default_op and not value:
             return None
+
+        if self.op == 'selmonth':
+            if is_value2:
+                return feval.Int(not_empty=False, min=1900, max=9999).to_python(value)
+            return feval.Int(not_empty=False).to_python(value)
 
         if self.op in self.days_operators:
             filter_value = feval.Int(not_empty=True).to_python(value)
@@ -517,7 +741,6 @@ class DateTimeFilter(DateFilter):
             if "'NoneType' object is not iterable" not in str(e):
                 raise
             raise formencode.Invalid('invalid date (parsing exception)', value, self)
-
 
         if is_value2:
             self._has_date_only2 = self._has_date_only(dt_value, value)
@@ -607,6 +830,24 @@ class DateTimeFilter(DateFilter):
                 return query.filter(between_clause)
             else:
                 return query.filter(~between_clause)
+
+        if self.op == 'thismonth':
+            last_day = today + relativedelta(day=1, months=+1, microseconds=-1)
+            first_day = today + relativedelta(day=1)
+            return query.filter(self.sa_col.between(first_day, last_day))
+
+        if self.op == 'lastmonth':
+            last_day = today + relativedelta(day=1, microseconds=-1)
+            first_day = today + relativedelta(day=1, months=-1)
+            return query.filter(self.sa_col.between(first_day, last_day))
+
+        if self.op == 'selmonth' and not self.value2:
+            return query
+
+        if self.op == 'selmonth':
+            first_day = self.first_day
+            last_day = self.last_day + relativedelta(days=1, microseconds=-1)
+            return query.filter(self.sa_col.between(first_day, last_day))
 
         return DateFilter.apply(self, query)
 

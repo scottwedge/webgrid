@@ -312,10 +312,10 @@ class TestHtmlRenderer(object):
         assert '<input id="firstname_input1" name="v1(firstname)" type="text" value="foo" />' in filter_html, filter_html
 
         filter_html = g.html.filtering_col_inputs1(g.key_column_map['createdts'])
-        assert '<input id="createdts_input1" name="v1(createdts)" type="text" value="2/15/12" />' in filter_html, filter_html
+        assert '<input id="createdts_input1" name="v1(createdts)" type="text" value="02/15/2012 12:00 AM" />' in filter_html, filter_html
 
         filter_html = g.html.filtering_col_inputs2(g.key_column_map['createdts'])
-        assert '<input id="createdts_input2" name="v2(createdts)" type="text" value="2012-02-16" />' in filter_html, filter_html
+        assert '<input id="createdts_input2" name="v2(createdts)" type="text" value="02/16/2012 12:00 AM" />' in filter_html, filter_html
 
     @inrequest('/thepage?op(firstname)=foobar&v1(firstname)=baz')
     def test_filtering_invalid_operator(self):

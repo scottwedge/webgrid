@@ -1,11 +1,12 @@
 Changelog
 ---------
 
-0.1.17 released <in development>
+0.1.17 released 2015-12-04
 ==========================
 
  - add YesNoFilter and OptionsIntFilterBase helper
  - fix compatibility with SQLAlchemy 1.0.9 for tests to pass
+ - add additional DateFilter operators
 
 0.1.16 released 2015-10-15
 ==========================
