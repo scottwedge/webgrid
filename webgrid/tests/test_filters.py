@@ -7,7 +7,7 @@ from nose.tools import eq_
 from .helpers import query_to_str
 
 from webgrid.filters import OptionsFilterBase, TextFilter, IntFilter, NumberFilter, DateFilter, \
-    DateTimeFilter, FilterBase, TimeFilter
+    DateTimeFilter, FilterBase, TimeFilter, YesNoFilter
 from webgrid_ta.model.entities import Person, db
 
 from .helpers import ModelBase
@@ -18,6 +18,10 @@ class CheckFilterBase(ModelBase):
     def assert_in_query(self, query, test_for):
         query_str = query_to_str(query)
         assert test_for in query_str, '{} not found in {}'.format(test_for, query_str)
+
+    def assert_not_in_query(self, query, test_for):
+        query_str = query_to_str(query)
+        assert test_for not in query_str, '{} found in {}'.format(test_for, query_str)
 
     def assert_filter_query(self, filter, test_for):
         query = filter.apply(db.session.query(Person.id))
@@ -630,3 +634,23 @@ class TestIntrospect(CheckFilterBase):
         eq_(tf2.kwargs, {'x': 1, 'y': 2})
 
         assert tf1 is not tf2
+
+
+class TestYesNoFilter(CheckFilterBase):
+    def test_y(self):
+        filterobj = YesNoFilter(Person.boolcol)
+        filterobj.set('y', None)
+        query = filterobj.apply(db.session.query(Person.boolcol))
+        self.assert_in_query(query, "WHERE persons.boolcol = 1")
+
+    def test_n(self):
+        filterobj = YesNoFilter(Person.boolcol)
+        filterobj.set('n', None)
+        query = filterobj.apply(db.session.query(Person.boolcol))
+        self.assert_in_query(query, "WHERE persons.boolcol = 0")
+
+    def test_a(self):
+        filterobj = YesNoFilter(Person.boolcol)
+        filterobj.set('a', None)
+        query = filterobj.apply(db.session.query(Person.boolcol))
+        self.assert_not_in_query(query, "WHERE persons.boolcol")

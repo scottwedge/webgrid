@@ -305,6 +305,12 @@ class OptionsFilterBase(FilterBase):
                 return query
         return FilterBase.apply(self, query)
 
+class OptionsIntFilterBase(OptionsFilterBase):
+    def __init__(self, sa_col, value_modifier=feval.Int, default_op=None, default_value1=None,
+                 default_value2=None):
+        OptionsFilterBase.__init__(self, sa_col, value_modifier, default_op, default_value1,
+                                   default_value2)
+
 class TextFilter(FilterBase):
     operators =  (ops.eq, ops.not_eq, ops.contains, ops.not_contains,
                     ops.empty, ops.not_empty)
@@ -651,3 +657,20 @@ class TimeFilter(FilterBase):
             return dt.datetime.strptime(value, self.time_format).time()
         except ValueError:
             raise formencode.Invalid('invalid time', value, self)
+
+
+class YesNoFilter(FilterBase):
+    operators = (
+        Operator('a', 'all', None),
+        Operator('y', 'yes', None),
+        Operator('n', 'no', None),
+    )
+
+    def apply(self, query):
+        if self.op == 'a':
+            return query
+        if self.op == 'y':
+            return query.filter(self.sa_col == True)
+        if self.op == 'n':
+            return query.filter(self.sa_col == False)
+        return FilterBase.apply(self, query)

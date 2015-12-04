@@ -4,7 +4,7 @@ Changelog
 0.1.17 released <in development>
 ==========================
 
- - ?
+ - add YesNoFilter and OptionsIntFilterBase helper
 
 0.1.16 released 2015-10-15
 ==========================
