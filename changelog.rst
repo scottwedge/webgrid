@@ -5,6 +5,7 @@ Changelog
 ==========================
 
  - add YesNoFilter and OptionsIntFilterBase helper
+ - fix compatibility with SQLAlchemy 1.0.9 for tests to pass
 
 0.1.16 released 2015-10-15
 ==========================
