@@ -357,6 +357,15 @@ class TestDateFilter(CheckFilterBase):
         )
         eq_(filter.description, '01/01/2012 - 12/31/2012')
 
+    def test_this_year_default(self):
+        filter = DateFilter(Person.due_date, _now=dt.date(2012, 2, 4), default_op='thisyear')
+        filter.set(None, None)
+        self.assert_filter_query(
+            filter,
+            "WHERE persons.due_date BETWEEN '2012-01-01' AND '2012-12-31'"
+        )
+        eq_(filter.description, '01/01/2012 - 12/31/2012')
+
     def test_selmonth(self):
         filter = DateFilter(Person.due_date, _now=dt.date(2012, 2, 4))
         filter.set('selmonth', 1, 2012)
@@ -613,7 +622,16 @@ class TestDateTimeFilter(CheckFilterBase):
         filter.set('thisyear', None)
         self.assert_filter_query(
             filter,
-            "WHERE persons.createdts BETWEEN '2012-01-01' AND '2012-12-31'"
+            "WHERE persons.createdts BETWEEN '2012-01-01' AND '2012-12-31 23:59:59.999999'"
+        )
+        eq_(filter.description, '01/01/2012 - 12/31/2012')
+
+    def test_this_year_default(self):
+        filter = DateTimeFilter(Person.createdts, _now=dt.date(2012, 2, 4), default_op='thisyear')
+        filter.set(None, None)
+        self.assert_filter_query(
+            filter,
+            "WHERE persons.createdts BETWEEN '2012-01-01' AND '2012-12-31 23:59:59.999999'"
         )
         eq_(filter.description, '01/01/2012 - 12/31/2012')
 

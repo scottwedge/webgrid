@@ -412,21 +412,33 @@ class _DateMixin(object):
         if self.error:
             return 'invalid'
 
-        if not self.op or (
-            self.default_op == self.op and (
-                self.value2 is None and self.value1 is None
-            )
-        ):
-            return 'all'
-
-        # ops with both dates populated
+        # these filters can be set as default ops without input values, so don't ignore them
         if self.op == 'thismonth':
             last_day = today + relativedelta(day=1, months=+1, days=-1)
             first_day = today + relativedelta(day=1)
         elif self.op == 'lastmonth':
             last_day = today + relativedelta(day=1, days=-1)
             first_day = today + relativedelta(day=1, months=-1)
-        elif self.op == 'selmonth':
+        elif self.op == 'thisyear':
+            last_day = dt.date(today.year, 12, 31)
+            first_day = dt.date(today.year, 1, 1)
+        elif self.op == 'thisweek':
+            first_day = today - relativedelta(weekday=SU(-1))
+            last_day = today + relativedelta(weekday=calendar.SATURDAY)
+        elif self.op == 'today':
+            first_day = today
+
+        if not first_day and (
+            not self.op or (
+                self.default_op == self.op and (
+                    self.value2 is None and self.value1 is None
+                )
+            )
+        ):
+            return 'all'
+
+        # ops with both dates populated
+        if self.op == 'selmonth':
             if not (
                 isinstance(self.value1, int) and isinstance(self.value2, int)
             ):
@@ -434,9 +446,6 @@ class _DateMixin(object):
             if self.value1 < 1 or self.value1 > 12:
                 return self.value2
             return dt.date(self.value2, self.value1, 1).strftime('%b %Y')
-        elif self.op == 'thisyear':
-            last_day = dt.date(today.year, 12, 31)
-            first_day = dt.date(today.year, 1, 1)
         elif self.op in ('between', '!between'):
             if self.value1 <= self.value2:
                 first_day = self.value1
@@ -452,9 +461,6 @@ class _DateMixin(object):
         elif self.op == 'iltd':
             last_day = today + dt.timedelta(days=self.value1)
             first_day = today
-        elif self.op == 'thisweek':
-            first_day = today - relativedelta(weekday=SU(-1))
-            last_day = today + relativedelta(weekday=calendar.SATURDAY)
 
         if last_day and first_day:
             return '{0}{1} - {2}'.format(
@@ -472,8 +478,6 @@ class _DateMixin(object):
             first_day = today + dt.timedelta(days=self.value1)
             if self.op == 'imtd':
                 prefix = 'after '
-        elif self.op == 'today':
-            first_day = today
         elif self.op == 'empty':
             return 'date not specified'
         elif self.op == '!empty':
@@ -579,6 +583,27 @@ class DateFilter(FilterBase, _DateMixin):
     def apply(self, query):
         today = self._get_today()
 
+        if self.op == 'today':
+            return query.filter(self.sa_col == today)
+
+        if self.op == 'thisweek':
+            sunday = today - relativedelta(weekday=SU(-1))
+            saturday = today + relativedelta(weekday=calendar.SATURDAY)
+            return query.filter(self.sa_col.between(sunday, saturday))
+
+        if self.op == 'selmonth' and not (self.value1 and self.value2):
+            return query
+
+        if self.op in ('thismonth', 'lastmonth', 'selmonth', 'thisyear',):
+            return query.filter(self.sa_col.between(
+                self.first_day,
+                self.last_day
+            ))
+
+        # filters above are handled specifically before this check because they do not require any
+        #   input values (or selmonth, which is grouped and handled specially). Filters below this
+        #   need at least one value to proceed, and if a default value is displayed but not
+        #   populated, we need to ignore it
         if self.op == self.default_op and self.value1 is None:
             return query
 
@@ -617,23 +642,6 @@ class DateFilter(FilterBase, _DateMixin):
                 return query.filter(self.sa_col > target_date)
             # op == 'ind'
             return query.filter(self.sa_col == target_date)
-
-        if self.op == 'today':
-            return query.filter(self.sa_col == today)
-
-        if self.op == 'thisweek':
-            sunday = today - relativedelta(weekday=SU(-1))
-            saturday = today + relativedelta(weekday=calendar.SATURDAY)
-            return query.filter(self.sa_col.between(sunday, saturday))
-
-        if self.op == 'selmonth' and not self.value2:
-            return query
-
-        if self.op in ('thismonth', 'lastmonth', 'selmonth', 'thisyear',):
-            return query.filter(self.sa_col.between(
-                self.first_day,
-                self.last_day
-            ))
 
         return FilterBase.apply(self, query)
 
@@ -758,6 +766,46 @@ class DateTimeFilter(DateFilter):
     def apply(self, query):
         today = self._get_today()
 
+        if self.op == 'today':
+            left_side = ensure_datetime(today)
+            right_side = ensure_datetime(today, time_part=dt.time(23,59,59,999999))
+            return query.filter(self.sa_col.between(left_side, right_side))
+
+        if self.op == 'thisweek':
+            sunday = today - relativedelta(weekday=SU(-1))
+            saturday = today + relativedelta(weekday=calendar.SATURDAY)
+
+            left_side = ensure_datetime(sunday)
+            right_side = ensure_datetime(saturday, time_part=dt.time(23,59,59,999999))
+            return query.filter(self.sa_col.between(left_side, right_side))
+
+        if self.op == 'thismonth':
+            last_day = today + relativedelta(day=1, months=+1, microseconds=-1)
+            first_day = today + relativedelta(day=1)
+            return query.filter(self.sa_col.between(first_day, last_day))
+
+        if self.op == 'lastmonth':
+            last_day = today + relativedelta(day=1, microseconds=-1)
+            first_day = today + relativedelta(day=1, months=-1)
+            return query.filter(self.sa_col.between(first_day, last_day))
+
+        if self.op == 'thisyear':
+            last_day = today + relativedelta(day=31, month=12, days=+1, microseconds=-1)
+            first_day = today + relativedelta(day=1, month=1)
+            return query.filter(self.sa_col.between(first_day, last_day))
+
+        if self.op == 'selmonth' and not self.value2:
+            return query
+
+        if self.op == 'selmonth':
+            first_day = self.first_day
+            last_day = self.last_day + relativedelta(days=1, microseconds=-1)
+            return query.filter(self.sa_col.between(first_day, last_day))
+
+        # filters above are handled specifically before this check because they do not require any
+        #   input values (or selmonth, which is grouped and handled specially). Filters below this
+        #   need at least one value to proceed, and if a default value is displayed but not
+        #   populated, we need to ignore it
         if self.op == self.default_op and self.value1 is None:
             return query
 
@@ -790,19 +838,6 @@ class DateTimeFilter(DateFilter):
             right_side = ensure_datetime(target_date, time_part=dt.time(23,59,59,999999))
             return query.filter(self.sa_col.between(left_side, right_side))
 
-        if self.op == 'today':
-            left_side = ensure_datetime(today)
-            right_side = ensure_datetime(today, time_part=dt.time(23,59,59,999999))
-            return query.filter(self.sa_col.between(left_side, right_side))
-
-        if self.op == 'thisweek':
-            sunday = today - relativedelta(weekday=SU(-1))
-            saturday = today + relativedelta(weekday=calendar.SATURDAY)
-
-            left_side = ensure_datetime(sunday)
-            right_side = ensure_datetime(saturday, time_part=dt.time(23,59,59,999999))
-            return query.filter(self.sa_col.between(left_side, right_side))
-
         # if this is an equal operation, but the date given did not have a time
         # portion, make the filter cover the whole day
         if self.op in ('eq', '!eq') and self._has_date_only1:
@@ -830,24 +865,6 @@ class DateTimeFilter(DateFilter):
                 return query.filter(between_clause)
             else:
                 return query.filter(~between_clause)
-
-        if self.op == 'thismonth':
-            last_day = today + relativedelta(day=1, months=+1, microseconds=-1)
-            first_day = today + relativedelta(day=1)
-            return query.filter(self.sa_col.between(first_day, last_day))
-
-        if self.op == 'lastmonth':
-            last_day = today + relativedelta(day=1, microseconds=-1)
-            first_day = today + relativedelta(day=1, months=-1)
-            return query.filter(self.sa_col.between(first_day, last_day))
-
-        if self.op == 'selmonth' and not self.value2:
-            return query
-
-        if self.op == 'selmonth':
-            first_day = self.first_day
-            last_day = self.last_day + relativedelta(days=1, microseconds=-1)
-            return query.filter(self.sa_col.between(first_day, last_day))
 
         return DateFilter.apply(self, query)
 

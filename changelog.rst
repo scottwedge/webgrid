@@ -1,10 +1,10 @@
 Changelog
 ---------
 
-0.1.18 released <in development>
+0.1.18 released 2015-12-11
 ==========================
 
- - ?
+ - fix bugs related to default operations using no-input date filters
 
 0.1.17 released 2015-12-04
 ==========================
