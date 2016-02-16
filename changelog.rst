@@ -1,10 +1,10 @@
 Changelog
 ---------
 
-0.1.19 released <in development>
+0.1.19 released 2016-02-16
 ==========================
 
- - ?
+ - fix edit/delete link display on large screens
 
 0.1.18 released 2015-12-11
 ==========================

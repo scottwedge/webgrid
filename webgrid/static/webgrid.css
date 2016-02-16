@@ -254,7 +254,7 @@ table.datagrid td a.delete_link {
     float: left;
     height: 16px;
     width: 16px;
-    text-indent: -1200px;
+    text-indent: -9999px;
 }
 
 .datagrid table.records td a.edit_link:focus,
