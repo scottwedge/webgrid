@@ -4,7 +4,7 @@ Changelog
 0.1.20 released <in development>
 ==========================
 
- - ?
+ - fix potential warnings for SQLAlchemy when sorting by a label instead of an SA expression
 
 0.1.19 released 2016-02-16
 ==========================
