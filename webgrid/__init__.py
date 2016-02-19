@@ -228,7 +228,7 @@ class Column(object):
     def apply_sort(self, query, flag_desc):
         if self.expr is None:
             direction = 'DESC' if flag_desc else 'ASC'
-            return query.order_by(sasql.text('{0} {1}'.format(self.key, direction))
+            return query.order_by(sasql.text('{0} {1}'.format(self.key, direction)))
         if flag_desc:
             return query.order_by(self.expr.desc())
         return query.order_by(self.expr)

@@ -1,10 +1,20 @@
 Changelog
 ---------
 
-0.1.20 released <in development>
+0.1.22 released 2016-02-18
 ==========================
 
  - fix potential warnings for SQLAlchemy when sorting by a label instead of an SA expression
+
+0.1.21 released 2016-02-18
+==========================
+
+ - bad release
+
+0.1.20 released 2016-02-18
+==========================
+
+ - errant release, identical to 0.1.19
 
 0.1.19 released 2016-02-16
 ==========================
