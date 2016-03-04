@@ -35,7 +35,7 @@ setup(
     long_description='\n\n'.join((README, CHANGELOG)),
     author="Randy Syring",
     author_email="randy@thesyrings.us",
-    url='https://bitbucket.org/rsyring/webgrid',
+    url='https://github.com/level12/webgrid',
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
