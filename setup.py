@@ -13,7 +13,6 @@ develop_requires = [
     'SQLAlchemy>=0.9.0'
     'SQLAlchemyBWC',
     'mock',
-    'nose',
     'Flask',
     'Flask-Bootstrap',
     'Flask-SQLAlchemy',

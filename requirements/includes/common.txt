@@ -1,0 +1,15 @@
+BlazeWeb
+SQLAlchemy>=0.9.0
+SQLAlchemyBWC
+mock
+pytest
+coverage
+pytest-cov
+codecov
+Flask
+Flask-Bootstrap
+Flask-SQLAlchemy
+Flask-WebTest
+wrapt
+xlrd
+xlwt
