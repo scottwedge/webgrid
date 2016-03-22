@@ -15,6 +15,6 @@ test:
        -v /home/ubuntu/$CIRCLE_PROJECT_REPONAME:/opt/src \
        -v $CIRCLE_TEST_REPORTS:/opt/artifacts \
        --add-host=database:$DATABASE_HOST \
-       $CIRCLE_PROJECT_REPONAME -e py27,py34,py35,flake8,circleci'"
+       level12/python-test-multi -e py27,py34,py35,flake8,circleci'"
   post:
     - pip install codecov && codecov
