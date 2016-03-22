@@ -52,10 +52,10 @@ setup(
     include_package_data=True,
     install_requires=[
         'BlazeUtils',
-        'FormEncode',
+        'FormEncode==1.3.0a1',
         'jinja2',
         'SQLAlchemy',
-        'webhelpers',
+        'webhelpers2',
         'python-dateutil',
         'Werkzeug',
     ],
