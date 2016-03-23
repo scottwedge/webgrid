@@ -13,6 +13,7 @@ develop_requires = [
     'SQLAlchemy>=0.9.0'
     'SQLAlchemyBWC',
     'mock',
+    'nose',
     'Flask',
     'Flask-Bootstrap',
     'Flask-SQLAlchemy',
@@ -52,17 +53,16 @@ setup(
     include_package_data=True,
     install_requires=[
         'BlazeUtils',
-        'FormEncode==1.3.0a1',
+        'FormEncode',
         'jinja2',
         'SQLAlchemy',
-        'webhelpers2',
+        'webhelpers',
         'python-dateutil',
         'Werkzeug',
     ],
     entry_points="""
         [console_scripts]
         webgrid_ta = webgrid_ta.manage:script_entry
-
         [nose.plugins]
         webgridta_initapp = webgrid.webgrid_nose:WebGridNosePlugin
     """,
