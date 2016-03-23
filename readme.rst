@@ -16,6 +16,12 @@ Questions & Comments
 
 Please visit: http://groups.google.com/group/blazelibs
 
+Running the Tests
+----------------
+
+Make sure to include the `--nologcapture` flag to nosetests or else you will get
+failures when testing the logging features.
+
 Current Status
 ---------------
 
