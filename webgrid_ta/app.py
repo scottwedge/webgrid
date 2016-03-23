@@ -15,6 +15,7 @@ def create_app(config):
     app = Flask(__name__)
 
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///'
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     #app.config['SQLALCHEMY_ECHO'] = True
     #app.config['DEBUG'] = True
     if config == 'Test':
@@ -31,4 +32,3 @@ def create_app(config):
     app.register_blueprint(main)
 
     return app
-

@@ -5,6 +5,7 @@ Changelog
 ==========================
 
  - update to support new python-dateutil, including fix of old parsing exception
+ - fix testing compatibility with Flask-SQLALchemy 2.1
 
 0.1.22 released 2016-02-18
 ==========================
