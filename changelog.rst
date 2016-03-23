@@ -4,7 +4,7 @@ Changelog
 0.1.23 released <in development>
 ==========================
 
- - ?
+ - update to support new python-dateutil, including fix of old parsing exception
 
 0.1.22 released 2016-02-18
 ==========================

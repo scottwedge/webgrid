@@ -684,13 +684,11 @@ class DateFilter(FilterBase, _DateMixin):
 
             return d
         except ValueError:
+            # allow open ranges when blanks are submitted as a second value
+            if is_value2 and not value:
+                return dt.date.today()
+
             raise formencode.Invalid('invalid date', value, self)
-        except TypeError, e:
-            # can probably be removed if this ever gets fixed:
-            # https://bugs.launchpad.net/dateutil/+bug/1257985
-            if "'NoneType' object is not iterable" not in str(e):
-                raise
-            raise formencode.Invalid('invalid date (parsing exception)', value, self)
 
 
 class DateTimeFilter(DateFilter):
@@ -743,12 +741,6 @@ class DateTimeFilter(DateFilter):
             dt_value = parse(value)
         except ValueError:
             raise formencode.Invalid('invalid date', value, self)
-        except TypeError, e:
-            # can probably be removed if this ever gets fixed:
-            # https://bugs.launchpad.net/dateutil/+bug/1257985
-            if "'NoneType' object is not iterable" not in str(e):
-                raise
-            raise formencode.Invalid('invalid date (parsing exception)', value, self)
 
         if is_value2:
             self._has_date_only2 = self._has_date_only(dt_value, value)
