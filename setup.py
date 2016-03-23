@@ -18,6 +18,7 @@ develop_requires = [
     'Flask-Bootstrap',
     'Flask-SQLAlchemy',
     'Flask-WebTest',
+    'sqlalchemybwc',
     'wrapt',
     'xlrd',
     'xlwt',
@@ -67,4 +68,3 @@ setup(
         webgridta_initapp = webgrid.webgrid_nose:WebGridNosePlugin
     """,
 )
-
