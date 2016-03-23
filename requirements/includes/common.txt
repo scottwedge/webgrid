@@ -44,6 +44,5 @@ WebOb
 WebTest
 Werkzeug
 wrapt
-wsgiref
 xlrd
 xlwt
