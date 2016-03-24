@@ -1,6 +1,14 @@
-from cStringIO import StringIO
-import datetime as dt
+from __future__ import absolute_import
+import six
 
+if six.PY2:
+    from cStringIO import StringIO
+elif six.PY3:
+    from io import StringIO
+else:
+    raise NotImplementedError(u'Unsupported python version')
+
+import datetime as dt
 from nose.tools import eq_
 import xlrd
 
@@ -11,6 +19,7 @@ from webgrid_ta.model.entities import Person, Status, Email, db
 
 from webgrid_ta.grids import Grid, PeopleGrid as PG
 from .helpers import inrequest, eq_html
+from six.moves import range
 
 
 class PeopleGrid(PG):
@@ -42,8 +51,8 @@ def setup_module():
         p.sortorder = x
         p.numericcol = '2.13'
         if x != 2:
-            p.createdts = dt.datetime(2012, 02, 22, 10, x, 16)
-            p.due_date = dt.date(2012, 02, x)
+            p.createdts = dt.datetime(2012, 0o2, 22, 10, x, 16)
+            p.due_date = dt.date(2012, 0o2, x)
         db.session.add(p)
         p.emails.append(Email(email='email%03d@example.com' % x))
         p.emails.append(Email(email='email%03d@gmail.com' % x))
@@ -76,6 +85,7 @@ class ColorColumn(Column):
 
 class EditColumn(LinkColumnBase):
     link_attrs = {'target': '_blank'}
+
     def create_url(self, record):
         return '/vehicle-edit/{0}'.format(record['id'])
 
@@ -114,21 +124,25 @@ class CarGrid(Grid):
             return 'pink :('
         return value
 
+
 class TestHtmlRenderer(object):
     key_data = (
-        {'id':1, 'name': 'one'},
-        {'id':2, 'name': 'two'},
-        {'id':3, 'name': 'three'},
-        {'id':4, 'name': 'three'},
-        {'id':5, 'name': 'three'},
+        {'id': 1, 'name': 'one'},
+        {'id': 2, 'name': 'two'},
+        {'id': 3, 'name': 'three'},
+        {'id': 4, 'name': 'three'},
+        {'id': 5, 'name': 'three'},
     )
 
     @inrequest('/')
     def test_car_html(self):
         key_data = (
-            {'id':1, 'make': 'ford', 'model': 'F150&', 'color': 'pink', 'dealer': 'bob', 'dealer_id': '7', 'active': True},
-            {'id':2, 'make': 'chevy', 'model': '1500', 'color': 'blue', 'dealer': 'fred', 'dealer_id': '9', 'active': False},
+            {'id': 1, 'make': 'ford', 'model': 'F150&', 'color': 'pink',
+             'dealer': 'bob', 'dealer_id': '7', 'active': True},
+            {'id': 2, 'make': 'chevy', 'model': '1500', 'color': 'blue',
+             'dealer': 'fred', 'dealer_id': '9', 'active': False},
         )
+
         mg = CarGrid()
         mg.set_records(key_data)
         eq_html(mg.html.table(), 'basic_table.html')
@@ -183,7 +197,7 @@ class TestHtmlRenderer(object):
         g = self.get_grid()
         eq_('/thepage?onpage=5&perpage=1', g.html.paging_url_last())
 
-    @inrequest('/thepage?foo=bar&onpage=5&perpage=10&sort1=1&sort2=2&sort3=3&op(name)=eq&v1(name)=bob&v2(name)=fred')
+    @inrequest('/thepage?foo=bar&onpage=5&perpage=10&sort1=1&sort2=2&sort3=3&op(name)=eq&v1(name)=bob&v2(name)=fred')  # noqa
     def test_reset_url(self):
         g = self.get_grid()
         eq_(
@@ -214,28 +228,36 @@ class TestHtmlRenderer(object):
         eq_(input_html, '<input name="perpage" type="text" value="1" />')
 
         img_html = g.html.paging_img_first()
-        eq_(img_html, '<img alt="&lt;&lt;" height="13" src="/static/webgrid/b_firstpage.png" width="16" />')
+        eq_(img_html,
+            '<img alt="&lt;&lt;" height="13" src="/static/webgrid/b_firstpage.png" width="16" />')
 
         img_html = g.html.paging_img_first_dead()
-        eq_(img_html, '<img alt="&lt;&lt;" height="13" src="/static/webgrid/bd_firstpage.png" width="16" />')
+        eq_(img_html,
+            '<img alt="&lt;&lt;" height="13" src="/static/webgrid/bd_firstpage.png" width="16" />')
 
         img_html = g.html.paging_img_prev()
-        eq_(img_html, '<img alt="&lt;" height="13" src="/static/webgrid/b_prevpage.png" width="8" />')
+        eq_(img_html,
+            '<img alt="&lt;" height="13" src="/static/webgrid/b_prevpage.png" width="8" />')
 
         img_html = g.html.paging_img_prev_dead()
-        eq_(img_html, '<img alt="&lt;" height="13" src="/static/webgrid/bd_prevpage.png" width="8" />')
+        eq_(img_html,
+            '<img alt="&lt;" height="13" src="/static/webgrid/bd_prevpage.png" width="8" />')
 
         img_html = g.html.paging_img_next()
-        eq_(img_html, '<img alt="&gt;" height="13" src="/static/webgrid/b_nextpage.png" width="8" />')
+        eq_(img_html,
+            '<img alt="&gt;" height="13" src="/static/webgrid/b_nextpage.png" width="8" />')
 
         img_html = g.html.paging_img_next_dead()
-        eq_(img_html, '<img alt="&gt;" height="13" src="/static/webgrid/bd_nextpage.png" width="8" />')
+        eq_(img_html,
+            '<img alt="&gt;" height="13" src="/static/webgrid/bd_nextpage.png" width="8" />')
 
         img_html = g.html.paging_img_last()
-        eq_(img_html, '<img alt="&gt;&gt;" height="13" src="/static/webgrid/b_lastpage.png" width="16" />')
+        eq_(img_html,
+            '<img alt="&gt;&gt;" height="13" src="/static/webgrid/b_lastpage.png" width="16" />')
 
         img_html = g.html.paging_img_last_dead()
-        eq_(img_html, '<img alt="&gt;&gt;" height="13" src="/static/webgrid/bd_lastpage.png" width="16" />')
+        eq_(img_html,
+            '<img alt="&gt;&gt;" height="13" src="/static/webgrid/bd_lastpage.png" width="16" />')
 
         # since we are on page 2, all links should be live
         footer_html = g.html.footer()
@@ -293,37 +315,36 @@ class TestHtmlRenderer(object):
         heading_row = g.html.table_column_headings()
         assert '<th><a class="sort-desc" href="/thepage?sort1=name">Name</a></th>' in heading_row
 
-    @inrequest('/thepage?op(firstname)=eq&v1(firstname)=foo&op(createdts)=between&v1(createdts)=2%2F15%2F12&&v2(createdts)=2012-02-16')
+    @inrequest('/thepage?op(firstname)=eq&v1(firstname)=foo&op(createdts)=between&v1(createdts)=2%2F15%2F12&&v2(createdts)=2012-02-16')  # noqa
     def test_filtering_input_html(self):
         g = PeopleGrid()
 
         filter_html = g.html.filtering_col_inputs1(g.key_column_map['firstname'])
-        assert '<input id="firstname_input1" name="v1(firstname)" type="text" />' in filter_html, filter_html
+        assert '<input id="firstname_input1" name="v1(firstname)" type="text" />' in filter_html, filter_html  # noqa
 
         filter_html = g.html.filtering_col_inputs1(g.key_column_map['createdts'])
-        assert '<input id="createdts_input1" name="v1(createdts)" type="text" />' in filter_html, filter_html
+        assert '<input id="createdts_input1" name="v1(createdts)" type="text" />' in filter_html, filter_html  # noqa
 
         filter_html = g.html.filtering_col_inputs2(g.key_column_map['createdts'])
-        assert '<input id="createdts_input2" name="v2(createdts)" type="text" />' in filter_html, filter_html
+        assert '<input id="createdts_input2" name="v2(createdts)" type="text" />' in filter_html, filter_html  # noqa
 
         g.apply_qs_args()
 
         filter_html = g.html.filtering_col_inputs1(g.key_column_map['firstname'])
-        assert '<input id="firstname_input1" name="v1(firstname)" type="text" value="foo" />' in filter_html, filter_html
+        assert '<input id="firstname_input1" name="v1(firstname)" type="text" value="foo" />' in filter_html, filter_html  # noqa
 
         filter_html = g.html.filtering_col_inputs1(g.key_column_map['createdts'])
-        assert '<input id="createdts_input1" name="v1(createdts)" type="text" value="02/15/2012 12:00 AM" />' in filter_html, filter_html
+        assert '<input id="createdts_input1" name="v1(createdts)" type="text" value="02/15/2012 12:00 AM" />' in filter_html, filter_html  # noqa
 
         filter_html = g.html.filtering_col_inputs2(g.key_column_map['createdts'])
-        assert '<input id="createdts_input2" name="v2(createdts)" type="text" value="02/16/2012 12:00 AM" />' in filter_html, filter_html
+        assert '<input id="createdts_input2" name="v2(createdts)" type="text" value="02/16/2012 12:00 AM" />' in filter_html, filter_html  # noqa
 
     @inrequest('/thepage?op(firstname)=foobar&v1(firstname)=baz')
     def test_filtering_invalid_operator(self):
         g = PeopleGrid()
-        #g.apply_qs_args()
 
         filter_html = g.html.filtering_col_inputs1(g.key_column_map['firstname'])
-        assert '<input id="firstname_input1" name="v1(firstname)" type="text" />' in filter_html, filter_html
+        assert '<input id="firstname_input1" name="v1(firstname)" type="text" />' in filter_html, filter_html  # noqa
 
     @inrequest('/thepage')
     def test_extra_filter_attrs(self):
@@ -348,15 +369,18 @@ class TestHtmlRenderer(object):
     @inrequest('/thepage')
     def test_no_pager(self):
         class PgNP(PeopleGrid):
-            pager_on=False
+            pager_on = False
+
         g = PgNP()
         assert '<td class="page">' not in g.html()
         assert '<td class="perpage">' not in g.html()
         assert '<th class="page">' not in g.html()
         assert '<th class="perpage">' not in g.html()
 
+
 class PGPageTotals(PeopleGrid):
     subtotals = 'page'
+
 
 class TestPageTotals(object):
     @inrequest('/')
@@ -364,11 +388,12 @@ class TestPageTotals(object):
         g = PGPageTotals()
         g.html
         assert '<td class="totals-label" colspan="7">Page Totals (3 records):</td>' in g.html()
-        #assert '<td>6.39</td>' in g.html()
         assert '<td class="totals-label" colspan="7">Grand Totals (3 records):</td>' not in g.html()
+
 
 class PGGrandTotals(PeopleGrid):
     subtotals = 'grand'
+
 
 class TestGrandTotals(object):
     @inrequest('/')
@@ -376,11 +401,12 @@ class TestGrandTotals(object):
         g = PGGrandTotals()
         g.html
         assert '<td class="totals-label" colspan="7">Grand Totals (3 records):</td>' in g.html()
-        #assert '<td>6.39</td>' in g.html()
         assert '<td class="totals-label" colspan="7">Page Totals (3 records):</td>' not in g.html()
+
 
 class PGAllTotals(PeopleGrid):
     subtotals = 'all'
+
 
 class TestAllTotals(object):
     @inrequest('/')
@@ -388,7 +414,6 @@ class TestAllTotals(object):
         g = PGAllTotals()
         html = g.html()
         assert '<td class="totals-label" colspan="7">Grand Totals (3 records):</td>' in html
-        #assert '<td>6.39</td>' in html, html
         assert '<td class="totals-label" colspan="7">Page Totals (3 records):</td>' in html
 
 
@@ -406,8 +431,8 @@ class TestStringExprTotals(PeopleGrid):
     def test_people_html(self):
         g = PGTotalsStringExpr()
         html = g.html()
+
         assert '<td class="totals-label" colspan="7">Grand Totals (3 records):</td>' in html
-        #assert '<td>6.39</td>' in html, html
         assert '<td class="totals-label" colspan="7">Page Totals (3 records):</td>' in html
 
 
@@ -423,12 +448,12 @@ class TestExcelRenderer(object):
         book = xlrd.open_workbook(file_contents=buffer.getvalue())
         sh = book.sheet_by_name('people_grid')
         # headers
-        eq_(sh.cell_value(0,0), 'First Name')
-        eq_(sh.cell_value(0,7), 'Sort Order')
+        eq_(sh.cell_value(0, 0), 'First Name')
+        eq_(sh.cell_value(0, 7), 'Sort Order')
 
         # last data row
-        eq_(sh.cell_value(3,0), 'fn001')
-        eq_(sh.cell_value(3,7), 1)
+        eq_(sh.cell_value(3, 0), 'fn001')
+        eq_(sh.cell_value(3, 7), 1)
         eq_(sh.nrows, 4)
 
     def test_subtotals_with_no_records(self):
@@ -449,4 +474,3 @@ class TestHideSection(object):
         g = NoControlBoxGrid()
         assert '<tr class="status"' not in g.html()
         assert '<div class="footer">' not in g.html()
-

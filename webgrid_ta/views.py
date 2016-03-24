@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from flask import current_app, Blueprint, render_template
 main = Blueprint('main', __name__)
 

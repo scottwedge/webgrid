@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import datetime as dt
 from decimal import Decimal as D
 
@@ -11,6 +12,8 @@ from webgrid.filters import OptionsFilterBase, TextFilter, IntFilter, NumberFilt
 from webgrid_ta.model.entities import Person, db
 
 from .helpers import ModelBase
+from six.moves import map
+from six.moves import range
 
 
 class CheckFilterBase(ModelBase):
@@ -779,7 +782,7 @@ class TestOptionsFilter(CheckFilterBase):
         self.assert_filter_query(filter, "WHERE persons.sortorder IN (1, 2)")
 
     def test_default_callable(self):
-        def_val = lambda: map(str, range(1, 4))
+        def_val = lambda: list(map(str, list(range(1, 4))))
         filter = SortOrderFilter(Person.sortorder, default_op='is',
                                  default_value1=def_val).new_instance()
         filter.set(None, None)

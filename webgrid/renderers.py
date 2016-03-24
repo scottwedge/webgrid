@@ -1,4 +1,7 @@
+from __future__ import absolute_import
 from collections import defaultdict
+import six
+from six.moves import range
 
 from blazeutils.containers import HTMLAttributes
 from blazeutils.datastructures import BlankObject
@@ -7,8 +10,15 @@ from blazeutils.jsonh import jsonmod
 from blazeutils.spreadsheets import Writer
 from blazeutils.strings import reindent, randnumerics
 import jinja2 as jinja
-from webhelpers.html import HTML as _HTML, literal, tags
 from werkzeug import Href, MultiDict
+
+if six.PY2:
+    from webhelpers.html import HTML as _HTML, literal, tags
+elif six.PY3:
+    from webhelpers2.html import HTML as _HTML, literal, tags
+else:
+    raise RuntimeError(u'Unsupported python version')
+
 
 from .utils import current_url
 
@@ -75,7 +85,7 @@ class HTML(object):
 
     def filtering_fields(self):
         rows = []
-        for col in self.grid.filtered_cols.itervalues():
+        for col in six.itervalues(self.grid.filtered_cols):
             rows.append(self.filtering_table_row(col))
         return literal('\n'.join(rows))
 
@@ -157,13 +167,13 @@ class HTML(object):
 
     def filtering_add_filter_select(self):
         options = [('',literal('&nbsp;'))]
-        for col in self.grid.filtered_cols.itervalues():
+        for col in six.itervalues(self.grid.filtered_cols):
             options.append((col.key, col.label))
         return tags.select('datagrid-add-filter', None, options)
 
     def filtering_json_data(self):
         for_js = {}
-        for col_key, col in self.grid.filtered_cols.iteritems():
+        for col_key, col in six.iteritems(self.grid.filtered_cols):
             for_js[col_key] = opdict =  {}
             for op in col.filter.operators:
                 opdict[op.key] = {
@@ -209,7 +219,7 @@ class HTML(object):
 
     def paging_select_options(self):
         options = []
-        for page in xrange(1, self.grid.page_count + 1):
+        for page in range(1, self.grid.page_count + 1):
             label = '{0} of {1}'.format(page, self.grid.page_count)
             options.append((page, label))
         return options
@@ -372,7 +382,7 @@ class HTML(object):
         colspan = 0
         firstcol = True
         for col in self.grid.iter_columns('html'):
-            if col.key not in self.grid.subtotal_cols.keys():
+            if col.key not in list(self.grid.subtotal_cols.keys()):
                 if firstcol:
                     colspan += 1
                 else:
@@ -419,7 +429,7 @@ class HTML(object):
         # collapse
         if col_value is None:
             styled_value = literal('&nbsp;')
-        elif isinstance(col_value, basestring) and col_value.strip() == '':
+        elif isinstance(col_value, six.string_types) and col_value.strip() == '':
             styled_value = literal('&nbsp;')
         else:
             styled_value = col_value
@@ -482,7 +492,7 @@ class HTML(object):
         url_args['export_to'] = None
         url_args['datagrid-add-filter'] = None
 
-        for col in self.grid.filtered_cols.itervalues():
+        for col in six.itervalues(self.grid.filtered_cols):
             url_args['op({0})'.format(col.key)] = None
             url_args['v1({0})'.format(col.key)] = None
             url_args['v2({0})'.format(col.key)] = None
@@ -582,7 +592,7 @@ class XLS(object):
         firstcol = True
         totals_xf = xlwt.easyxf('font: bold on; border: top thin')
         for col in self.grid.iter_columns('xls'):
-            if col.key not in self.grid.subtotal_cols.keys():
+            if col.key not in list(self.grid.subtotal_cols.keys()):
                 if firstcol:
                     colspan += 1
                 else:

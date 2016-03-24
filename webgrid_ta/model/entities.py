@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from blazeutils.strings import randchars
 import sqlalchemy as sa
 import sqlalchemy.orm as saorm

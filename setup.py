@@ -1,10 +1,11 @@
+import sys
 import os.path as osp
 try:
     from setuptools import setup, find_packages
 except ImportError:
     from ez_setup import use_setuptools
     use_setuptools()
-    from setuptools import setup, find_packages
+    from setuptools import setup
 
 # pip install -e .[develop]
 develop_requires = [
@@ -23,6 +24,17 @@ develop_requires = [
     'xlrd',
     'xlwt',
 ]
+
+py_version_deps = {
+    2: [
+        'webhelpers',
+        'FormEncode',
+    ],
+    3: [
+        'webhelpers2',
+        'FormEncode==1.3.0a1',
+    ]
+}
 
 cdir = osp.abspath(osp.dirname(__file__))
 README = open(osp.join(cdir, 'readme.rst')).read()
@@ -53,13 +65,11 @@ setup(
     include_package_data=True,
     install_requires=[
         'BlazeUtils',
-        'FormEncode',
         'jinja2',
         'SQLAlchemy',
-        'webhelpers',
         'python-dateutil',
         'Werkzeug',
-    ],
+    ] + py_version_deps[sys.version_info.major],
     entry_points="""
         [console_scripts]
         webgrid_ta = webgrid_ta.manage:script_entry

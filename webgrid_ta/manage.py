@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+from __future__ import print_function
 import logging
 from pprint import pprint
 import urllib
@@ -23,10 +25,10 @@ class CreateDB(Command):
     def run(self, clear):
         if clear:
             clear_db()
-            print '- db cleared'
+            print('- db cleared')
 
         model.load_db()
-        print '- db loaded'
+        print('- db loaded')
 
 
 manager = Manager(create_app)
