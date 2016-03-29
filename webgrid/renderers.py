@@ -106,11 +106,11 @@ class HTML(object):
         return col.label
 
     def filtering_col_op_select_options(self, filter):
-        options = [('',literal('&nbsp;'))]
+        options = [tags.Option(literal('&nbsp;'), value='')]
         for op in filter.operators:
-            options.append((
-                op.key,
-                self.filtering_operator_labels.get(op.key, op.display)
+            options.append(tags.Option(
+                self.filtering_operator_labels.get(op.key, op.display),
+                value=op.key,
             ))
         return options
 
@@ -151,7 +151,14 @@ class HTML(object):
         return img_tag
 
     def filtering_filter_options(self, filter):
-        return filter.options_seq
+        # webhelpers2 doesn't allow options to be lists or tuples anymore. If this is the case,
+        # turn it into an Option list
+        return [
+            (tags.Option(
+                option[1],
+                value=option[0]
+            ) if isinstance(option, (tuple, list)) else option) for option in filter.options_seq
+        ]
 
     def filtering_col_inputs2(self, col):
         filter = col.filter
@@ -166,9 +173,9 @@ class HTML(object):
         return inputs
 
     def filtering_add_filter_select(self):
-        options = [('',literal('&nbsp;'))]
+        options = [tags.Option(literal('&nbsp;'), value='')]
         for col in six.itervalues(self.grid.filtered_cols):
-            options.append((col.key, col.label))
+            options.append(tags.Option(col.label, value=col.key))
         return tags.select('datagrid-add-filter', None, options)
 
     def filtering_json_data(self):
@@ -186,11 +193,11 @@ class HTML(object):
         return self.load_content('header_sorting.html')
 
     def sorting_select_options(self):
-        options = [('',literal('&nbsp;'))]
+        options = [tags.Option(literal('&nbsp;'), value='')]
         for col in self.grid.columns:
             if col.can_sort:
-                options.append((col.key, col.label))
-                options.append(('-' + col.key, col.label + ' DESC'))
+                options.append(tags.Option(col.label, value=col.key))
+                options.append(tags.Option(col.label + ' DESC', value='-' + col.key))
         return options
 
     def sorting_select(self, number):
@@ -221,7 +228,7 @@ class HTML(object):
         options = []
         for page in range(1, self.grid.page_count + 1):
             label = '{0} of {1}'.format(page, self.grid.page_count)
-            options.append((page, label))
+            options.append(tags.Option(label, value=page))
         return options
 
     def paging_select(self):
