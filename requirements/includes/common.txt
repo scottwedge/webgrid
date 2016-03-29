@@ -38,7 +38,7 @@ SQLAlchemy
 SQLAlchemyBWC
 SQLiteFKTG4SA
 waitress
-WebHelpers
+WebHelpers2
 WebOb
 WebTest
 Werkzeug

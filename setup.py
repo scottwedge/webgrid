@@ -27,11 +27,9 @@ develop_requires = [
 
 py_version_deps = {
     2: [
-        'webhelpers',
         'FormEncode',
     ],
     3: [
-        'webhelpers2',
         'FormEncode==1.3.0a1',
     ]
 }
@@ -65,9 +63,10 @@ setup(
     include_package_data=True,
     install_requires=[
         'BlazeUtils',
-        'jinja2',
         'SQLAlchemy',
+        'jinja2',
         'python-dateutil',
+        'webhelpers2',
         'Werkzeug',
     ] + py_version_deps[sys.version_info.major],
     entry_points="""

@@ -10,15 +10,8 @@ from blazeutils.jsonh import jsonmod
 from blazeutils.spreadsheets import Writer
 from blazeutils.strings import reindent, randnumerics
 import jinja2 as jinja
+from webhelpers2.html import HTML as _HTML, literal, tags
 from werkzeug import Href, MultiDict
-
-if six.PY2:
-    from webhelpers.html import HTML as _HTML, literal, tags
-elif six.PY3:
-    from webhelpers2.html import HTML as _HTML, literal, tags
-else:
-    raise RuntimeError(u'Unsupported python version')
-
 
 from .utils import current_url
 
