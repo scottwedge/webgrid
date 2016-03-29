@@ -752,9 +752,10 @@ class TestOptionsFilter(CheckFilterBase):
         filter.set('is', ['1'])
         self.assert_filter_query(filter, "WHERE persons.boolcol = 1")
 
-    @raises(TypeError, "can't use value_modifier='auto' when option keys are <type 'list'>")
-    def test_unkonwn_type(self):
-        filter = BadTypeFilter(Person.boolcol).new_instance()
+    @raises(TypeError, "can't use value_modifier='auto' when option keys are <(class|type) 'list'>",
+            re_esc=False)
+    def test_unknown_type(self):
+        BadTypeFilter(Person.boolcol).new_instance()
 
     def test_value_not_in_options_makes_inactive(self):
         filter = StateFilter(Person.state).new_instance()
