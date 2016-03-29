@@ -1,15 +1,10 @@
 from __future__ import absolute_import
-import six
-
-if six.PY2:
-    from cStringIO import StringIO
-elif six.PY3:
-    from io import StringIO
-else:
-    raise NotImplementedError(u'Unsupported python version')
 
 import datetime as dt
+from io import BytesIO
+
 from nose.tools import eq_
+from six.moves import range
 import xlrd
 
 from webgrid import Column, LinkColumnBase, YesNoColumn, BoolColumn, row_styler, col_filter, \
@@ -19,7 +14,6 @@ from webgrid_ta.model.entities import Person, Status, Email, db
 
 from webgrid_ta.grids import Grid, PeopleGrid as PG
 from .helpers import inrequest, eq_html
-from six.moves import range
 
 
 class PeopleGrid(PG):
@@ -440,7 +434,7 @@ class TestExcelRenderer(object):
 
     def test_some_basics(self):
         g = PeopleGrid(per_page=1)
-        buffer = StringIO()
+        buffer = BytesIO()
         wb = g.xls()
         wb.save(buffer)
         buffer.seek(0)
@@ -460,7 +454,7 @@ class TestExcelRenderer(object):
         g = PGGrandTotals()
         g.column('firstname').filter.op = 'eq'
         g.column('firstname').filter.value1 = 'foobar'
-        buffer = StringIO()
+        buffer = BytesIO()
         wb = g.xls()
         wb.save(buffer)
         buffer.seek(0)

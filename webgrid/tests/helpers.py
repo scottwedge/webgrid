@@ -65,7 +65,7 @@ def query_to_str(statement, bind=None):
 
 def eq_html(html, filename):
     with open(opath.join(cdir, 'data', filename), 'rb') as fh:
-        file_html = fh.read()
+        file_html = fh.read().decode('ascii')
     assert_equal_txt(html, file_html)
 
 
