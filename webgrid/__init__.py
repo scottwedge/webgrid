@@ -190,10 +190,10 @@ class Column(object):
         """
         data = self.extract_data(record)
         data = self.format_data(data)
-        for filter, cname in self.grid._colfilters:
+        for _filter, cname in self.grid._colfilters:
             for_column = self.grid.column(cname)
             if self.key == for_column.key:
-                data = list(filter(self.grid, data))
+                data = _filter(self.grid, data)
         return data
 
     def extract_data(self, record):
