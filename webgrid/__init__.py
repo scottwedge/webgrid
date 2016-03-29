@@ -12,15 +12,8 @@ from blazeutils.strings import case_cw2us, randchars
 from formencode import Invalid
 import formencode.validators as fev
 import sqlalchemy.sql as sasql
+from webhelpers2.html.tags import link_to
 from werkzeug.datastructures import MultiDict
-
-
-if six.PY3:
-    from webhelpers2.html.tags import link_to
-elif six.PY2:
-    from webhelpers.html.tags import link_to
-else:
-    raise RuntimeError(u'Unsupported python version')
 
 from .renderers import HTML, XLS
 
