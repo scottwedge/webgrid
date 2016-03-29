@@ -468,8 +468,10 @@ class HTML(object):
 
         req_args = MultiDict(self.grid.manager.request_args())
 
-        for key in kwargs.keys():
-
+        # kwargs will be modified with new keys if there is a prefix, so copy the original set
+        # of keys first. Otherwise, the loop may pick up new keys and apply the prefix again
+        key_list = list(kwargs.keys())
+        for key in key_list:
             # arg keys may need to be prefixed
             if self.grid.qs_prefix:
                 prefixed_key = self.grid.qs_prefix + key
