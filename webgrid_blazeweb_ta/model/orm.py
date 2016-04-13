@@ -3,7 +3,6 @@ import sqlalchemy as sa
 
 from sqlalchemybwc import db
 from sqlalchemybwc.lib.declarative import declarative_base, DefaultMixin
-from sqlalchemybwc.lib.decorators import ignore_unique, transaction
 import sqlalchemy.orm as saorm
 
 Base = declarative_base()
@@ -43,6 +42,7 @@ class Person(Base, DefaultMixin):
         Email.delete_all()
         cls.delete_all()
 
+
 class Email(Base, DefaultMixin):
     __tablename__ = 'emails'
 
@@ -51,6 +51,7 @@ class Email(Base, DefaultMixin):
     email = sa.Column(sa.String(50), nullable=False)
 
     person = saorm.relationship(Person, backref='emails')
+
 
 class Status(Base, DefaultMixin):
     __tablename__ = 'statuses'

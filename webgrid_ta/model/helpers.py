@@ -440,9 +440,7 @@ class DefaultMixin(DefaultColsMixin, MethodsMixin):
     pass
 
 
-###
-### Lookup Functionality
-###
+# Lookup Functionality
 class LookupMixin(DefaultMixin):
     @sautil.classproperty
     def label(cls):
