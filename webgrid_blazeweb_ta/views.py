@@ -1,5 +1,4 @@
 from blazeweb.views import View
-from sqlalchemybwc import db
 
 from webgrid import NumericColumn
 from webgrid_blazeweb_ta.tests.grids import PeopleGrid as PGBase

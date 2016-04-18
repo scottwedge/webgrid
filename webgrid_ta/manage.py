@@ -1,5 +1,6 @@
+from __future__ import absolute_import
+from __future__ import print_function
 import logging
-from pprint import pprint
 import urllib
 
 import flask
@@ -23,10 +24,10 @@ class CreateDB(Command):
     def run(self, clear):
         if clear:
             clear_db()
-            print '- db cleared'
+            print('- db cleared')
 
         model.load_db()
-        print '- db loaded'
+        print('- db loaded')
 
 
 manager = Manager(create_app)
@@ -46,12 +47,15 @@ def list_routes(name='list-routes'):
     for line in sorted(output):
         print(line)
 
+
 @manager.command
 def serve():
     flask.current_app.run(debug=True)
 
+
 def script_entry():
     manager.run()
+
 
 if __name__ == "__main__":
     script_entry()

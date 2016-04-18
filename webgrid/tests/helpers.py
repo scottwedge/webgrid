@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from os import path as opath
 
 from blazeutils.testing import assert_equal_txt
@@ -64,7 +65,7 @@ def query_to_str(statement, bind=None):
 
 def eq_html(html, filename):
     with open(opath.join(cdir, 'data', filename), 'rb') as fh:
-        file_html = fh.read()
+        file_html = fh.read().decode('ascii')
     assert_equal_txt(html, file_html)
 
 

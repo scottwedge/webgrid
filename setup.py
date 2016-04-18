@@ -1,10 +1,11 @@
+import sys
 import os.path as osp
 try:
     from setuptools import setup, find_packages
 except ImportError:
     from ez_setup import use_setuptools
     use_setuptools()
-    from setuptools import setup, find_packages
+    from setuptools import setup
 
 # pip install -e .[develop]
 develop_requires = [
@@ -24,6 +25,15 @@ develop_requires = [
     'xlwt',
 ]
 
+py_version_deps = {
+    2: [
+        'FormEncode',
+    ],
+    3: [
+        'FormEncode==1.3.0a1',
+    ]
+}
+
 cdir = osp.abspath(osp.dirname(__file__))
 README = open(osp.join(cdir, 'readme.rst')).read()
 CHANGELOG = open(osp.join(cdir, 'changelog.rst')).read()
@@ -42,9 +52,9 @@ setup(
         'Intended Audience :: Developers',
         'License :: OSI Approved :: BSD License',
         'Operating System :: OS Independent',
-        'Programming Language :: Python :: 2.5',
-        'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
     ],
     license='BSD',
     packages=['webgrid'],
@@ -53,17 +63,15 @@ setup(
     include_package_data=True,
     install_requires=[
         'BlazeUtils',
-        'FormEncode',
-        'jinja2',
         'SQLAlchemy',
-        'webhelpers',
+        'jinja2',
         'python-dateutil',
+        'webhelpers2',
         'Werkzeug',
-    ],
+    ] + py_version_deps[sys.version_info.major],
     entry_points="""
         [console_scripts]
         webgrid_ta = webgrid_ta.manage:script_entry
-
         [nose.plugins]
         webgridta_initapp = webgrid.webgrid_nose:WebGridNosePlugin
     """,

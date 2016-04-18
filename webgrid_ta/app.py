@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import warnings
 
 from flask import Flask
@@ -16,8 +17,8 @@ def create_app(config):
 
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    #app.config['SQLALCHEMY_ECHO'] = True
-    #app.config['DEBUG'] = True
+    # app.config['SQLALCHEMY_ECHO'] = True
+    # app.config['DEBUG'] = True
     if config == 'Test':
         app.config['TEST'] = True
     app.secret_key = 'only-testing'

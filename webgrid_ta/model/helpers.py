@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+from __future__ import print_function
 import datetime as dt
 
 from blazeutils.decorators import curry
@@ -13,6 +15,7 @@ import sqlalchemy.util as sautil
 import wrapt
 
 from ..model import db
+import six
 
 
 class DefaultColsMixin(object):
@@ -148,7 +151,7 @@ def ignore_unique(f, decorated_obj, args, kwargs):
     dbsess = _find_sa_sess(decorated_obj)
     try:
         return f(*args, **kwargs)
-    except Exception, e:
+    except Exception as e:
         dbsess.rollback()
         if is_unique_exc(e):
                 return
@@ -171,7 +174,7 @@ def one_to_none(f, _, args, kwargs):
     """
     try:
         return f(*args, **kwargs)
-    except NoResultFound, e:
+    except NoResultFound as e:
         if 'No row was found for one()' != str(e):
             raise
         return None
@@ -379,7 +382,7 @@ class MethodsMixin(object):
 
         mapper = saorm.object_mapper(self)
 
-        for key, value in data.iteritems():
+        for key, value in six.iteritems(data):
             if isinstance(value, dict):
                 dbvalue = getattr(self, key)
                 rel_class = mapper.get_property(key).mapper.class_
@@ -437,9 +440,7 @@ class DefaultMixin(DefaultColsMixin, MethodsMixin):
     pass
 
 
-###
-### Lookup Functionality
-###
+# Lookup Functionality
 class LookupMixin(DefaultMixin):
     @sautil.classproperty
     def label(cls):
@@ -478,6 +479,7 @@ class LookupMixin(DefaultMixin):
     def __repr__(self):
         return '<%s %s:%s>' % (self.__class__.__name__, self.id, self.label)
 
+
 def clear_db():
     if db.engine.dialect.name == 'postgresql':
         sql = []
@@ -489,8 +491,9 @@ def clear_db():
         for exstr in sql:
             try:
                 db.engine.execute(exstr)
-            except Exception, e:
-                print 'WARNING: %s' % e
+            except Exception as e:
+                print(('WARNING: %s' % e))
+
     elif db.engine.dialect.name == 'sqlite':
         # drop the views
         sql = "select name from sqlite_master where type='view'"
@@ -506,9 +509,10 @@ def clear_db():
         for table in reversed(db.metadata.sorted_tables):
             try:
                 table.drop(db.engine)
-            except Exception, e:
-                if not 'no such table' in str(e):
+            except Exception as e:
+                if 'no such table' not in str(e):
                     raise
+
     elif db.engine.dialect.name == 'mssql':
         mapping = {
             'P': 'drop procedure [%(name)s]',
@@ -519,7 +523,7 @@ def clear_db():
             'U': 'drop table [%(name)s]',
         }
         delete_sql = []
-        for type, drop_sql in mapping.iteritems():
+        for type, drop_sql in six.iteritems(mapping):
             sql = 'select name, object_name( parent_object_id ) as parent_name '\
                 'from sys.objects where type in (\'%s\')' % '", "'.join(type)
             rows = db.engine.execute(sql)

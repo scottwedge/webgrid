@@ -1,6 +1,8 @@
+from __future__ import absolute_import
 import inspect
 import re
 import sys
+import six
 
 from blazeutils.containers import HTMLAttributes
 from blazeutils.datastructures import BlankObject, OrderedDict
@@ -10,10 +12,11 @@ from blazeutils.strings import case_cw2us, randchars
 from formencode import Invalid
 import formencode.validators as fev
 import sqlalchemy.sql as sasql
-from webhelpers.html.tags import link_to
+from webhelpers2.html.tags import link_to
 from werkzeug.datastructures import MultiDict
 
 from .renderers import HTML, XLS
+
 
 try:
     import xlwt
@@ -61,7 +64,7 @@ class _DeclarativeMeta(type):
         class_dict['__cls_cols__'] = class_columns
 
         # we have to assign the attribute name
-        for k,v in class_dict.iteritems():
+        for k,v in six.iteritems(class_dict):
             # catalog the row stylers
             if getattr(v, '__grid_rowstyler__', None):
                 class_dict['_rowstylers'].append(v)
@@ -126,7 +129,7 @@ class Column(object):
         # works with a SA Query instance
         if key is None:
             self.can_sort = False
-        elif not isinstance(key, basestring):
+        elif not isinstance(key, six.string_types):
             self.expr = col = key
             # use column.key, column.name, or None in that order
             key = getattr(col, 'key', getattr(col, 'name', None))
@@ -180,10 +183,10 @@ class Column(object):
         """
         data = self.extract_data(record)
         data = self.format_data(data)
-        for filter, cname in self.grid._colfilters:
+        for _filter, cname in self.grid._colfilters:
             for_column = self.grid.column(cname)
             if self.key == for_column.key:
-                data = filter(self.grid, data)
+                data = _filter(self.grid, data)
         return data
 
     def extract_data(self, record):
@@ -206,7 +209,7 @@ class Column(object):
         # attribute style
         try:
             return getattr(record, self.key)
-        except AttributeError, e:
+        except AttributeError as e:
             if ("object has no attribute '%s'" % self.key) not in str(e):
                 raise
 
@@ -239,7 +242,7 @@ class Column(object):
     def xls_width_calc(self, value):
         if self.xls_width:
             return self.xls_width
-        if isinstance(value, basestring):
+        if isinstance(value, six.string_types):
             return len(value)
         return len(str(value))
 
@@ -333,7 +336,7 @@ class DateColumnBase(Column):
             # to be in HTML as an approximation of its format in excel
             html_version = value.strftime(self.html_format)
             return len(html_version)
-        except AttributeError, e:
+        except AttributeError as e:
             if "has no attribute 'strftime'" not in str(e):
                 raise
             # must be the column heading
@@ -422,12 +425,7 @@ class NumericColumn(Column):
             return xlwt.easyxf(self.xls_style, num_format)
         return Column.xlwt_stymat_init(self)
 
-class BaseGrid(object):
-    __metaclass__ = _DeclarativeMeta
-    # this value will rarely be used, it will always be overriden by the logic
-    # in Column.__new__() which creates a new value on the Grid subclass
-    # which will take precedence over this one.  Its really only hear to give
-    # a default value for when a Grid is declared without columns when testing.
+class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
     __cls_cols__ = ()
     identifier = None
     sorter_on = True
@@ -502,7 +500,7 @@ class BaseGrid(object):
         self.record_count
 
     def column(self, ident):
-        if isinstance(ident, basestring):
+        if isinstance(ident, six.string_types):
             return self.key_column_map[ident]
         return self.columns[ident]
 
@@ -555,7 +553,7 @@ class BaseGrid(object):
 
     @property
     def has_filters(self):
-        for col in self.filtered_cols.itervalues():
+        for col in six.itervalues(self.filtered_cols):
             if col.filter.is_active:
                 return True
         return False
@@ -582,7 +580,7 @@ class BaseGrid(object):
         SUB = self.build_query(for_count=(not page_totals_only)).subquery()
 
         cols = []
-        for colname, coltuple in self.subtotal_cols.iteritems():
+        for colname, coltuple in six.iteritems(self.subtotal_cols):
             sa_aggregate_func, colobj = coltuple
 
             # column may have a label. If it does, use it
@@ -645,7 +643,7 @@ class BaseGrid(object):
         return query
 
     def query_filters(self, query):
-        for col in self.filtered_cols.itervalues():
+        for col in six.itervalues(self.filtered_cols):
             if col.filter.is_active:
                 query = col.filter.apply(query)
         return query
@@ -717,14 +715,14 @@ class BaseGrid(object):
                 args = session_args
 
             req_args = self.manager.request_args()
-            if req_args.has_key(self.prefix_qs_arg_key('export_to')):
+            if self.prefix_qs_arg_key('export_to') in req_args:
                 args[self.prefix_qs_arg_key('export_to')] = \
                     req_args[self.prefix_qs_arg_key('export_to')]
             self.save_session_store(args)
 
         ## filtering (make sure this is above paging otherwise self.page_count
         ## used in the paging section below won't work)
-        for col in self.filtered_cols.itervalues():
+        for col in six.itervalues(self.filtered_cols):
             filter = col.filter
             filter_op_qsk = self.prefix_qs_arg_key('op({0})'.format(col.key))
             filter_v1_qsk = self.prefix_qs_arg_key('v1({0})'.format(col.key))
@@ -749,20 +747,20 @@ class BaseGrid(object):
                         v1,
                         v2,
                     )
-                except Invalid, e:
+                except Invalid as e:
                     invalid_msg = filter.format_invalid(e, col)
                     self.user_warnings.append(invalid_msg)
 
         ## paging
         pp_qsk = self.prefix_qs_arg_key('perpage')
-        if args.has_key(pp_qsk):
+        if pp_qsk in args:
             per_page = self.apply_validator(fev.Int, args[pp_qsk], pp_qsk)
             if per_page is None or per_page < 1:
                 per_page = 1
             self.per_page = per_page
 
         op_qsk = self.prefix_qs_arg_key('onpage')
-        if args.has_key(op_qsk):
+        if op_qsk in args:
             on_page = self.apply_validator(fev.Int, args[op_qsk], op_qsk)
             if on_page is None or on_page < 1:
                 on_page = 1
@@ -815,7 +813,7 @@ class BaseGrid(object):
         stored_args = None
         # if dgreset is in args, store the session key if present
         #   and then pass back the incoming args
-        reset = args.has_key(self.prefix_qs_arg_key('dgreset'))
+        reset = self.prefix_qs_arg_key('dgreset') in args
         if args.get(self.prefix_qs_arg_key('session_key'), None):
             if dgsessions.get(self.session_key, None):
                 stored_args = dgsessions[self.session_key]

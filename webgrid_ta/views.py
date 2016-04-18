@@ -1,11 +1,13 @@
-from flask import current_app, Blueprint, render_template
+from __future__ import absolute_import
+from flask import Blueprint, render_template
 main = Blueprint('main', __name__)
+
 
 @main.route('/')
 def index():
     from webgrid import NumericColumn
     from webgrid_ta.grids import PeopleGrid as PGBase
-    from webgrid_ta.model.entities import Person, Status
+    from webgrid_ta.model.entities import Person
 
     class CurrencyCol(NumericColumn):
         def format_data(self, data):

@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import calendar
 import datetime as dt
 from decimal import Decimal as D
@@ -11,6 +12,7 @@ import formencode
 import formencode.validators as feval
 from sqlalchemy.sql import or_, and_
 import sqlalchemy as sa
+import six
 
 class UnrecognizedOperator(ValueError):
     pass
@@ -208,7 +210,7 @@ class OptionsFilterBase(FilterBase):
         if self._options_seq is None:
             try:
                 self._options_seq = self.options_from()
-            except TypeError, e:
+            except TypeError as e:
                 if 'is not callable' not in str(e):
                     raise
                 self._options_seq = self.options_from
@@ -231,7 +233,7 @@ class OptionsFilterBase(FilterBase):
                     'the options set is empty and the type can therefore not '
                     'be determined')
             first_key = self.option_keys[0]
-            if isinstance(first_key, basestring) or self.value_modifier is None:
+            if isinstance(first_key, six.string_types) or self.value_modifier is None:
                 self.value_modifier = feval.UnicodeString
             # this didn't work right, so commenting out for now
             #elif isinstance(first_key, bool):
@@ -364,7 +366,7 @@ class NumberFilter(NumberFilterBase):
         # call the validator to ensure the value is in the right format, but
         # don't use its value b/c it converts to float
         NumberFilterBase.process(self, value, is_value2)
-        if value is None or (isinstance(value,basestring) and not len(value)):
+        if value is None or (isinstance(value,six.string_types) and not len(value)):
             return None
         return D(value)
 

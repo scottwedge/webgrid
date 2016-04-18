@@ -1,0 +1,20 @@
+machine:
+  services:
+    - docker
+    - postgresql
+
+dependencies:
+  override:
+    - ls # stop the inference that circle does with setup.py and such
+
+test:
+  override:
+    - "DATABASE_HOST=$(ip -4 addr show docker0 | grep -Po 'inet \\K[\\d.]+') \
+       bash -c \
+       'docker run \
+       -v /home/ubuntu/$CIRCLE_PROJECT_REPONAME:/opt/src \
+       -v $CIRCLE_TEST_REPORTS:/opt/artifacts \
+       --add-host=database:$DATABASE_HOST \
+       level12/python-test-multi -e py27,py34,py35,flake8,circleci'"
+  post:
+    - pip install codecov && codecov

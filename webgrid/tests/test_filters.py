@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import datetime as dt
 from decimal import Decimal as D
 
@@ -11,6 +12,8 @@ from webgrid.filters import OptionsFilterBase, TextFilter, IntFilter, NumberFilt
 from webgrid_ta.model.entities import Person, db
 
 from .helpers import ModelBase
+from six.moves import map
+from six.moves import range
 
 
 class CheckFilterBase(ModelBase):
@@ -749,9 +752,10 @@ class TestOptionsFilter(CheckFilterBase):
         filter.set('is', ['1'])
         self.assert_filter_query(filter, "WHERE persons.boolcol = 1")
 
-    @raises(TypeError, "can't use value_modifier='auto' when option keys are <type 'list'>")
-    def test_unkonwn_type(self):
-        filter = BadTypeFilter(Person.boolcol).new_instance()
+    @raises(TypeError, "can't use value_modifier='auto' when option keys are <(class|type) 'list'>",
+            re_esc=False)
+    def test_unknown_type(self):
+        BadTypeFilter(Person.boolcol).new_instance()
 
     def test_value_not_in_options_makes_inactive(self):
         filter = StateFilter(Person.state).new_instance()
@@ -779,7 +783,7 @@ class TestOptionsFilter(CheckFilterBase):
         self.assert_filter_query(filter, "WHERE persons.sortorder IN (1, 2)")
 
     def test_default_callable(self):
-        def_val = lambda: map(str, range(1, 4))
+        def_val = lambda: list(map(str, list(range(1, 4))))
         filter = SortOrderFilter(Person.sortorder, default_op='is',
                                  default_value1=def_val).new_instance()
         filter.set(None, None)

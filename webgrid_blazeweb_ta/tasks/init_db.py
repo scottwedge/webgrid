@@ -5,6 +5,7 @@ from blazeweb.tasks import attributes
 from webgrid_blazeweb_ta.model.orm import Status, Person, Email
 from sqlalchemybwc import db
 
+
 @attributes('~dev')
 def action_40_base_data():
     stat_open = Status.add_iu(label=u'open')

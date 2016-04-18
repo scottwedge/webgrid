@@ -5,9 +5,11 @@ from webgrid.filters import TextFilter, OptionsFilterBase, Operator, \
     DateTimeFilter, ops
 from webgrid_blazeweb_ta.model.orm import Person, Status
 
+
 class FirstNameColumn(LinkColumnBase):
     def create_url(self, record):
         return '/person-edit/{0}'.format(record.id)
+
 
 class FullNameColumn(LinkColumnBase):
     def extract_data(self, record):
@@ -16,14 +18,17 @@ class FullNameColumn(LinkColumnBase):
     def create_url(self, record):
         return '/person-edit/{0}'.format(record.id)
 
+
 class EmailsColumn(Column):
     def extract_data(self, recordset):
         return ', '.join([e.email for e in recordset.Person.emails])
 
+
 class StatusFilter(OptionsFilterBase):
     operators = (Operator('o', 'open', None), ops.is_, ops.not_is,
-            Operator('c', 'closed', None), ops.empty, ops.not_empty)
+                 Operator('c', 'closed', None), ops.empty, ops.not_empty)
     options_from = Status.pairs
+
 
 class PeopleGrid(Grid):
     session_on = True
@@ -48,4 +53,3 @@ class PeopleGrid(Grid):
             query = query.order_by(Person.id)
 
         return query
-

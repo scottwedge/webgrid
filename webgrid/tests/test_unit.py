@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import flask
 from nose.tools import eq_
 from werkzeug.datastructures import MultiDict

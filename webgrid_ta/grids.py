@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from webgrid import BaseGrid as BaseGrid, Column, LinkColumnBase, \
     YesNoColumn, DateTimeColumn, DateColumn, NumericColumn
 from webgrid.filters import TextFilter, OptionsFilterBase, Operator, \

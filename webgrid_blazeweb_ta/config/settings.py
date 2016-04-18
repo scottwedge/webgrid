@@ -6,6 +6,7 @@ from blazeweb.config import DefaultSettings
 basedir = path.dirname(path.dirname(__file__))
 app_package = path.basename(basedir)
 
+
 class Default(DefaultSettings):
     def init(self):
         self.dirs.base = basedir
@@ -27,6 +28,7 @@ class Default(DefaultSettings):
     def init_routing(self):
         self.add_route('/people/manage', endpoint='ManagePeople')
 
+
 class Dev(Default):
     def init(self):
         Default.init(self)
@@ -35,8 +37,9 @@ class Dev(Default):
         self.db.url = 'sqlite://'
 
         # uncomment this if you want to use a database you can inspect
-        #from os import path
-        #self.db.url = 'sqlite:///%s' % path.join(self.dirs.data, 'test_application.db')
+        # from os import path
+        # self.db.url = 'sqlite:///%s' % path.join(self.dirs.data, 'test_application.db')
+
 
 class Test(Default):
     def init(self):
@@ -46,11 +49,11 @@ class Test(Default):
         self.db.url = 'sqlite://'
 
         # uncomment this if you want to use a database you can inspect
-        #from os import path
-        #self.db.url = 'sqlite:///%s' % path.join(self.dirs.data, 'test_application.db')
+        # from os import path
+        # self.db.url = 'sqlite:///%s' % path.join(self.dirs.data, 'test_application.db')
 
 try:
-    from site_settings import *
-except ImportError, e:
+    from site_settings import *  # noqa
+except ImportError as e:
     if 'No module named site_settings' not in str(e):
         raise
