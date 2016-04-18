@@ -1,7 +1,7 @@
 Changelog
 ---------
 
-0.1.23 released <in development>
+0.1.23 released 2016-04-18
 ==========================
 
  - change dependency to webhelpers2 from webhelpers
