@@ -1,7 +1,7 @@
 Changelog
 ---------
 
-0.1.24 released <in development>
+0.1.24 released 2016-05-10
 ==========================
 
  - enhanced options for subtotals to include sum, avg, strings, and SQLAlchemy expressions
