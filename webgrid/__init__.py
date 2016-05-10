@@ -469,11 +469,14 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
         self.columns = []
         self.key_column_map = {}
         def subtotal_function_map(v):
+            # subtotals default to the simplest expression (sum). avg is also an option, or you
+            #   can assign a string or expression (string using column labels would probably
+            #   work best at this stage)
             if v == True or v == 'sum':
                 return sum_
             elif v == 'avg':
                 return avg_
-            return None
+            return v
 
         for col in self.__cls_cols__:
             new_col = col.new_instance(self)
@@ -481,7 +484,7 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
             self.key_column_map[new_col.key] = new_col
             if new_col.filter is not None:
                 self.filtered_cols[new_col.key] = new_col
-            if new_col.has_subtotal:
+            if new_col.has_subtotal != False and new_col.has_subtotal is not None:
                 self.subtotal_cols[new_col.key] = (
                     subtotal_function_map(new_col.has_subtotal),
                     new_col
@@ -591,7 +594,15 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
             else:
                 aggregate_this = colobj.expr
 
-            labeled_aggregate_col = sa_aggregate_func(aggregate_this).label(colname)
+            # sa_aggregate_func could be an expression, or a callable. If it is callable, give it
+            #   the column
+            labeled_aggregate_col = None
+            if callable(sa_aggregate_func):
+                labeled_aggregate_col = sa_aggregate_func(aggregate_this).label(colname)
+            elif isinstance(sa_aggregate_func, six.string_types):
+                labeled_aggregate_col = sasql.literal_column(sa_aggregate_func).label(colname)
+            else:
+                labeled_aggregate_col = sa_aggregate_func.label(colname)
             cols.append(labeled_aggregate_col)
 
         return self.manager.sa_query(*cols).select_entity_from(SUB).first()
