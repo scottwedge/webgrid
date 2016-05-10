@@ -56,9 +56,9 @@ class Person(db.Model, DefaultMixin):
         return '<Person: "%s, created: %s">' % (self.id, self.createdts)
 
     @classmethod
-    def testing_create(cls, firstname=None):
+    def testing_create(cls, firstname=None, **kwargs):
         firstname = firstname or randchars()
-        return cls.add(firstname=firstname)
+        return cls.add(firstname=firstname, **kwargs)
 
     @classmethod
     def delete_cascaded(cls):

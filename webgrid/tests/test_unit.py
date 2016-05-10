@@ -1,6 +1,10 @@
 from __future__ import absolute_import
+
+from decimal import Decimal
+
 import flask
 from nose.tools import eq_
+import sqlalchemy.sql as sasql
 from werkzeug.datastructures import MultiDict
 
 from webgrid import Column, BoolColumn, YesNoColumn
@@ -14,8 +18,7 @@ class TestGrid(object):
     class TG(Grid):
         Column('First Name', Person.firstname)
 
-    @classmethod
-    def setup_class(self):
+    def setUp(self):
         Status.delete_cascaded()
         Person.testing_create()
         Person.testing_create()
@@ -61,6 +64,61 @@ class TestGrid(object):
         assert_not_in_query(query, 'ORDER BY')
         rs = g.records
         assert len(rs) > 0, rs
+
+    def test_subtotal_sum_by_default(self):
+        class CTG(Grid):
+            Column('Sum Total', Person.numericcol.label('something'), has_subtotal=True)
+        Person.testing_create(numericcol=5)
+        Person.testing_create(numericcol=10)
+        g = CTG()
+        totals = g.grand_totals
+        assert totals.something == 15
+
+    def test_subtotal_sum(self):
+        class CTG(Grid):
+            Column('Sum Total', Person.numericcol.label('something'), has_subtotal='sum')
+        Person.testing_create(numericcol=5)
+        Person.testing_create(numericcol=10)
+        g = CTG()
+        totals = g.grand_totals
+        assert totals.something == 15
+
+    def test_subtotal_avg(self):
+        class CTG(Grid):
+            Column('Sum Total', Person.numericcol.label('something'), has_subtotal='avg')
+        Person.testing_create(numericcol=5)
+        Person.testing_create(numericcol=10)
+        g = CTG()
+        totals = g.grand_totals
+        assert totals.something == Decimal('7.5')
+
+    def test_subtotal_expr_string(self):
+        class CTG(Grid):
+            ratio_expr = Person.numericcol / Person.sortorder
+            Column('Numeric', Person.numericcol.label('numeric_col'), has_subtotal=True)
+            Column('Ints', Person.floatcol.label('float_col'), has_subtotal=True)
+            Column('Ratio', Person.numericcol.label('something'),
+                   has_subtotal='sum(numeric_col) / sum(float_col)')
+        Person.testing_create(numericcol=5, floatcol=1)
+        Person.testing_create(numericcol=10, floatcol=3)
+        g = CTG()
+        totals = g.grand_totals
+        assert totals.something == Decimal('3.75'), totals
+
+    def test_subtotal_expr(self):
+        sum_ = sasql.functions.sum
+
+        class CTG(Grid):
+            ratio_expr = Person.numericcol / Person.sortorder
+            Column('Numeric', Person.numericcol.label('numeric_col'), has_subtotal=True)
+            Column('Ints', Person.floatcol.label('float_col'), has_subtotal=True)
+            Column('Ratio', Person.numericcol.label('something'),
+                   has_subtotal=sum_(Person.numericcol) / sum_(Person.floatcol))
+        Person.testing_create(numericcol=5, floatcol=1)
+        Person.testing_create(numericcol=10, floatcol=3)
+        g = CTG()
+        totals = g.grand_totals
+        assert totals.something == Decimal('3.75'), totals
 
     def test_query_prep_sorting(self):
         class CTG(Grid):
