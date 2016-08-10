@@ -1,4 +1,5 @@
 argparse
+arrow
 Beaker
 beautifulsoup4
 BlazeUtils
@@ -36,6 +37,7 @@ setuptools
 six
 SQLAlchemy
 SQLAlchemyBWC
+sqlalchemy_utils
 SQLiteFKTG4SA
 waitress
 WebHelpers2

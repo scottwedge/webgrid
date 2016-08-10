@@ -17,6 +17,12 @@ from werkzeug.datastructures import MultiDict
 
 from .renderers import HTML, XLS
 
+# conditional imports to support libs without requiring them
+try:
+    import arrow
+except ImportError:
+    arrow = None
+
 try:
     import xlwt
 except ImportError:
@@ -330,6 +336,10 @@ class DateColumnBase(Column):
         data = self.extract_and_format_data(record)
         if not data:
             return data
+        # if we have an arrow date, allow html_format to use that functionality
+        if arrow and isinstance(data, arrow.Arrow):
+            if data.strftime(self.html_format) == self.html_format:
+                return data.format(self.html_format)
         return data.strftime(self.html_format)
 
     def xls_width_calc(self, value):

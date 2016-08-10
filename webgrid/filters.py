@@ -739,6 +739,9 @@ class DateTimeFilter(DateFilter):
             return feval.Int(not_empty=False).to_python(value)
 
         if self.op in self.days_operators:
+            if is_value2:
+                return None
+
             filter_value = feval.Int(not_empty=True).to_python(value)
 
             if self.op in ('da', 'ltda', 'mtda'):
@@ -754,6 +757,8 @@ class DateTimeFilter(DateFilter):
                     raise formencode.Invalid('date filter given is out of range', value, self)
 
             return filter_value
+        elif value == '':
+            return None
 
         try:
             dt_value = parse(value)
@@ -793,24 +798,24 @@ class DateTimeFilter(DateFilter):
 
         if self.op == 'thismonth':
             last_day = today + relativedelta(day=1, months=+1, microseconds=-1)
-            first_day = today + relativedelta(day=1)
+            first_day = ensure_datetime(today + relativedelta(day=1))
             return query.filter(self.sa_col.between(first_day, last_day))
 
         if self.op == 'lastmonth':
             last_day = today + relativedelta(day=1, microseconds=-1)
-            first_day = today + relativedelta(day=1, months=-1)
+            first_day = ensure_datetime(today + relativedelta(day=1, months=-1))
             return query.filter(self.sa_col.between(first_day, last_day))
 
         if self.op == 'thisyear':
             last_day = today + relativedelta(day=31, month=12, days=+1, microseconds=-1)
-            first_day = today + relativedelta(day=1, month=1)
+            first_day = ensure_datetime(today + relativedelta(day=1, month=1))
             return query.filter(self.sa_col.between(first_day, last_day))
 
         if self.op == 'selmonth' and not self.value2:
             return query
 
         if self.op == 'selmonth':
-            first_day = self.first_day
+            first_day = ensure_datetime(self.first_day)
             last_day = self.last_day + relativedelta(days=1, microseconds=-1)
             return query.filter(self.sa_col.between(first_day, last_day))
 
@@ -877,7 +882,7 @@ class DateTimeFilter(DateFilter):
                                              time_part=dt.time(23, 59, 59, 999999))
             else:
                 right_side = self.value2
-            between_clause = self.sa_col.between(self.value1, right_side)
+            between_clause = self.sa_col.between(ensure_datetime(self.value1), right_side)
             if self.op == 'between':
                 return query.filter(between_clause)
             else:

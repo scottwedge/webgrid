@@ -9,7 +9,7 @@ from .helpers import query_to_str
 
 from webgrid.filters import OptionsFilterBase, TextFilter, IntFilter, NumberFilter, DateFilter, \
     DateTimeFilter, FilterBase, TimeFilter, YesNoFilter
-from webgrid_ta.model.entities import Person, db
+from webgrid_ta.model.entities import ArrowRecord, Person, db
 
 from .helpers import ModelBase
 from six.moves import map
@@ -425,7 +425,24 @@ class TestDateFilter(CheckFilterBase):
 
 
 class TestDateTimeFilter(CheckFilterBase):
-    between_sql = "WHERE persons.createdts BETWEEN '2012-01-01' AND '2012-01-31 23:59:59.999999'"
+    between_sql = "WHERE persons.createdts BETWEEN '2012-01-01 00:00:00.000000' AND " \
+        "'2012-01-31 23:59:59.999999'"
+
+    def test_arrow_support_eq(self):
+        filter = DateTimeFilter(ArrowRecord.created_utc)
+        filter.set('eq', '12/31/2010')
+        self.assert_filter_query(
+            filter,
+            "WHERE arrow_records.created_utc BETWEEN '2010-12-31 00:00:00.000000' "
+            "AND '2010-12-31 23:59:59.999999'")
+
+    def test_arrow_support_lastmonth(self):
+        filter = DateTimeFilter(ArrowRecord.created_utc, _now=dt.datetime(2016, 7, 18))
+        filter.set('lastmonth', None)
+        self.assert_filter_query(
+            filter,
+            "WHERE arrow_records.created_utc BETWEEN '2016-06-01 00:00:00.000000' "
+            "AND '2016-06-30 23:59:59.999999'")
 
     def test_eq(self):
         filter = DateTimeFilter(Person.createdts)
@@ -604,6 +621,10 @@ class TestDateTimeFilter(CheckFilterBase):
         filter = DateTimeFilter(Person.createdts, _now=dt.datetime(2012, 1, 1, 12, 35))
         filter.set('ind', '')
 
+    def test_non_days_operator_with_empty_value(self):
+        filter = DateTimeFilter(Person.createdts, _now=dt.datetime(2012, 1, 1, 12, 35))
+        filter.set('lastmonth', '')
+
     def test_set_makes_op_none(self):
         filter = DateTimeFilter(Person.createdts, _now=dt.datetime(2012, 1, 1, 12, 35))
         filter.op = 'foo'
@@ -660,7 +681,8 @@ class TestDateTimeFilter(CheckFilterBase):
         filter.set('thisyear', None)
         self.assert_filter_query(
             filter,
-            "WHERE persons.createdts BETWEEN '2012-01-01' AND '2012-12-31 23:59:59.999999'"
+            "WHERE persons.createdts BETWEEN '2012-01-01 00:00:00.000000' AND "
+            "'2012-12-31 23:59:59.999999'"
         )
         eq_(filter.description, '01/01/2012 - 12/31/2012')
 
@@ -669,7 +691,8 @@ class TestDateTimeFilter(CheckFilterBase):
         filter.set(None, None)
         self.assert_filter_query(
             filter,
-            "WHERE persons.createdts BETWEEN '2012-01-01' AND '2012-12-31 23:59:59.999999'"
+            "WHERE persons.createdts BETWEEN '2012-01-01 00:00:00.000000' AND "
+            "'2012-12-31 23:59:59.999999'"
         )
         eq_(filter.description, '01/01/2012 - 12/31/2012')
 

@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import datetime as dt
 from io import BytesIO
 
+import arrow
 from nose.tools import eq_
 from six.moves import range
 import xlrd
@@ -10,9 +11,9 @@ import xlrd
 from webgrid import Column, LinkColumnBase, YesNoColumn, BoolColumn, row_styler, col_filter, \
     col_styler
 from webgrid.filters import TextFilter
-from webgrid_ta.model.entities import Person, Status, Email, db
+from webgrid_ta.model.entities import ArrowRecord, Person, Status, Email, db
 
-from webgrid_ta.grids import Grid, PeopleGrid as PG
+from webgrid_ta.grids import ArrowGrid, Grid, PeopleGrid as PG
 from .helpers import inrequest, eq_html
 
 
@@ -477,3 +478,26 @@ class TestHideSection(object):
         g = NoControlBoxGrid()
         assert '<tr class="status"' not in g.html()
         assert '<div class="footer">' not in g.html()
+
+
+class TestArrowDate(object):
+    @inrequest('/')
+    def test_arrow_render_html(self):
+        ArrowRecord.query.delete()
+        ArrowRecord.testing_create(created_utc=arrow.Arrow(2016, 8, 10, 1, 2, 3))
+        g = ArrowGrid()
+        assert '<td>08/10/2016 01:02 AM</td>' in g.html(), g.html()
+
+        g.column('created_utc').html_format = 'YYYY-MM-DD HH:mm:ss ZZ'
+        assert '<td>2016-08-10 01:02:03 -00:00</td>' in g.html(), g.html()
+
+    @inrequest('/')
+    def test_arrow_timezone(self):
+        # regardless of timezone given, ArrowType stored as UTC and will display that way
+        ArrowRecord.query.delete()
+        ArrowRecord.testing_create(created_utc=arrow.Arrow(2016, 8, 10, 1, 2, 3).to('US/Pacific'))
+        g = ArrowGrid()
+        assert '<td>08/10/2016 01:02 AM</td>' in g.html(), g.html()
+
+        g.column('created_utc').html_format = 'YYYY-MM-DD HH:mm:ss ZZ'
+        assert '<td>2016-08-10 01:02:03 -00:00</td>' in g.html(), g.html()

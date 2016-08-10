@@ -50,6 +50,29 @@ def query_to_str(statement, bind=None):
     compiler = statement._compiler(dialect)
 
     class LiteralCompiler(compiler.__class__):
+        def render_literal_value(self, value, type_):
+            import datetime
+            """
+            For date and datetime values, convert to a string
+            format acceptable to the dialect. That seems to be the
+            so-called ODBC canonical date format which looks
+            like this:
+
+                yyyy-mm-dd hh:mi:ss.mmm(24h)
+
+            For other data types, call the base class implementation.
+            """
+            if isinstance(value, datetime.datetime):
+                return "'" + value.strftime('%Y-%m-%d %H:%M:%S.%f') + "'"
+            elif isinstance(value, datetime.date):
+                return "'" + value.strftime('%Y-%m-%d') + "'"
+            elif isinstance(value, datetime.time):
+                return "'{:%H:%M:%S.%f}'".format(value)
+            elif value is None:
+                return 'NULL'
+            else:
+                return super(LiteralCompiler, self).render_literal_value(value, type_)
+
         def visit_bindparam(
                 self, bindparam, within_columns_clause=False,
                 literal_binds=False, **kwargs
