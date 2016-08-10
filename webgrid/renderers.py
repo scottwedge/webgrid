@@ -644,4 +644,4 @@ class XLS(object):
 
     def as_response(self, wb=None, sheet_name=None):
         wb = self.build_sheet(wb, sheet_name)
-        self.grid.manager.xls_as_response(wb, self.file_name())
+        return self.grid.manager.xls_as_response(wb, self.file_name())
