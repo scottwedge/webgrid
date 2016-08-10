@@ -17,7 +17,6 @@ from werkzeug.datastructures import MultiDict
 
 from .renderers import HTML, XLS
 
-
 try:
     import xlwt
 except ImportError:
@@ -64,7 +63,7 @@ class _DeclarativeMeta(type):
         class_dict['__cls_cols__'] = class_columns
 
         # we have to assign the attribute name
-        for k,v in six.iteritems(class_dict):
+        for k, v in six.iteritems(class_dict):
             # catalog the row stylers
             if getattr(v, '__grid_rowstyler__', None):
                 class_dict['_rowstylers'].append(v)
@@ -80,6 +79,7 @@ class _DeclarativeMeta(type):
                 class_dict['_colfilters'].append((v, for_column))
 
         return super(_DeclarativeMeta, cls).__new__(cls, name, bases, class_dict)
+
 
 class Column(object):
     """
@@ -103,8 +103,8 @@ class Column(object):
         grid_cls_cols.append(self)
 
     def __init__(self, label, key=None, filter=None, can_sort=True,
-                xls_width=None, xls_style=None, xls_num_format=None,
-                render_in=_None, has_subtotal=False, **kwargs):
+                 xls_width=None, xls_style=None, xls_num_format=None,
+                 render_in=_None, has_subtotal=False, **kwargs):
         self.label = label
         self.key = key
         self.filter = filter
@@ -136,16 +136,16 @@ class Column(object):
 
             if key is None:
                 raise ValueError('expected filter to be a SQLAlchemy column-like'
-                        ' object, but it did not have a "key" or "name"'
-                        ' attribute')
+                                 ' object, but it did not have a "key" or "name"'
+                                 ' attribute')
             self.key = key
 
         # filters can be sent in as a class (not class instance) if needed
         if inspect.isclass(filter):
             if self.expr is None:
                 raise ValueError('the filter was a class type, but no'
-                    ' column-like object is available from "key" to pass in as'
-                    ' as the first argument')
+                                 ' column-like object is available from "key" to pass in as'
+                                 ' as the first argument')
             self.filter = filter(self.expr)
 
     def new_instance(self, grid):
@@ -170,8 +170,8 @@ class Column(object):
         # new instance by looking for attributes on the class that have the
         # same name as arguments to the classes __init__ method
         for argname in inspect.getargspec(self.__init__).args:
-            if argname != 'self' and hasattr(self, argname) and               \
-                        argname not in ('label', 'key', 'filter', 'can_sort'):
+            if argname != 'self' and hasattr(self, argname) and \
+                    argname not in ('label', 'key', 'filter', 'can_sort'):
                 setattr(column, argname, getattr(self, argname))
 
         return column
@@ -225,7 +225,7 @@ class Column(object):
     def render(self, render_type, record, *args, **kwargs):
         render_attr = 'render_{0}'.format(render_type)
         if hasattr(self, render_attr):
-           return getattr(self, render_attr)(record, *args, **kwargs)
+            return getattr(self, render_attr)(record, *args, **kwargs)
         return self.extract_and_format_data(record)
 
     def apply_sort(self, query, flag_desc):
@@ -264,12 +264,13 @@ class Column(object):
         """
         return self.xlwt_stymat
 
+
 class LinkColumnBase(Column):
     link_attrs = {}
 
-    def __init__(self, label, key=None, filter=None, can_sort=True, \
-                link_label=None, xls_width=None, xls_style=None, xls_num_format=None,
-                render_in=_None, **kwargs):
+    def __init__(self, label, key=None, filter=None, can_sort=True,
+                 link_label=None, xls_width=None, xls_style=None, xls_num_format=None,
+                 render_in=_None, **kwargs):
         Column.__init__(self, label, key, filter, can_sort, xls_width,
                         xls_style, xls_num_format, render_in, **kwargs)
         self.link_label = link_label
@@ -285,12 +286,13 @@ class LinkColumnBase(Column):
     def create_url(self, record):
         raise NotImplementedError('create_url() must be defined on a subclass')
 
+
 class BoolColumn(Column):
 
-    def __init__(self, label, key_or_filter=None, key=None, can_sort=True, \
-                reverse=False, true_label='True', false_label='False', \
-                xls_width=None, xls_style=None, xls_num_format=None, \
-                render_in=_None, **kwargs):
+    def __init__(self, label, key_or_filter=None, key=None, can_sort=True,
+                 reverse=False, true_label='True', false_label='False',
+                 xls_width=None, xls_style=None, xls_num_format=None,
+                 render_in=_None, **kwargs):
         Column.__init__(self, label, key_or_filter, key, can_sort, xls_width,
                         xls_style, xls_num_format, render_in, **kwargs)
         self.reverse = reverse
@@ -304,19 +306,21 @@ class BoolColumn(Column):
             return self.true_label
         return self.false_label
 
+
 class YesNoColumn(BoolColumn):
 
-    def __init__(self, label, key_or_filter=None, key=None, can_sort=True, \
-                reverse=False, xls_width=None, xls_style=None, xls_num_format=None,
-                render_in=_None, **kwargs):
-        BoolColumn.__init__(self, label, key_or_filter, key, can_sort, reverse, \
-                'Yes', 'No', xls_width, xls_style, xls_num_format, render_in, **kwargs)
+    def __init__(self, label, key_or_filter=None, key=None, can_sort=True,
+                 reverse=False, xls_width=None, xls_style=None, xls_num_format=None,
+                 render_in=_None, **kwargs):
+        BoolColumn.__init__(self, label, key_or_filter, key, can_sort, reverse,
+                            'Yes', 'No', xls_width, xls_style, xls_num_format, render_in, **kwargs)
+
 
 class DateColumnBase(Column):
 
     def __init__(self, label, key_or_filter=None, key=None, can_sort=True,
-                html_format=None, xls_width=None, xls_style=None, xls_num_format=None,
-                render_in=_None, **kwargs):
+                 html_format=None, xls_width=None, xls_style=None, xls_num_format=None,
+                 render_in=_None, **kwargs):
         Column.__init__(self, label, key_or_filter, key, can_sort, xls_width,
                         xls_style, xls_num_format, render_in, **kwargs)
         if html_format:
@@ -342,12 +346,14 @@ class DateColumnBase(Column):
             # must be the column heading
             return Column.xls_width_calc(self, value)
 
+
 class DateColumn(DateColumnBase):
     html_format = '%m/%d/%Y'
     xls_num_format = 'm/dd/yyyy'
 
+
 class DateTimeColumn(DateColumnBase):
-    html_format='%m/%d/%Y %I:%M %p'
+    html_format = '%m/%d/%Y %I:%M %p'
     xls_num_format = 'mm/dd/yyyy hh:mm am/pm'
 
 
@@ -358,14 +364,15 @@ class TimeColumn(DateColumnBase):
 
 class NumericColumn(Column):
     xls_fmt_general = '#,##0{dec_places};{neg_prefix}-#,##0{dec_places}'
-    xls_fmt_accounting = '_($* #,##0{dec_places}_);{neg_prefix}_($* (#,##0{dec_places});_($* "-"??_);_(@_)'
+    xls_fmt_accounting = '_($* #,##0{dec_places}_);{neg_prefix}_($* (#,##0{dec_places})' + \
+                         ';_($* "-"??_);_(@_)'
     xls_fmt_percent = '0{dec_places}%;{neg_prefix}-0{dec_places}%'
 
-    def __init__(self, label, key_or_filter=None, key=None, can_sort=True, \
-                reverse=False, xls_width=None, xls_style=None, xls_num_format=None,
-                render_in=_None, format_as='general', places=2, curr='',
-                sep=',', dp='.', pos='', neg='-', trailneg='',
-                xls_neg_red=True, has_subtotal=False, **kwargs):
+    def __init__(self, label, key_or_filter=None, key=None, can_sort=True,
+                 reverse=False, xls_width=None, xls_style=None, xls_num_format=None,
+                 render_in=_None, format_as='general', places=2, curr='',
+                 sep=',', dp='.', pos='', neg='-', trailneg='',
+                 xls_neg_red=True, has_subtotal=False, **kwargs):
         Column.__init__(self, label, key_or_filter, key, can_sort, xls_width,
                         xls_style, xls_num_format, render_in,
                         has_subtotal, **kwargs)
@@ -425,6 +432,7 @@ class NumericColumn(Column):
             return xlwt.easyxf(self.xls_style, num_format)
         return Column.xlwt_stymat_init(self)
 
+
 class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
     __cls_cols__ = ()
     identifier = None
@@ -440,7 +448,8 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
     subtotals = 'none'
     manager = None
 
-    def __init__(self, ident=None, per_page=_None, on_page=_None, qs_prefix='', class_='datagrid', **kwargs):
+    def __init__(self, ident=None, per_page=_None, on_page=_None, qs_prefix='', class_='datagrid',
+                 **kwargs):
         self._ident = ident
         self.hah = HTMLAttributes(kwargs)
         self.hah.id = self.ident
@@ -468,11 +477,12 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
 
         self.columns = []
         self.key_column_map = {}
+
         def subtotal_function_map(v):
             # subtotals default to the simplest expression (sum). avg is also an option, or you
             #   can assign a string or expression (string using column labels would probably
             #   work best at this stage)
-            if v == True or v == 'sum':
+            if v is True or v == 'sum':
                 return sum_
             elif v == 'avg':
                 return avg_
@@ -484,7 +494,7 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
             self.key_column_map[new_col.key] = new_col
             if new_col.filter is not None:
                 self.filtered_cols[new_col.key] = new_col
-            if new_col.has_subtotal != False and new_col.has_subtotal is not None:
+            if new_col.has_subtotal is not False and new_col.has_subtotal is not None:
                 self.subtotal_cols[new_col.key] = (
                     subtotal_function_map(new_col.has_subtotal),
                     new_col
@@ -683,17 +693,19 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
             # any of the grid's query string args can be used to
             #   override the session behavior (except export_to)
             r = re.compile(
-                self.qs_prefix+'(op\(.*\))'
+                self.qs_prefix + '(op\(.*\))'
             )
             return any(r.match(a) for a in args.keys())
+
         def args_have_page(args):
             r = re.compile(
-                self.qs_prefix+'(onpage|perpage)'
+                self.qs_prefix + '(onpage|perpage)'
             )
             return any(r.match(a) for a in args.keys())
+
         def args_have_sort(args):
             r = re.compile(
-                self.qs_prefix+'(sort[1-3])'
+                self.qs_prefix + '(sort[1-3])'
             )
             return any(r.match(a) for a in args.keys())
 
@@ -731,8 +743,8 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
                     req_args[self.prefix_qs_arg_key('export_to')]
             self.save_session_store(args)
 
-        ## filtering (make sure this is above paging otherwise self.page_count
-        ## used in the paging section below won't work)
+        # filtering (make sure this is above paging otherwise self.page_count
+        # used in the paging section below won't work)
         for col in six.itervalues(self.filtered_cols):
             filter = col.filter
             filter_op_qsk = self.prefix_qs_arg_key('op({0})'.format(col.key))
@@ -762,7 +774,7 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
                     invalid_msg = filter.format_invalid(e, col)
                     self.user_warnings.append(invalid_msg)
 
-        ## paging
+        # paging
         pp_qsk = self.prefix_qs_arg_key('perpage')
         if pp_qsk in args:
             per_page = self.apply_validator(fev.Int, args[pp_qsk], pp_qsk)
@@ -779,7 +791,7 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
                 on_page = self.page_count
             self.on_page = on_page
 
-        ## sorting
+        # sorting
         sort_qs_keys = [
             self.prefix_qs_arg_key('sort1'),
             self.prefix_qs_arg_key('sort2'),
@@ -853,15 +865,18 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
     def __repr__(self):
         return '<Grid "{0}">'.format(self.__class__.__name__)
 
+
 def row_styler(f):
     f.__grid_rowstyler__ = True
     return f
+
 
 def col_styler(for_column):
     def decorator(f):
         f.__grid_colstyler__ = for_column
         return f
     return decorator
+
 
 def col_filter(for_column):
     def decorator(f):

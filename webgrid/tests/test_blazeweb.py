@@ -14,7 +14,6 @@ if six.PY2:
 
     from webgrid.renderers import HTML
 
-
     class TestBlazeWeb(object):
         @classmethod
         def setup_class(cls):

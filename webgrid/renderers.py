@@ -85,11 +85,11 @@ class HTML(object):
     def filtering_table_row(self, col):
         extra = getattr(col.filter, 'html_extra', {})
         return _HTML.tr(
-            _HTML.th(self.filtering_col_label(col), class_='filter-label')
-            + _HTML.td(self.filtering_col_op_select(col), class_='operator')
-            + _HTML.td(
-                _HTML.div(self.filtering_col_inputs1(col), class_='inputs1')
-                + _HTML.div(self.filtering_col_inputs2(col), class_='inputs2')
+            _HTML.th(self.filtering_col_label(col), class_='filter-label') +
+            _HTML.td(self.filtering_col_op_select(col), class_='operator') +
+            _HTML.td(
+                _HTML.div(self.filtering_col_inputs1(col), class_='inputs1') +
+                _HTML.div(self.filtering_col_inputs2(col), class_='inputs2')
             ),
             class_=col.key,
             **extra
@@ -117,7 +117,8 @@ class HTML(object):
         field_name = 'op({0})'.format(col.key)
         field_name = self.grid.prefix_qs_arg_key(field_name)
 
-        return tags.select(field_name, current_selected, self.filtering_col_op_select_options(filter))
+        return tags.select(field_name, current_selected,
+                           self.filtering_col_op_select_options(filter))
 
     def filtering_col_inputs1(self, col):
         filter = col.filter
@@ -127,14 +128,16 @@ class HTML(object):
         inputs = ''
         if 'input' in filter.input_types:
             ident = '{0}_input1'.format(col.key)
-            inputs += _HTML.input(name=field_name, type='text', value=filter.value1_set_with, id=ident)
+            inputs += _HTML.input(name=field_name, type='text', value=filter.value1_set_with,
+                                  id=ident)
         if 'select' in filter.input_types:
             ident = '{0}_select1'.format(col.key)
             current_selected = tolist(filter.value1) or []
             multiple = None
             if len(current_selected) > 1:
                 multiple = 'multiple'
-            inputs += tags.select(field_name, current_selected, self.filtering_filter_options(filter), multiple=multiple)
+            inputs += tags.select(field_name, current_selected,
+                                  self.filtering_filter_options(filter), multiple=multiple)
             inputs += self.filtering_toggle_image()
         return inputs
 
@@ -162,7 +165,8 @@ class HTML(object):
         inputs = ''
         if 'input2' in filter.input_types:
             ident = '{0}_input2'.format(col.key)
-            inputs += _HTML.input(name=field_name, type='text', value=filter.value2_set_with, id=ident)
+            inputs += _HTML.input(name=field_name, type='text', value=filter.value2_set_with,
+                                  id=ident)
         return inputs
 
     def filtering_add_filter_select(self):
@@ -174,7 +178,7 @@ class HTML(object):
     def filtering_json_data(self):
         for_js = {}
         for col_key, col in six.iteritems(self.grid.filtered_cols):
-            for_js[col_key] = opdict =  {}
+            for_js[col_key] = opdict = {}
             for op in col.filter.operators:
                 opdict[op.key] = {
                     'field_type': op.field_type,
@@ -307,7 +311,7 @@ class HTML(object):
             if self.grid.order_by and len(self.grid.order_by) == 1:
                 current_sort, flag_desc = self.grid.order_by[0]
                 if current_sort == col.key:
-                    cls = 'sort-'+('desc' if flag_desc else 'asc')
+                    cls = 'sort-' + ('desc' if flag_desc else 'asc')
                 if current_sort != col.key or flag_desc:
                     url_args['sort1'] = col.key
                 else:
@@ -327,15 +331,15 @@ class HTML(object):
         for rownum, record in enumerate(self.grid.records):
             rows.append(self.table_tr(rownum, record))
         # process subtotals (if any)
-        if rows and self.grid.subtotals in ('page','all') and \
-            self.grid.subtotal_cols:
+        if rows and self.grid.subtotals in ('page', 'all') and \
+                self.grid.subtotal_cols:
             rows.append(
-                self.table_pagetotals(rownum+1,self.grid.page_totals)
+                self.table_pagetotals(rownum + 1, self.grid.page_totals)
             )
-        if rows and self.grid.subtotals in ('grand','all') and \
-            self.grid.subtotal_cols:
+        if rows and self.grid.subtotals in ('grand', 'all') and \
+                self.grid.subtotal_cols:
             rows.append(
-                self.table_grandtotals(rownum+2,self.grid.grand_totals)
+                self.table_grandtotals(rownum + 2, self.grid.grand_totals)
             )
         rows_str = '\n        '.join(rows)
         return literal(rows_str)
@@ -508,6 +512,7 @@ class HTML(object):
     def xls_url(self):
         return self.current_url(export_to='xls')
 
+
 class XLS(object):
     def __init__(self, grid, max_col_width=150):
         self.grid = grid
@@ -581,8 +586,8 @@ class XLS(object):
 
         # totals
         if rownum and self.grid.subtotals != 'none' \
-            and self.grid.subtotal_cols:
-            self.totals_row(xlh, rownum+1, self.grid.grand_totals)
+                and self.grid.subtotal_cols:
+            self.totals_row(xlh, rownum + 1, self.grid.grand_totals)
 
     def record_row(self, xlh, rownum, record):
         for col in self.grid.iter_columns('xls'):
@@ -610,11 +615,11 @@ class XLS(object):
                     xlh.rownum,
                     xlh.rownum,
                     xlh.colnum,
-                    xlh.colnum+colspan-1,
+                    xlh.colnum + colspan - 1,
                     bufferval,
                     totals_xf
                 )
-                xlh.colnum = xlh.colnum+colspan
+                xlh.colnum = xlh.colnum + colspan
                 firstcol = False
                 colspan = 0
             self.total_cell(xlh, col, record)

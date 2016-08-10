@@ -191,7 +191,8 @@ class TestHtmlRenderer(object):
         g = self.get_grid()
         eq_('/thepage?onpage=5&perpage=1', g.html.paging_url_last())
 
-    @inrequest('/thepage?foo=bar&onpage=5&perpage=10&sort1=1&sort2=2&sort3=3&op(name)=eq&v1(name)=bob&v2(name)=fred')  # noqa
+    @inrequest('/thepage?foo=bar&onpage=5&perpage=10&sort1=1&sort2=2&sort3=3&op(name)=eq&v1(name)'
+               '=bob&v2(name)=fred')
     def test_reset_url(self):
         g = self.get_grid()
         eq_(
@@ -309,36 +310,44 @@ class TestHtmlRenderer(object):
         heading_row = g.html.table_column_headings()
         assert '<th><a class="sort-desc" href="/thepage?sort1=name">Name</a></th>' in heading_row
 
-    @inrequest('/thepage?op(firstname)=eq&v1(firstname)=foo&op(createdts)=between&v1(createdts)=2%2F15%2F12&&v2(createdts)=2012-02-16')  # noqa
+    @inrequest('/thepage?op(firstname)=eq&v1(firstname)=foo&op(createdts)=between&v1(createdts)='
+               '2%2F15%2F12&&v2(createdts)=2012-02-16')
     def test_filtering_input_html(self):
         g = PeopleGrid()
 
         filter_html = g.html.filtering_col_inputs1(g.key_column_map['firstname'])
-        assert '<input id="firstname_input1" name="v1(firstname)" type="text" />' in filter_html, filter_html  # noqa
+        assert '<input id="firstname_input1" name="v1(firstname)" type="text" />' in filter_html, \
+            filter_html
 
         filter_html = g.html.filtering_col_inputs1(g.key_column_map['createdts'])
-        assert '<input id="createdts_input1" name="v1(createdts)" type="text" />' in filter_html, filter_html  # noqa
+        assert '<input id="createdts_input1" name="v1(createdts)" type="text" />' in filter_html, \
+            filter_html
 
         filter_html = g.html.filtering_col_inputs2(g.key_column_map['createdts'])
-        assert '<input id="createdts_input2" name="v2(createdts)" type="text" />' in filter_html, filter_html  # noqa
+        assert '<input id="createdts_input2" name="v2(createdts)" type="text" />' in filter_html, \
+            filter_html
 
         g.apply_qs_args()
 
         filter_html = g.html.filtering_col_inputs1(g.key_column_map['firstname'])
-        assert '<input id="firstname_input1" name="v1(firstname)" type="text" value="foo" />' in filter_html, filter_html  # noqa
+        assert '<input id="firstname_input1" name="v1(firstname)" type="text" value="foo" />' in \
+            filter_html, filter_html
 
         filter_html = g.html.filtering_col_inputs1(g.key_column_map['createdts'])
-        assert '<input id="createdts_input1" name="v1(createdts)" type="text" value="02/15/2012 12:00 AM" />' in filter_html, filter_html  # noqa
+        assert '<input id="createdts_input1" name="v1(createdts)" type="text" value=' + \
+            '"02/15/2012 12:00 AM" />' in filter_html, filter_html
 
         filter_html = g.html.filtering_col_inputs2(g.key_column_map['createdts'])
-        assert '<input id="createdts_input2" name="v2(createdts)" type="text" value="02/16/2012 12:00 AM" />' in filter_html, filter_html  # noqa
+        assert '<input id="createdts_input2" name="v2(createdts)" type="text" value=' + \
+            '"02/16/2012 12:00 AM" />' in filter_html, filter_html
 
     @inrequest('/thepage?op(firstname)=foobar&v1(firstname)=baz')
     def test_filtering_invalid_operator(self):
         g = PeopleGrid()
 
         filter_html = g.html.filtering_col_inputs1(g.key_column_map['firstname'])
-        assert '<input id="firstname_input1" name="v1(firstname)" type="text" />' in filter_html, filter_html  # noqa
+        assert '<input id="firstname_input1" name="v1(firstname)" type="text" />' in filter_html, \
+            filter_html
 
     @inrequest('/thepage')
     def test_extra_filter_attrs(self):
