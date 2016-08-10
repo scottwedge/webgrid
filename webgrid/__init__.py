@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+import datetime as dt
 import inspect
 import re
 import sys
@@ -341,6 +342,19 @@ class DateColumnBase(Column):
             if data.strftime(self.html_format) == self.html_format:
                 return data.format(self.html_format)
         return data.strftime(self.html_format)
+
+    def render_xls(self, record):
+        data = self.extract_and_format_data(record)
+        if not data:
+            return data
+        # if we have an arrow date, pull the underlying datetime, else the renderer won't know
+        #   how to handle it
+        if arrow and isinstance(data, arrow.Arrow):
+            data = data.datetime
+        # xlwt has no idea what to do with zone information
+        if isinstance(data, dt.datetime) and data.tzinfo is not None:
+            data = data.replace(tzinfo=None)
+        return data
 
     def xls_width_calc(self, value):
         if self.xls_width:

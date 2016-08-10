@@ -501,3 +501,22 @@ class TestArrowDate(object):
 
         g.column('created_utc').html_format = 'YYYY-MM-DD HH:mm:ss ZZ'
         assert '<td>2016-08-10 01:02:03 -00:00</td>' in g.html(), g.html()
+
+    def test_xls(self):
+        ArrowRecord.query.delete()
+        ArrowRecord.testing_create(created_utc=arrow.Arrow(2016, 8, 10, 1, 2, 3))
+        g = ArrowGrid()
+        buffer = BytesIO()
+        wb = g.xls()
+        wb.save(buffer)
+        buffer.seek(0)
+
+        book = xlrd.open_workbook(file_contents=buffer.getvalue())
+        sh = book.sheet_by_name('arrow_grid')
+        # headers
+        eq_(sh.cell_value(0, 0), 'Created')
+        # data row
+        eq_(
+            dt.datetime(*xlrd.xldate_as_tuple(sh.cell_value(1, 0), sh.book.datemode)[:6]),
+            dt.datetime(2016, 8, 10, 1, 2, 3)
+        )
