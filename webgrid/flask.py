@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 from io import BytesIO
+from os import path
 
 from flask import request, session, flash, Blueprint, url_for, send_file
 
@@ -27,6 +28,9 @@ class WebGrid(object):
 
     def request(self):
         return request
+
+    def static_path(self):
+        return path.join(path.dirname(__file__), 'static')
 
     def static_url(self, url_tail):
         return url_for('webgrid.static', filename=url_tail)

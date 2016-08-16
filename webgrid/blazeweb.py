@@ -1,5 +1,7 @@
 from __future__ import absolute_import
 
+from os import path
+
 from blazeweb.content import getcontent
 from blazeweb.globals import ag, rg, user
 from blazeweb.routing import abs_static_url
@@ -35,6 +37,9 @@ class WebGrid(object):
 
     def request(self):
         return rg.request
+
+    def static_path(self):
+        return path.join(path.dirname(__file__), 'static')
 
     def static_url(self, url_tail):
         return abs_static_url('component/webgrid/{0}'.format(url_tail))
