@@ -711,20 +711,22 @@ class DateFilter(FilterBase, _DateMixin):
 
 class DateTimeFilter(DateFilter):
     def format_display_vals(self):
-        if isinstance(self.value1, dt.datetime) and self.op in (
+        check_ops = (
             ops.eq.key,
             ops.not_eq.key,
             ops.less_than_equal.key,
             ops.greater_than_equal.key,
             ops.between.key,
             ops.not_between.key
-        ):
+        )
+        if isinstance(self.value1, dt.datetime) and self.op in check_ops:
             self.value1_set_with = self.value1.strftime('%m/%d/%Y %I:%M %p')
-        if isinstance(self.value2, dt.datetime) and self.op in (
-            ops.between.key,
-            ops.not_between.key
-        ):
+            if self.op in check_ops[:4] and self._has_date_only1:
+                self.value1_set_with = self.value1.strftime('%m/%d/%Y')
+        if isinstance(self.value2, dt.datetime) and self.op in check_ops[-2:]:
             self.value2_set_with = self.value2.strftime('%m/%d/%Y %I:%M %p')
+            if self._has_date_only2:
+                self.value2_set_with = self.value2.strftime('%m/%d/%Y 11:59 PM')
 
     def process(self, value, is_value2):
         if value is None:
