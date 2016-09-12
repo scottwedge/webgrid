@@ -1,10 +1,11 @@
 Changelog
 ---------
 
-0.1.25 released <in development>
+0.1.25 released 2016-09-12
 ==========================
 
- - ?
+ - various bug fixes in DateTimeFilter
+ - introduce support for Arrow date objects in grid and date filters
 
 0.1.24 released 2016-05-10
 ==========================
