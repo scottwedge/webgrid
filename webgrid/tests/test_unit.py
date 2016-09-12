@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 from decimal import Decimal
+from os import path
 
 import flask
 from nose.tools import eq_
@@ -25,6 +26,10 @@ class TestGrid(object):
         Person.testing_create()
         Person.testing_create()
         Person.testing_create()
+
+    def test_static_path(self):
+        g = self.TG()
+        assert g.manager.static_path().endswith('webgrid{}static'.format(path.sep))
 
     def test_column_key(self):
         g = self.TG()

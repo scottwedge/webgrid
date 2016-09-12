@@ -1,4 +1,7 @@
 from __future__ import absolute_import
+
+from os import path
+
 import six
 
 if six.PY2:
@@ -13,7 +16,6 @@ if six.PY2:
     import mock
 
     from webgrid.renderers import HTML
-
 
     class TestBlazeWeb(object):
         @classmethod
@@ -71,3 +73,9 @@ if six.PY2:
             g = PeopleGrid()
             g.apply_qs_args()
             assert '123456' in user.dgsessions
+
+        @inrequest('/path?session_key=123456')
+        def test_static_path(self):
+            from webgrid_blazeweb_ta.views import PeopleGrid
+            g = PeopleGrid()
+            assert g.manager.static_path().endswith('webgrid{}static'.format(path.sep))

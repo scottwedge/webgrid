@@ -9,7 +9,7 @@ from .helpers import query_to_str
 
 from webgrid.filters import OptionsFilterBase, TextFilter, IntFilter, NumberFilter, DateFilter, \
     DateTimeFilter, FilterBase, TimeFilter, YesNoFilter
-from webgrid_ta.model.entities import Person, db
+from webgrid_ta.model.entities import ArrowRecord, Person, db
 
 from .helpers import ModelBase
 from six.moves import map
@@ -29,6 +29,7 @@ class CheckFilterBase(ModelBase):
     def assert_filter_query(self, filter, test_for):
         query = filter.apply(db.session.query(Person.id))
         self.assert_in_query(query, test_for)
+
 
 class TestTextFilter(CheckFilterBase):
 
@@ -54,7 +55,8 @@ class TestTextFilter(CheckFilterBase):
         tf = TextFilter(Person.firstname)
         tf.set('!empty', 'foo')
         query = tf.apply(db.session.query(Person.id))
-        self.assert_in_query(query, "WHERE persons.firstname IS NOT NULL AND persons.firstname != ''")
+        self.assert_in_query(query,
+                             "WHERE persons.firstname IS NOT NULL AND persons.firstname != ''")
 
     def test_contains(self):
         tf = TextFilter(Person.firstname)
@@ -75,11 +77,13 @@ class TestTextFilter(CheckFilterBase):
         self.assert_in_query(query, "WHERE persons.firstname LIKE '%foo%'")
 
     def test_default_callable(self):
-        def_val = lambda: 'bar'
+        def def_val():
+            return 'bar'
         tf = TextFilter(Person.firstname, default_op='contains', default_value1=def_val)
         tf.set(None, None)
         query = tf.apply(db.session.query(Person.id))
         self.assert_in_query(query, "WHERE persons.firstname LIKE '%bar%'")
+
 
 class TestNumberFilters(CheckFilterBase):
     """
@@ -421,22 +425,48 @@ class TestDateFilter(CheckFilterBase):
 
 
 class TestDateTimeFilter(CheckFilterBase):
-    between_sql = "WHERE persons.createdts BETWEEN '2012-01-01' AND '2012-01-31 23:59:59.999999'"
+    between_sql = "WHERE persons.createdts BETWEEN '2012-01-01 00:00:00.000000' AND " \
+        "'2012-01-31 23:59:59.999999'"
+
+    def test_arrow_support_eq(self):
+        filter = DateTimeFilter(ArrowRecord.created_utc)
+        filter.set('eq', '12/31/2010')
+        self.assert_filter_query(
+            filter,
+            "WHERE arrow_records.created_utc BETWEEN '2010-12-31 00:00:00.000000' "
+            "AND '2010-12-31 23:59:59.999999'")
+
+    def test_arrow_support_lastmonth(self):
+        filter = DateTimeFilter(ArrowRecord.created_utc, _now=dt.datetime(2016, 7, 18))
+        filter.set('lastmonth', None)
+        self.assert_filter_query(
+            filter,
+            "WHERE arrow_records.created_utc BETWEEN '2016-06-01 00:00:00.000000' "
+            "AND '2016-06-30 23:59:59.999999'")
 
     def test_eq(self):
         filter = DateTimeFilter(Person.createdts)
         filter.set('eq', '12/31/2010')
-        self.assert_filter_query(filter, "WHERE persons.createdts BETWEEN '2010-12-31 00:00:00.000000' AND '2010-12-31 23:59:59.999999'")
+        self.assert_filter_query(
+            filter,
+            "WHERE persons.createdts BETWEEN '2010-12-31 00:00:00.000000' "
+            "AND '2010-12-31 23:59:59.999999'")
+        eq_(filter.value1_set_with, '12/31/2010')
 
     def test_eq_with_time(self):
         filter = DateTimeFilter(Person.createdts)
         filter.set('eq', '12/31/2010 10:26:27')
         self.assert_filter_query(filter, "WHERE persons.createdts = '2010-12-31 10:26:27.000000'")
+        eq_(filter.value1_set_with, '12/31/2010 10:26 AM')
 
     def test_not_eq(self):
         filter = DateTimeFilter(Person.createdts)
         filter.set('!eq', '12/31/2010')
-        self.assert_filter_query(filter, "WHERE persons.createdts NOT BETWEEN '2010-12-31 00:00:00.000000' AND '2010-12-31 23:59:59.999999'")
+        self.assert_filter_query(
+            filter,
+            "WHERE persons.createdts NOT BETWEEN '2010-12-31 00:00:00.000000' AND "
+            "'2010-12-31 23:59:59.999999'")
+        eq_(filter.value1_set_with, '12/31/2010')
 
     def test_not_eq_with_time(self):
         filter = DateTimeFilter(Person.createdts)
@@ -447,6 +477,7 @@ class TestDateTimeFilter(CheckFilterBase):
         filter = DateTimeFilter(Person.createdts)
         filter.set('lte', '12/31/2010')
         self.assert_filter_query(filter, "WHERE persons.createdts <= '2010-12-31 23:59:59.999999'")
+        eq_(filter.value1_set_with, '12/31/2010')
 
     def test_lte_with_time(self):
         filter = DateTimeFilter(Person.createdts)
@@ -457,6 +488,7 @@ class TestDateTimeFilter(CheckFilterBase):
         filter = DateTimeFilter(Person.createdts)
         filter.set('gte', '12/31/2010')
         self.assert_filter_query(filter, "WHERE persons.createdts >= '2010-12-31 00:00:00.000000'")
+        eq_(filter.value1_set_with, '12/31/2010')
 
     def test_gte_with_time(self):
         filter = DateTimeFilter(Person.createdts)
@@ -476,90 +508,134 @@ class TestDateTimeFilter(CheckFilterBase):
     def test_between(self):
         filter = DateTimeFilter(Person.createdts)
         filter.set('between', '1/31/2010', '12/31/2010')
-        self.assert_filter_query(filter, "WHERE persons.createdts BETWEEN '2010-01-31 00:00:00.000000' AND '2010-12-31 23:59:59.999999'")
+        self.assert_filter_query(
+            filter,
+            "WHERE persons.createdts BETWEEN '2010-01-31 00:00:00.000000' AND "
+            "'2010-12-31 23:59:59.999999'")
+        eq_(filter.value1_set_with, '01/31/2010 12:00 AM')
+        eq_(filter.value2_set_with, '12/31/2010 11:59 PM')
 
     def test_between_with_time(self):
         filter = DateTimeFilter(Person.createdts)
         filter.set('between', '1/31/2010 10:00', '12/31/2010 10:59:59')
-        self.assert_filter_query(filter, "WHERE persons.createdts BETWEEN '2010-01-31 10:00:00.000000' AND '2010-12-31 10:59:59.000000'")
+        self.assert_filter_query(
+            filter,
+            "WHERE persons.createdts BETWEEN '2010-01-31 10:00:00.000000' AND "
+            "'2010-12-31 10:59:59.000000'")
+        eq_(filter.value1_set_with, '01/31/2010 10:00 AM')
+        eq_(filter.value2_set_with, '12/31/2010 10:59 AM')
 
     def test_between_with_explicit_midnight(self):
         filter = DateTimeFilter(Person.createdts)
         filter.set('between', '1/31/2010 10:00', '12/31/2010 00:00')
-        self.assert_filter_query(filter, "WHERE persons.createdts BETWEEN '2010-01-31 10:00:00.000000' AND '2010-12-31 00:00:00.000000'")
+        self.assert_filter_query(
+            filter,
+            "WHERE persons.createdts BETWEEN '2010-01-31 10:00:00.000000' AND "
+            "'2010-12-31 00:00:00.000000'")
 
     def test_not_between(self):
         filter = DateTimeFilter(Person.createdts)
         filter.set('!between', '1/31/2010', '12/31/2010')
-        self.assert_filter_query(filter, "WHERE persons.createdts NOT BETWEEN '2010-01-31 00:00:00.000000' AND '2010-12-31 23:59:59.999999'")
+        self.assert_filter_query(
+            filter,
+            "WHERE persons.createdts NOT BETWEEN '2010-01-31 00:00:00.000000' AND "
+            "'2010-12-31 23:59:59.999999'")
 
     def test_days_ago(self):
-        filter = DateTimeFilter(Person.createdts, _now=dt.date(2012,1,1))
+        filter = DateTimeFilter(Person.createdts, _now=dt.date(2012, 1, 1))
         filter.set('da', '10')
-        self.assert_filter_query(filter, "WHERE persons.createdts BETWEEN '2011-12-22 00:00:00.000000' AND '2011-12-22 23:59:59.999999'")
+        self.assert_filter_query(
+            filter,
+            "WHERE persons.createdts BETWEEN '2011-12-22 00:00:00.000000' AND "
+            "'2011-12-22 23:59:59.999999'")
 
     @raises(formencode.Invalid, 'date filter given is out of range')
     def test_days_ago_overflow(self):
-        filter = DateTimeFilter(Person.due_date, _now=dt.date(2012,1,1))
+        filter = DateTimeFilter(Person.due_date, _now=dt.date(2012, 1, 1))
         filter.set('da', '10000000')
 
     def test_less_than_days_ago(self):
-        filter = DateTimeFilter(Person.createdts, _now=dt.date(2012,1,1))
+        filter = DateTimeFilter(Person.createdts, _now=dt.date(2012, 1, 1))
         filter.set('ltda', '10')
-        self.assert_filter_query(filter, "WHERE persons.createdts > '2011-12-22 23:59:59.999999' AND persons.createdts < '2012-01-01 00:00:00.000000'")
+        self.assert_filter_query(
+            filter,
+            "WHERE persons.createdts > '2011-12-22 23:59:59.999999' AND "
+            "persons.createdts < '2012-01-01 00:00:00.000000'")
 
     def test_more_than_days_ago(self):
-        filter = DateTimeFilter(Person.createdts, _now=dt.date(2012,1,1))
+        filter = DateTimeFilter(Person.createdts, _now=dt.date(2012, 1, 1))
         filter.set('mtda', '10')
         self.assert_filter_query(filter, "WHERE persons.createdts < '2011-12-22 00:00:00.000000'")
 
     def test_in_less_than_days(self):
-        filter = DateTimeFilter(Person.createdts, _now=dt.datetime(2012,1,1,12,35))
+        filter = DateTimeFilter(Person.createdts, _now=dt.datetime(2012, 1, 1, 12, 35))
         filter.set('iltd', '10')
-        self.assert_filter_query(filter, "WHERE persons.createdts >= '2012-01-01 12:35:00.000000' AND persons.createdts < '2012-01-11 00:00:00.000000'")
+        self.assert_filter_query(
+            filter,
+            "WHERE persons.createdts >= '2012-01-01 12:35:00.000000' AND "
+            "persons.createdts < '2012-01-11 00:00:00.000000'")
 
     def test_in_more_than_days(self):
-        filter = DateTimeFilter(Person.createdts, _now=dt.datetime(2012,1,1,12,35))
+        filter = DateTimeFilter(Person.createdts, _now=dt.datetime(2012, 1, 1, 12, 35))
         filter.set('imtd', '10')
         self.assert_filter_query(filter, "WHERE persons.createdts > '2012-01-11 23:59:59.999999'")
 
     def test_in_days(self):
-        filter = DateTimeFilter(Person.createdts, _now=dt.datetime(2012,1,1,12,35))
+        filter = DateTimeFilter(Person.createdts, _now=dt.datetime(2012, 1, 1, 12, 35))
         filter.set('ind', '10')
-        self.assert_filter_query(filter, "WHERE persons.createdts BETWEEN '2012-01-11 00:00:00.000000' AND '2012-01-11 23:59:59.999999'")
+        self.assert_filter_query(
+            filter,
+            "WHERE persons.createdts BETWEEN '2012-01-11 00:00:00.000000' AND "
+            "'2012-01-11 23:59:59.999999'")
 
     @raises(formencode.Invalid, 'date filter given is out of range')
     def test_in_days_overflow(self):
-        filter = DateTimeFilter(Person.due_date, _now=dt.date(2012,1,1))
+        filter = DateTimeFilter(Person.due_date, _now=dt.date(2012, 1, 1))
         filter.set('ind', '10000000')
 
     def test_today(self):
-        filter = DateTimeFilter(Person.createdts, _now=dt.datetime(2012,1,1,12,35))
+        filter = DateTimeFilter(Person.createdts, _now=dt.datetime(2012, 1, 1, 12, 35))
         filter.set('today', None)
-        self.assert_filter_query(filter, "WHERE persons.createdts BETWEEN '2012-01-01 00:00:00.000000' AND '2012-01-01 23:59:59.999999'")
+        self.assert_filter_query(
+            filter,
+            "WHERE persons.createdts BETWEEN '2012-01-01 00:00:00.000000' AND "
+            "'2012-01-01 23:59:59.999999'")
 
     def test_this_week(self):
-        filter = DateTimeFilter(Person.createdts, _now=dt.datetime(2012,1,4,12,35))
+        filter = DateTimeFilter(Person.createdts, _now=dt.datetime(2012, 1, 4, 12, 35))
         filter.set('thisweek', None)
-        self.assert_filter_query(filter, "WHERE persons.createdts BETWEEN '2012-01-01 00:00:00.000000' AND '2012-01-07 23:59:59.999999'")
+        self.assert_filter_query(
+            filter,
+            "WHERE persons.createdts BETWEEN '2012-01-01 00:00:00.000000' AND "
+            "'2012-01-07 23:59:59.999999'")
 
     def test_this_week_left_edge(self):
-        filter = DateTimeFilter(Person.createdts, _now=dt.datetime(2012,1,1))
+        filter = DateTimeFilter(Person.createdts, _now=dt.datetime(2012, 1, 1))
         filter.set('thisweek', None)
-        self.assert_filter_query(filter, "WHERE persons.createdts BETWEEN '2012-01-01 00:00:00.000000' AND '2012-01-07 23:59:59.999999'")
+        self.assert_filter_query(
+            filter,
+            "WHERE persons.createdts BETWEEN '2012-01-01 00:00:00.000000' AND "
+            "'2012-01-07 23:59:59.999999'")
 
     def test_this_week_right_edge(self):
-        filter = DateTimeFilter(Person.createdts, _now=dt.datetime(2012,1,1,23,59,59,999999))
+        filter = DateTimeFilter(Person.createdts, _now=dt.datetime(2012, 1, 1, 23, 59, 59, 999999))
         filter.set('thisweek', None)
-        self.assert_filter_query(filter, "WHERE persons.createdts BETWEEN '2012-01-01 00:00:00.000000' AND '2012-01-07 23:59:59.999999'")
+        self.assert_filter_query(
+            filter,
+            "WHERE persons.createdts BETWEEN '2012-01-01 00:00:00.000000' AND "
+            "'2012-01-07 23:59:59.999999'")
 
     @raises(formencode.Invalid, 'Please enter a value')
     def test_days_operator_with_empty_value(self):
-        filter = DateTimeFilter(Person.createdts, _now=dt.datetime(2012,1,1,12,35))
+        filter = DateTimeFilter(Person.createdts, _now=dt.datetime(2012, 1, 1, 12, 35))
         filter.set('ind', '')
 
+    def test_non_days_operator_with_empty_value(self):
+        filter = DateTimeFilter(Person.createdts, _now=dt.datetime(2012, 1, 1, 12, 35))
+        filter.set('lastmonth', '')
+
     def test_set_makes_op_none(self):
-        filter = DateTimeFilter(Person.createdts, _now=dt.datetime(2012,1,1,12,35))
+        filter = DateTimeFilter(Person.createdts, _now=dt.datetime(2012, 1, 1, 12, 35))
         filter.op = 'foo'
         filter.set('', '')
         assert filter.op is None
@@ -568,7 +644,10 @@ class TestDateTimeFilter(CheckFilterBase):
         filter = DateTimeFilter(Person.createdts, default_op='between', default_value1='1/31/2010',
                                 default_value2='12/31/2010')
         filter.set(None, None)
-        self.assert_filter_query(filter, "WHERE persons.createdts BETWEEN '2010-01-31 00:00:00.000000' AND '2010-12-31 23:59:59.999999'")
+        self.assert_filter_query(
+            filter,
+            "WHERE persons.createdts BETWEEN '2010-01-31 00:00:00.000000' AND "
+            "'2010-12-31 23:59:59.999999'")
 
     def test_this_month(self):
         filter = DateTimeFilter(Person.createdts, _now=dt.date(2012, 1, 4))
@@ -611,7 +690,8 @@ class TestDateTimeFilter(CheckFilterBase):
         filter.set('thisyear', None)
         self.assert_filter_query(
             filter,
-            "WHERE persons.createdts BETWEEN '2012-01-01' AND '2012-12-31 23:59:59.999999'"
+            "WHERE persons.createdts BETWEEN '2012-01-01 00:00:00.000000' AND "
+            "'2012-12-31 23:59:59.999999'"
         )
         eq_(filter.description, '01/01/2012 - 12/31/2012')
 
@@ -620,7 +700,8 @@ class TestDateTimeFilter(CheckFilterBase):
         filter.set(None, None)
         self.assert_filter_query(
             filter,
-            "WHERE persons.createdts BETWEEN '2012-01-01' AND '2012-12-31 23:59:59.999999'"
+            "WHERE persons.createdts BETWEEN '2012-01-01 00:00:00.000000' AND "
+            "'2012-12-31 23:59:59.999999'"
         )
         eq_(filter.description, '01/01/2012 - 12/31/2012')
 
@@ -635,32 +716,42 @@ class TestTimeFilter(CheckFilterBase):
     def test_eq(self):
         filter = TimeFilter(Person.start_time)
         filter.set('eq', '11:30 am')
-        self.assert_filter_query(filter, "WHERE persons.start_time = CAST('11:30:00.000000' AS TIME)")
+        self.assert_filter_query(filter,
+                                 "WHERE persons.start_time = CAST('11:30:00.000000' AS TIME)")
 
     def test_not_eq(self):
         filter = TimeFilter(Person.start_time)
         filter.set('!eq', '11:30 pm')
-        self.assert_filter_query(filter, "WHERE persons.start_time != CAST('23:30:00.000000' AS TIME)")
+        self.assert_filter_query(filter,
+                                 "WHERE persons.start_time != CAST('23:30:00.000000' AS TIME)")
 
     def test_lte(self):
         filter = TimeFilter(Person.start_time)
         filter.set('lte', '9:00 am')
-        self.assert_filter_query(filter, "WHERE persons.start_time <= CAST('09:00:00.000000' AS TIME)")
+        self.assert_filter_query(filter,
+                                 "WHERE persons.start_time <= CAST('09:00:00.000000' AS TIME)")
 
     def test_gte(self):
         filter = TimeFilter(Person.start_time)
         filter.set('gte', '10:15 am')
-        self.assert_filter_query(filter, "WHERE persons.start_time >= CAST('10:15:00.000000' AS TIME)")
+        self.assert_filter_query(filter,
+                                 "WHERE persons.start_time >= CAST('10:15:00.000000' AS TIME)")
 
     def test_between(self):
         filter = TimeFilter(Person.start_time)
         filter.set('between', '9:00 am', '5:00 pm')
-        self.assert_filter_query(filter, "WHERE persons.start_time BETWEEN CAST('09:00:00.000000' AS TIME) AND CAST('17:00:00.000000' AS TIME)")
+        self.assert_filter_query(
+            filter,
+            "WHERE persons.start_time BETWEEN CAST('09:00:00.000000' AS TIME) AND "
+            "CAST('17:00:00.000000' AS TIME)")
 
     def test_not_between(self):
         filter = TimeFilter(Person.start_time)
         filter.set('!between', '9:00 am', '5:00 pm')
-        self.assert_filter_query(filter, "WHERE persons.start_time NOT BETWEEN CAST('09:00:00.000000' AS TIME) AND CAST('17:00:00.000000' AS TIME)")
+        self.assert_filter_query(
+            filter,
+            "WHERE persons.start_time NOT BETWEEN CAST('09:00:00.000000' AS TIME) AND "
+            "CAST('17:00:00.000000' AS TIME)")
 
     def test_empty(self):
         filter = TimeFilter(Person.start_time)
@@ -766,15 +857,19 @@ class TestOptionsFilter(CheckFilterBase):
         filter.set('!is', ['foo'])
         assert not filter.is_active
 
-    @raises(ValueError, 'value_modifier argument set to "auto", but the options set is empty and the type can therefore not be determined')
+    @raises(ValueError,
+            'value_modifier argument set to "auto", but the options set is empty and '
+            'the type can therefore not be determined')
     def test_auto_validation_with_no_options(self):
         class NoOptionsFilter(OptionsFilterBase):
             pass
-        filter = NoOptionsFilter(Person.numericcol).new_instance()
+        NoOptionsFilter(Person.numericcol).new_instance()
 
-    @raises(TypeError, 'value_modifier must be the string "auto", have a "to_python" attribute, or be a callable')
+    @raises(TypeError,
+            'value_modifier must be the string "auto", have a "to_python" attribute, '
+            'or be a callable')
     def test_modifier_wrong_type(self):
-        filter = StateFilter(Person.state, value_modifier=1).new_instance()
+        StateFilter(Person.state, value_modifier=1).new_instance()
 
     def test_default(self):
         filter = SortOrderFilter(Person.sortorder, default_op='is',
@@ -783,7 +878,8 @@ class TestOptionsFilter(CheckFilterBase):
         self.assert_filter_query(filter, "WHERE persons.sortorder IN (1, 2)")
 
     def test_default_callable(self):
-        def_val = lambda: list(map(str, list(range(1, 4))))
+        def def_val():
+            return list(map(str, list(range(1, 4))))
         filter = SortOrderFilter(Person.sortorder, default_op='is',
                                  default_value1=def_val).new_instance()
         filter.set(None, None)

@@ -1,5 +1,9 @@
 from __future__ import absolute_import
-from flask import request, session, flash, Blueprint, url_for
+
+from io import BytesIO
+from os import path
+
+from flask import request, session, flash, Blueprint, url_for, send_file
 
 
 class WebGrid(object):
@@ -25,6 +29,9 @@ class WebGrid(object):
     def request(self):
         return request
 
+    def static_path(self):
+        return path.join(path.dirname(__file__), 'static')
+
     def static_url(self, url_tail):
         return url_for('webgrid.static', filename=url_tail)
 
@@ -36,3 +43,10 @@ class WebGrid(object):
             static_url_path=app.static_url_path + '/webgrid'
         )
         app.register_blueprint(bp)
+
+    def xls_as_response(self, workbook, filename):
+        buf = BytesIO()
+        workbook.save(buf)
+        buf.seek(0)
+        return send_file(buf, mimetype='application/vnd.ms-excel',
+                         as_attachment=True, attachment_filename=filename)

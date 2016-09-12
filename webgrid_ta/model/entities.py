@@ -1,7 +1,10 @@
 from __future__ import absolute_import
+
+import arrow
 from blazeutils.strings import randchars
 import sqlalchemy as sa
 import sqlalchemy.orm as saorm
+from sqlalchemy_utils import ArrowType
 
 from ..model import db
 
@@ -64,6 +67,15 @@ class Person(db.Model, DefaultMixin):
     def delete_cascaded(cls):
         Email.delete_all()
         cls.delete_all()
+
+
+class ArrowRecord(db.Model, DefaultMixin):
+    __tablename__ = 'arrow_records'
+    created_utc = sa.Column(ArrowType, default=arrow.now)
+
+    @classmethod
+    def testing_create(cls, **kwargs):
+        return cls.add(**kwargs)
 
 
 class Email(db.Model, DefaultMixin):

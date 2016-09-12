@@ -13,9 +13,11 @@ from webgrid.filters import TextFilter, DateFilter
 from webgrid_ta.grids import Grid
 from webgrid_ta.model.entities import Person
 
+
 class FirstNameColumn(LinkColumnBase):
     def create_url(self, record):
         return '/person-edit/{0}'.format(record.id)
+
 
 class FullNameColumn(LinkColumnBase):
     def extract_data(self, record):
@@ -24,16 +26,19 @@ class FullNameColumn(LinkColumnBase):
     def create_url(self, record):
         return '/person-edit/{0}'.format(record.id)
 
+
 class TestColumn(object):
 
     def test_attr_copy(self):
         class TG(Grid):
             Column('ID', Person.id, TextFilter, can_sort=False)
-            FirstNameColumn('First Name', Person.firstname, TextFilter, can_sort=False, link_label='hi')
+            FirstNameColumn('First Name', Person.firstname, TextFilter, can_sort=False,
+                            link_label='hi')
             YesNoColumn('Active', Person.inactive, TextFilter, can_sort=False, reverse=True)
             # DateColumn & DateTime Column are just subclasses of DateColumnBase
             # so we don't need to explicitly test both
-            DateTimeColumn('Created', Person.createdts, DateFilter, can_sort=False, html_format='foo', xls_format='bar')
+            DateTimeColumn('Created', Person.createdts, DateFilter, can_sort=False,
+                           html_format='foo', xls_format='bar')
 
         g = TG()
 
@@ -78,16 +83,17 @@ class TestColumn(object):
     def test_filter_without_column_key(self):
         class TG(Grid):
             Column('ID', 'id', TextFilter)
-        g = TG()
+        TG()
 
     @raises(ValueError, 'expected.+column-like object', re_esc=False)
     def test_fitler_of_wrong_type(self):
         class TG(Grid):
             Column('ID', Person, TextFilter)
-        g = TG()
+        TG()
 
     def test_fitlers_are_new_instances(self):
         tf = TextFilter
+
         class TG(Grid):
             Column('Name', Person.firstname, tf)
         g = TG()
@@ -125,7 +131,7 @@ class TestColumn(object):
         value = 123.333
         eq_(g.columns[0].xls_width_calc(value), 7)
 
-        value = dt.date(2012,1,1)
+        value = dt.date(2012, 1, 1)
         eq_(g.columns[3].xls_width_calc(value), 10)
 
     def test_xls_width_setting(self):
@@ -145,8 +151,8 @@ class TestColumn(object):
         eq_(g.columns[1].xls_width_calc('123'), 1)
         eq_(g.columns[2].xls_width_calc('123'), 1)
         eq_(g.columns[3].xls_width_calc('123'), 1)
-        eq_(g.columns[4].xls_width_calc(dt.date(2012,1,1)), 1)
-        eq_(g.columns[5].xls_width_calc(dt.date(2012,1,1)), 1)
+        eq_(g.columns[4].xls_width_calc(dt.date(2012, 1, 1)), 1)
+        eq_(g.columns[5].xls_width_calc(dt.date(2012, 1, 1)), 1)
 
     def test_xls_style_setting(self):
         class LinkColumn(LinkColumnBase):
@@ -197,7 +203,7 @@ class TestColumn(object):
             Column('C1', Person.firstname)
             Column('C1.5', Person.firstname.label('fn2'), render_in=None)
             LinkColumn('C2', Person.lastname, render_in='xls')
-            BoolColumn('C3', Person.inactive, render_in=('xls','html'))
+            BoolColumn('C3', Person.inactive, render_in=('xls', 'html'))
             YesNoColumn('C4', Person.inactive.label('yesno'), render_in='xls')
             DateColumn('Date', Person.due_date, render_in='xls')
             DateColumn('DateTime', Person.createdts, render_in='xls')
@@ -206,7 +212,7 @@ class TestColumn(object):
         eq_(g.columns[0].render_in, ('html', 'xls'))
         eq_(g.columns[1].render_in, ())
         eq_(g.columns[2].render_in, ('xls',))
-        eq_(g.columns[3].render_in, ('xls','html'))
+        eq_(g.columns[3].render_in, ('xls', 'html'))
         eq_(g.columns[4].render_in, ('xls',))
         eq_(g.columns[5].render_in, ('xls',))
         eq_(g.columns[6].render_in, ('xls',))
@@ -240,19 +246,22 @@ class TestColumn(object):
 
         c = g.columns[0]
         eq_(c.xls_construct_format(c.xls_fmt_general), '#,##0.00;[RED]-#,##0.00')
-        eq_(c.xls_construct_format(c.xls_fmt_accounting), '_($* #,##0.00_);[RED]_($* (#,##0.00);_($* "-"??_);_(@_)')
+        eq_(c.xls_construct_format(c.xls_fmt_accounting),
+            '_($* #,##0.00_);[RED]_($* (#,##0.00);_($* "-"??_);_(@_)')
         eq_(c.xls_construct_format(c.xls_fmt_percent), '0.00%;[RED]-0.00%')
 
         # no red
         c.xls_neg_red = False
         eq_(c.xls_construct_format(c.xls_fmt_general), '#,##0.00;-#,##0.00')
-        eq_(c.xls_construct_format(c.xls_fmt_accounting), '_($* #,##0.00_);_($* (#,##0.00);_($* "-"??_);_(@_)')
+        eq_(c.xls_construct_format(c.xls_fmt_accounting),
+            '_($* #,##0.00_);_($* (#,##0.00);_($* "-"??_);_(@_)')
         eq_(c.xls_construct_format(c.xls_fmt_percent), '0.00%;-0.00%')
 
         # adjust places
         c.places = 0
         eq_(c.xls_construct_format(c.xls_fmt_general), '#,##0;-#,##0')
-        eq_(c.xls_construct_format(c.xls_fmt_accounting), '_($* #,##0_);_($* (#,##0);_($* "-"??_);_(@_)')
+        eq_(c.xls_construct_format(c.xls_fmt_accounting),
+            '_($* #,##0_);_($* (#,##0);_($* "-"??_);_(@_)')
         eq_(c.xls_construct_format(c.xls_fmt_percent), '0%;-0%')
 
     def test_number_format_xlwt_stymat_init(self):
@@ -275,7 +284,10 @@ class TestColumn(object):
             class TG(Grid):
                 NumericColumn('C1', Person.numericcol, format_as='accounting')
             TG()
-            m_xlwt.easyxf.assert_called_once_with(None, '_($* #,##0.00_);[RED]_($* (#,##0.00);_($* "-"??_);_(@_)')
+            m_xlwt.easyxf.assert_called_once_with(
+                None,
+                '_($* #,##0.00_);[RED]_($* (#,##0.00);_($* "-"??_);_(@_)'
+            )
 
         # percent
         with mock.patch('webgrid.xlwt') as m_xlwt:

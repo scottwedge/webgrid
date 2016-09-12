@@ -3,7 +3,7 @@ from webgrid import BaseGrid as BaseGrid, Column, LinkColumnBase, \
     YesNoColumn, DateTimeColumn, DateColumn, NumericColumn
 from webgrid.filters import TextFilter, OptionsFilterBase, Operator, \
     DateTimeFilter, ops
-from .model.entities import Person, Status
+from .model.entities import ArrowRecord, Person, Status
 
 from .app import webgrid
 
@@ -63,5 +63,18 @@ class PeopleGrid(Grid):
         # default sort
         if not has_sort:
             query = query.order_by(Person.id)
+
+        return query
+
+
+class ArrowGrid(Grid):
+    session_on = True
+
+    DateTimeColumn('Created', ArrowRecord.created_utc, DateTimeFilter)
+
+    def query_prep(self, query, has_sort, has_filters):
+        # default sort
+        if not has_sort:
+            query = query.order_by(ArrowRecord.id)
 
         return query
