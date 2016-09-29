@@ -32,7 +32,6 @@ class CheckFilterBase(ModelBase):
 
 
 class TestTextFilter(CheckFilterBase):
-
     def test_eq(self):
         tf = TextFilter(Person.firstname)
         tf.set('eq', 'foo')
@@ -83,6 +82,37 @@ class TestTextFilter(CheckFilterBase):
         tf.set(None, None)
         query = tf.apply(db.session.query(Person.id))
         self.assert_in_query(query, "WHERE persons.firstname LIKE '%bar%'")
+
+
+class TestTextFilterCaseSensitive(CheckFilterBase):
+    def get_filter(self):
+        class MockDialect:
+            name = 'postgresql'
+        return TextFilter(Person.firstname).new_instance(MockDialect())
+
+    def test_eq(self):
+        tf = self.get_filter()
+        tf.set('eq', 'foo')
+        query = tf.apply(db.session.query(Person.id))
+        self.assert_in_query(query, "WHERE upper(persons.firstname) = upper('foo')")
+
+    def test_not_eq(self):
+        tf = self.get_filter()
+        tf.set('!eq', 'foo')
+        query = tf.apply(db.session.query(Person.id))
+        self.assert_in_query(query, "WHERE upper(persons.firstname) != upper('foo')")
+
+    def test_contains(self):
+        tf = self.get_filter()
+        tf.set('contains', 'foo')
+        query = tf.apply(db.session.query(Person.id))
+        self.assert_in_query(query, "WHERE lower(persons.firstname) LIKE lower('%foo%')")
+
+    def test_doesnt_contain(self):
+        tf = self.get_filter()
+        tf.set('!contains', 'foo')
+        query = tf.apply(db.session.query(Person.id))
+        self.assert_in_query(query, "WHERE lower(persons.firstname) NOT LIKE lower('%foo%')")
 
 
 class TestNumberFilters(CheckFilterBase):

@@ -65,12 +65,14 @@ class FilterBase(object):
     # does this filter take a list of values in it's set() method
     receives_list = False
 
-    def __init__(self, sa_col, default_op=None, default_value1=None, default_value2=None):
+    def __init__(self, sa_col, default_op=None, default_value1=None, default_value2=None,
+                 dialect=None):
         # attributes from static instance
         self.sa_col = sa_col
         self.default_op = default_op
         self.default_value1 = default_value1
         self.default_value2 = default_value2
+        self.dialect = dialect
 
         # attributes that will start fresh for each instance
         self.op = None
@@ -177,9 +179,11 @@ class FilterBase(object):
             str(exc)
         )
 
-    def new_instance(self):
+    def new_instance(self, dialect=None):
         cls = self.__class__
-        return cls(*self._vargs, **self._kwargs)
+        new_filter = cls(*self._vargs, **self._kwargs)
+        new_filter.dialect = dialect
+        return new_filter
 
 
 class _NoValue(object):
@@ -203,8 +207,8 @@ class OptionsFilterBase(FilterBase):
         self._options_seq = None
         self._options_keys = None
 
-    def new_instance(self):
-        filter = FilterBase.new_instance(self)
+    def new_instance(self, dialect=None):
+        filter = FilterBase.new_instance(self, dialect)
         filter.setup_validator()
         return filter
 
@@ -332,13 +336,25 @@ class OptionsIntFilterBase(OptionsFilterBase):
 class TextFilter(FilterBase):
     operators = (ops.eq, ops.not_eq, ops.contains, ops.not_contains, ops.empty, ops.not_empty)
 
+    @property
+    def comparisons(self):
+        if self.dialect and self.dialect.name in ('postgresql', 'sqlite'):
+            return {
+                'eq':        lambda col, value: sa.func.upper(col) == sa.func.upper(value),
+                '!eq':       lambda col, value: sa.func.upper(col) != sa.func.upper(value),
+                'contains':  lambda col, value: col.ilike(u'%{}%'.format(value)),
+                '!contains': lambda col, value: ~col.ilike(u'%{}%'.format(value))
+            }
+        return {
+            'eq':        lambda col, value: col == value,
+            '!eq':       lambda col, value: col != value,
+            'contains':  lambda col, value: col.like(u'%{}%'.format(value)),
+            '!contains': lambda col, value: ~col.like(u'%{}%'.format(value))
+        }
+
     def apply(self, query):
         if self.op == self.default_op and not self.value1:
             return query
-        if self.op == 'contains':
-            return query.filter(self.sa_col.like(u'%{0}%'.format(self.value1)))
-        if self.op == '!contains':
-            return query.filter(~self.sa_col.like(u'%{0}%'.format(self.value1)))
         if self.op == 'empty':
             return query.filter(or_(
                 self.sa_col.is_(None),
@@ -349,6 +365,9 @@ class TextFilter(FilterBase):
                 self.sa_col.isnot(None),
                 self.sa_col != u'',
             ))
+
+        if self.op in self.comparisons:
+            return query.filter(self.comparisons[self.op](self.sa_col, self.value1))
         return FilterBase.apply(self, query)
 
 
