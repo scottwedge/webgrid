@@ -1,10 +1,10 @@
 Changelog
 ---------
 
-0.1.26 released <in development>
+0.1.26 released 2016-10-03
 ==========================
 
- - ?
+ - update TextFilter to support case-insensitive operations for dialects like postgresql and sqlite
 
 0.1.25 released 2016-09-12
 ==========================
