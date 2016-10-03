@@ -143,7 +143,7 @@ class TestGrid(object):
 
         g = CTG()
         g.set_filter('firstname', 'eq', 'foo')
-        assert_in_query(g, "WHERE persons.firstname = 'foo'")
+        assert_in_query(g, "WHERE upper(persons.firstname) = upper('foo')")
 
     def test_filter_instance(self):
         class CTG(Grid):
@@ -151,7 +151,7 @@ class TestGrid(object):
 
         g = CTG()
         g.set_filter('firstname', 'eq', 'foo')
-        assert_in_query(g, "WHERE persons.last_name = 'foo'")
+        assert_in_query(g, "WHERE upper(persons.last_name) = upper('foo')")
 
     def test_order_by(self):
         class CTG(Grid):

@@ -162,7 +162,7 @@ class Column(object):
         column.expr = self.expr
 
         if self.filter:
-            column.filter = self.filter.new_instance()
+            column.filter = self.filter.new_instance(dialect=grid.manager.db.engine.dialect)
 
         column.head = BlankObject()
         column.head.hah = HTMLAttributes(self.kwargs)
