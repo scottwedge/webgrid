@@ -179,10 +179,14 @@ class FilterBase(object):
             str(exc)
         )
 
-    def new_instance(self, dialect=None):
+    def new_instance(self, **kwargs):
+        """
+        Note: Ensure any overrides of this method accept and pass through kwargs to preserve
+        compatibility in future
+        """
         cls = self.__class__
         new_filter = cls(*self._vargs, **self._kwargs)
-        new_filter.dialect = dialect
+        new_filter.dialect = kwargs.get('dialect')
         return new_filter
 
 
@@ -207,8 +211,8 @@ class OptionsFilterBase(FilterBase):
         self._options_seq = None
         self._options_keys = None
 
-    def new_instance(self, dialect=None):
-        filter = FilterBase.new_instance(self, dialect)
+    def new_instance(self, **kwargs):
+        filter = FilterBase.new_instance(self, **kwargs)
         filter.setup_validator()
         return filter
 

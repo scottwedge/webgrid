@@ -84,11 +84,11 @@ class TestTextFilter(CheckFilterBase):
         self.assert_in_query(query, "WHERE persons.firstname LIKE '%bar%'")
 
 
-class TestTextFilterCaseSensitive(CheckFilterBase):
+class TestTextFilterWithCaseSensitiveDialect(CheckFilterBase):
     def get_filter(self):
         class MockDialect:
             name = 'postgresql'
-        return TextFilter(Person.firstname).new_instance(MockDialect())
+        return TextFilter(Person.firstname).new_instance(dialect=MockDialect())
 
     def test_eq(self):
         tf = self.get_filter()
