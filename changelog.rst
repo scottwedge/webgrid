@@ -1,10 +1,10 @@
 Changelog
 ---------
 
-0.1.28 released <in development>
+0.1.28 released 2016-10-13
 ==========================
 
- - ?
+ - fixed an additional regression in DateFilter and DateTimeFilter validation
 
 0.1.27 released 2016-10-13
 ==========================

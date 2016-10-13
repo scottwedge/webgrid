@@ -545,6 +545,9 @@ class DateFilter(FilterBase, _DateMixin):
         ops.last_month, ops.select_month, ops.this_year
     )
     days_operators = 'da', 'ltda', 'mtda', 'iltd', 'imtd', 'ind'
+    no_value_operators = (
+        'empty', '!empty', 'today', 'thisweek', 'thismonth', 'lastmonth', 'thisyear'
+    )
     input_types = 'input', 'select', 'input2'
 
     def __init__(self, sa_col, _now=None, default_op=None, default_value1=None,
@@ -687,7 +690,7 @@ class DateFilter(FilterBase, _DateMixin):
         return FilterBase.apply(self, query)
 
     def process(self, value, is_value2):
-        if value is None or self.op in ('empty', '!empty'):
+        if value is None or self.op in self.no_value_operators:
             return None
 
         if self.op == self.default_op and not value:
@@ -791,7 +794,7 @@ class DateTimeFilter(DateFilter):
                     raise formencode.Invalid('date filter given is out of range', value, self)
 
             return filter_value
-        elif value == '' and self.op not in ('between', '!between'):
+        elif value == '' and self.op in self.no_value_operators:
             return None
 
         try:
