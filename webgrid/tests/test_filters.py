@@ -226,10 +226,16 @@ class TestDateFilter(CheckFilterBase):
         filter.set('empty', None)
         self.assert_filter_query(filter, "WHERE persons.due_date IS NULL")
         eq_(filter.description, 'date not specified')
+        filter.set('empty', '')
+        self.assert_filter_query(filter, "WHERE persons.due_date IS NULL")
+        eq_(filter.description, 'date not specified')
 
     def test_not_empty(self):
         filter = DateFilter(Person.due_date)
         filter.set('!empty', None)
+        self.assert_filter_query(filter, "WHERE persons.due_date IS NOT NULL")
+        eq_(filter.description, 'any date')
+        filter.set('!empty', '')
         self.assert_filter_query(filter, "WHERE persons.due_date IS NOT NULL")
         eq_(filter.description, 'any date')
 
@@ -259,6 +265,13 @@ class TestDateFilter(CheckFilterBase):
             filter,
             "WHERE persons.due_date BETWEEN '2010-12-31' AND '{}'".format(today)
         )
+
+    def test_between_blank(self):
+        filter = DateFilter(Person.due_date)
+        with assert_raises(formencode.Invalid):
+            filter.set('between', '', '')
+        eq_(filter.error, True)
+        eq_(filter.description, 'invalid')
 
     def test_not_between_missing_date(self):
         filter = DateFilter(Person.due_date)
@@ -529,10 +542,14 @@ class TestDateTimeFilter(CheckFilterBase):
         filter = DateTimeFilter(Person.createdts)
         filter.set('empty', None)
         self.assert_filter_query(filter, "WHERE persons.createdts IS NULL")
+        filter.set('empty', '')
+        self.assert_filter_query(filter, "WHERE persons.createdts IS NULL")
 
     def test_not_empty(self):
         filter = DateTimeFilter(Person.createdts)
         filter.set('!empty', None)
+        self.assert_filter_query(filter, "WHERE persons.createdts IS NOT NULL")
+        filter.set('!empty', '')
         self.assert_filter_query(filter, "WHERE persons.createdts IS NOT NULL")
 
     def test_between(self):
@@ -544,6 +561,13 @@ class TestDateTimeFilter(CheckFilterBase):
             "'2010-12-31 23:59:59.999999'")
         eq_(filter.value1_set_with, '01/31/2010 12:00 AM')
         eq_(filter.value2_set_with, '12/31/2010 11:59 PM')
+
+    def test_between_blank(self):
+        filter = DateTimeFilter(Person.createdts)
+        with assert_raises(formencode.Invalid):
+            filter.set('between', '', '')
+        eq_(filter.error, True)
+        eq_(filter.description, 'invalid')
 
     def test_between_with_time(self):
         filter = DateTimeFilter(Person.createdts)
@@ -566,6 +590,7 @@ class TestDateTimeFilter(CheckFilterBase):
     def test_not_between(self):
         filter = DateTimeFilter(Person.createdts)
         filter.set('!between', '1/31/2010', '12/31/2010')
+        eq_(filter.error, False)
         self.assert_filter_query(
             filter,
             "WHERE persons.createdts NOT BETWEEN '2010-01-31 00:00:00.000000' AND "
