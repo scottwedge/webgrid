@@ -1,10 +1,10 @@
 Changelog
 ---------
 
-0.1.27 released <in development>
+0.1.27 released 2016-10-13
 ==========================
 
- - ?
+ - corrected DateFilter and DateTimeFilter operations for empty, not empty, and between
 
 0.1.26 released 2016-10-03
 ==========================
