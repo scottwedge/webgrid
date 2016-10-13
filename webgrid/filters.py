@@ -344,15 +344,15 @@ class TextFilter(FilterBase):
     def comparisons(self):
         if self.dialect and self.dialect.name in ('postgresql', 'sqlite'):
             return {
-                'eq':        lambda col, value: sa.func.upper(col) == sa.func.upper(value),
-                '!eq':       lambda col, value: sa.func.upper(col) != sa.func.upper(value),
-                'contains':  lambda col, value: col.ilike(u'%{}%'.format(value)),
+                'eq': lambda col, value: sa.func.upper(col) == sa.func.upper(value),
+                '!eq': lambda col, value: sa.func.upper(col) != sa.func.upper(value),
+                'contains': lambda col, value: col.ilike(u'%{}%'.format(value)),
                 '!contains': lambda col, value: ~col.ilike(u'%{}%'.format(value))
             }
         return {
-            'eq':        lambda col, value: col == value,
-            '!eq':       lambda col, value: col != value,
-            'contains':  lambda col, value: col.like(u'%{}%'.format(value)),
+            'eq': lambda col, value: col == value,
+            '!eq': lambda col, value: col != value,
+            'contains': lambda col, value: col.like(u'%{}%'.format(value)),
             '!contains': lambda col, value: ~col.like(u'%{}%'.format(value))
         }
 
@@ -687,7 +687,7 @@ class DateFilter(FilterBase, _DateMixin):
         return FilterBase.apply(self, query)
 
     def process(self, value, is_value2):
-        if value is None:
+        if value is None or self.op in ('empty', '!empty'):
             return None
 
         if self.op == self.default_op and not value:
@@ -733,6 +733,13 @@ class DateFilter(FilterBase, _DateMixin):
 
 
 class DateTimeFilter(DateFilter):
+    def __init__(self, sa_col, _now=None, default_op=None, default_value1=None,
+                 default_value2=None):
+        self._has_date_only1 = self._has_date_only2 = False
+        super(DateTimeFilter, self).__init__(sa_col, _now=_now, default_op=default_op,
+                                             default_value1=default_value1,
+                                             default_value2=default_value2)
+
     def format_display_vals(self):
         ops_single_val = (
             ops.eq.key,
@@ -784,7 +791,7 @@ class DateTimeFilter(DateFilter):
                     raise formencode.Invalid('date filter given is out of range', value, self)
 
             return filter_value
-        elif value == '':
+        elif value == '' and self.op not in ('between', '!between'):
             return None
 
         try:
