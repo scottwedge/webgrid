@@ -214,6 +214,8 @@ class TestDateFilter(CheckFilterBase):
         filter.set('lte', '12/31/2010')
         self.assert_filter_query(filter, "WHERE persons.due_date <= '2010-12-31'")
         eq_(filter.description, 'up to 12/31/2010')
+        with assert_raises(formencode.Invalid):
+            filter.set('lte', '')
 
     def test_gte(self):
         filter = DateFilter(Person.due_date)
@@ -521,6 +523,8 @@ class TestDateTimeFilter(CheckFilterBase):
         filter.set('lte', '12/31/2010')
         self.assert_filter_query(filter, "WHERE persons.createdts <= '2010-12-31 23:59:59.999999'")
         eq_(filter.value1_set_with, '12/31/2010')
+        with assert_raises(formencode.Invalid):
+            filter.set('lte', '')
 
     def test_lte_with_time(self):
         filter = DateTimeFilter(Person.createdts)
