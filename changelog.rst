@@ -1,10 +1,10 @@
 Changelog
 ---------
 
-0.1.30 released <in development>
+0.1.30 released 2016-10-28
 ==========================
 
- - ?
+ - fixed problem with lambda default args being processed by the grid
 
 0.1.29 released 2016-10-28
 ==========================

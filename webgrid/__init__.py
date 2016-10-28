@@ -777,7 +777,7 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
 
             filter_op_value = args.get(filter_op_qsk, None)
 
-            if filter.default_op:
+            if filter._default_op:
                 filter.set(None, None, None)
 
             if filter_op_value is not None:

@@ -338,6 +338,22 @@ class TestQueryStringArgs(object):
         eq_(pg.columns[4].filter.value1, [1, 2])
         assert pg.columns[4].filter.value2 is None
 
+    @inrequest('/foo')
+    def test_qs_filtering_default_op(self):
+        from webgrid_ta.grids import DefaultOpGrid
+        pg = DefaultOpGrid()
+        pg.apply_qs_args()
+        eq_(pg.columns[0].filter.op, 'eq')
+        eq_(pg.columns[0].filter.value1, None)
+
+    @inrequest('/foo?op(firstname)=!eq&v1(firstname)=bob')
+    def test_qs_filtering_default_op_override(self):
+        from webgrid_ta.grids import DefaultOpGrid
+        pg = DefaultOpGrid()
+        pg.apply_qs_args()
+        eq_(pg.columns[0].filter.op, '!eq')
+        eq_(pg.columns[0].filter.value1, 'bob')
+
     @inrequest('/foo?op(firstname)=eq&v1(firstname)=bob&perpage=1&onpage=100')
     def test_qs_paging_doesnt_get_page_count_before_filters_are_handled(self):
         pg = PeopleGrid()

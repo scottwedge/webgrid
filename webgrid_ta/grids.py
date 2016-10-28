@@ -67,6 +67,13 @@ class PeopleGrid(Grid):
         return query
 
 
+class DefaultOpGrid(Grid):
+    session_on = True
+
+    FirstNameColumn('First Name', Person.firstname, 
+                    TextFilter(Person.firstname, default_op='eq'))
+
+
 class ArrowGrid(Grid):
     session_on = True
 
