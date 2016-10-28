@@ -75,6 +75,14 @@ class TestTextFilter(CheckFilterBase):
         query = tf.apply(db.session.query(Person.id))
         self.assert_in_query(query, "WHERE persons.firstname LIKE '%foo%'")
 
+    def test_default_op_callable(self):
+        def def_op():
+            return 'contains'
+        tf = TextFilter(Person.firstname, default_op=def_op, default_value1='bar')
+        tf.set(None, None)
+        query = tf.apply(db.session.query(Person.id))
+        self.assert_in_query(query, "WHERE persons.firstname LIKE '%bar%'")
+
     def test_default_callable(self):
         def def_val():
             return 'bar'
@@ -932,6 +940,14 @@ class TestOptionsFilter(CheckFilterBase):
 
     def test_default(self):
         filter = SortOrderFilter(Person.sortorder, default_op='is',
+                                 default_value1=['1', '2', '3', 'foo']).new_instance()
+        filter.set(None, None)
+        self.assert_filter_query(filter, "WHERE persons.sortorder IN (1, 2)")
+
+    def test_default_op_callable(self):
+        def def_op():
+            return 'is'
+        filter = SortOrderFilter(Person.sortorder, default_op=def_op,
                                  default_value1=['1', '2', '3', 'foo']).new_instance()
         filter.set(None, None)
         self.assert_filter_query(filter, "WHERE persons.sortorder IN (1, 2)")
