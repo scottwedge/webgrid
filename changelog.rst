@@ -1,10 +1,10 @@
 Changelog
 ---------
 
-0.1.29 released <in development>
+0.1.29 released 2016-10-28
 ==========================
 
- - ?
+ - allow default operation passed to filter to be a callable
 
 0.1.28 released 2016-10-13
 ==========================
