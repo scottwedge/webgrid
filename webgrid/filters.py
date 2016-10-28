@@ -69,7 +69,8 @@ class FilterBase(object):
                  dialect=None):
         # attributes from static instance
         self.sa_col = sa_col
-        self.default_op = default_op
+        self._default_op = default_op
+        self.default_op = None
         self.default_value1 = default_value1
         self.default_value2 = default_value2
         self.dialect = dialect
@@ -122,6 +123,7 @@ class FilterBase(object):
 
     def set(self, op, value1, value2=None):
         if not op:
+            self.default_op = self._default_op() if callable(self._default_op) else self._default_op
             self.op = self.default_op
             self.using_default_op = (self.default_op is not None)
             if self.op is None:
@@ -273,6 +275,7 @@ class OptionsFilterBase(FilterBase):
                 self.value_modifier = feval.Wrapper(to_python=self.value_modifier)
 
     def set(self, op, values, value2=None):
+        self.default_op = self._default_op() if callable(self._default_op) else self._default_op
         if not op and not self.default_op:
             return
         self.op = op or self.default_op
