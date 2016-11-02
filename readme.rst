@@ -1,11 +1,14 @@
 WebGrid
 #######
 
-.. image:: https://codecov.io/gh/level12/webgrid/branch/master/graph/badge.svg
-  :target: https://codecov.io/gh/level12/webgrid
+.. image:: https://ci.appveyor.com/api/projects/status/6s1886gojqi9c8h6?svg=true
+    :target: https://ci.appveyor.com/project/level12/webgrid
 
 .. image:: https://circleci.com/gh/level12/webgrid.svg?style=svg
     :target: https://circleci.com/gh/level12/webgrid
+
+.. image:: https://codecov.io/gh/level12/webgrid/branch/master/graph/badge.svg
+    :target: https://codecov.io/gh/level12/webgrid
 
 Introduction
 ---------------
