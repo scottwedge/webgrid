@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -ex
 # This script is used to run tox in the same docker container and in the same manner that our CI
 # will run tox.  If tox is passing locally, but CI is failing, use this script to troubleshoot.
 
@@ -24,7 +24,6 @@ if [ -z "${CIRCLECI}" ]; then
 
     DOCKER_FLAGS="--add-host=database:$DATABASE_HOST"
 
-    set -x
     git clone $local_src_dpath/ $tmp_src_dpath
 else
     SRC_DPATH="/home/ubuntu/$CIRCLE_PROJECT_REPONAME"
@@ -33,7 +32,6 @@ else
     DOCKER_FLAGS=""
 fi
 
-set -x
 docker run \
     -v $SRC_DPATH:/opt/src \
     -v $ARTIFACTS_DPATH:/opt/src/.ci/artifacts \

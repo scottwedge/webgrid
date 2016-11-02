@@ -5,3 +5,7 @@ dist/*
 .tox/
 venv
 pytest-reports
+*.coverage
+coverage.xml
+*.nose.xml
+*.py~
