@@ -1,3 +1,12 @@
+WebGrid
+#######
+
+.. image:: https://codecov.io/gh/level12/webgrid/branch/master/graph/badge.svg
+  :target: https://codecov.io/gh/level12/webgrid
+
+.. image:: https://circleci.com/gh/level12/webgrid.svg?style=svg
+    :target: https://circleci.com/gh/level12/webgrid
+
 Introduction
 ---------------
 
