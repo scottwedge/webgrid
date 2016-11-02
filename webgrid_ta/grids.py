@@ -70,7 +70,7 @@ class PeopleGrid(Grid):
 class DefaultOpGrid(Grid):
     session_on = True
 
-    FirstNameColumn('First Name', Person.firstname, 
+    FirstNameColumn('First Name', Person.firstname,
                     TextFilter(Person.firstname, default_op='eq'))
 
 
