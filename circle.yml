@@ -13,3 +13,9 @@ test:
     - ls -la
     - /home/ubuntu/$CIRCLE_PROJECT_REPONAME/docker-run-tests
 
+deployment:
+  codecov:
+    branch: /.*/
+    commands:
+      - bash <(curl -s https://codecov.io/bash) -t  "f52ea144-6e93-4cda-b927-1f578a6e814c"
+
