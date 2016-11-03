@@ -530,6 +530,8 @@ class TestDateTimeFilter(CheckFilterBase):
         filter = DateTimeFilter(Person.createdts)
         filter.set('lte', '12/31/2010')
         self.assert_filter_query(filter, "WHERE persons.createdts <= '2010-12-31 23:59:59.999999'")
+        filter.set('lte', '12/31/2010', '')
+        self.assert_filter_query(filter, "WHERE persons.createdts <= '2010-12-31 23:59:59.999999'")
         eq_(filter.value1_set_with, '12/31/2010')
         with assert_raises(formencode.Invalid):
             filter.set('lte', '')

@@ -1,10 +1,10 @@
 Changelog
 ---------
 
-0.1.31 released <in development>
+0.1.31 released 2016-11-03
 ==========================
 
- - ?
+ - corrected DateTimeFilter processing to avoid "invalid date" messages
 
 0.1.30 released 2016-10-28
 ==========================

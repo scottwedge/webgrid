@@ -767,7 +767,7 @@ class DateTimeFilter(DateFilter):
                 self.value2_set_with = self.value2.strftime('%m/%d/%Y 11:59 PM')
 
     def process(self, value, is_value2):
-        if value is None:
+        if value is None or (value == '' and is_value2):
             return None
 
         if self.op == self.default_op and not value:
