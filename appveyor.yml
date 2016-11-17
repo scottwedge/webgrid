@@ -48,6 +48,9 @@ after_test:
   - python setup.py bdist_wheel
   - ps: "ls dist"
 
+on_success:
+ - codecov --token=f52ea144-6e93-4cda-b927-1f578a6e814c
+
 artifacts:
   # Archive the generated wheel package in the ci.appveyor.com build report.
   - path: dist\*
