@@ -104,7 +104,10 @@ class FilterBase(object):
 
     @property
     def is_active(self):
-        return self.op is not None and not self.error
+        operator_by_key = {op.key: op for op in self.operators}
+        return self.op is not None and not self.error and (
+            operator_by_key[self.op].field_type is None or self.value1 is not None
+        )
 
     @property
     def is_display_active(self):

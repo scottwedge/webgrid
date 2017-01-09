@@ -4,7 +4,7 @@ Changelog
 0.1.32 released <in development>
 ==========================
 
- - ?
+ - corrected the results of Filter.is_active to account for default operation with no value
 
 0.1.31 released 2016-11-03
 ==========================

@@ -72,6 +72,7 @@ class TestTextFilter(CheckFilterBase):
     def test_default(self):
         tf = TextFilter(Person.firstname, default_op='contains', default_value1='foo')
         tf.set(None, None)
+        assert tf.is_active
         query = tf.apply(db.session.query(Person.id))
         self.assert_in_query(query, "WHERE persons.firstname LIKE '%foo%'")
 
@@ -80,6 +81,7 @@ class TestTextFilter(CheckFilterBase):
             return 'contains'
         tf = TextFilter(Person.firstname, default_op=def_op, default_value1='bar')
         tf.set(None, None)
+        assert tf.is_active
         query = tf.apply(db.session.query(Person.id))
         self.assert_in_query(query, "WHERE persons.firstname LIKE '%bar%'")
 
@@ -88,8 +90,14 @@ class TestTextFilter(CheckFilterBase):
             return 'bar'
         tf = TextFilter(Person.firstname, default_op='contains', default_value1=def_val)
         tf.set(None, None)
+        assert tf.is_active
         query = tf.apply(db.session.query(Person.id))
         self.assert_in_query(query, "WHERE persons.firstname LIKE '%bar%'")
+
+    def test_default_no_value(self):
+        tf = TextFilter(Person.firstname, default_op='contains')
+        tf.set(None, None)
+        assert not tf.is_active
 
 
 class TestTextFilterWithCaseSensitiveDialect(CheckFilterBase):
