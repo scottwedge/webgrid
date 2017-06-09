@@ -5,6 +5,7 @@ Changelog
 ==========================
 
  - corrected the results of Filter.is_active to account for default operation with no value
+ - fixed formencode requirement for python 3
 
 0.1.31 released 2016-11-03
 ==========================
