@@ -1,7 +1,7 @@
 Changelog
 ---------
 
-0.1.32 released <in development>
+0.1.32 released 2017-06-09
 ==========================
 
  - corrected the results of Filter.is_active to account for default operation with no value
