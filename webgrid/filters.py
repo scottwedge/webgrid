@@ -247,7 +247,7 @@ class OptionsFilterBase(FilterBase):
             if self.value_modifier and len(self.option_keys) == 0:
                 raise ValueError('value_modifier argument set to "auto", but '
                                  'the options set is empty and the type can therefore not '
-                                 'be determined')
+                                 'be determined for {}'.format(self.__class__.__name__))
             first_key = self.option_keys[0]
             if isinstance(first_key, six.string_types) or self.value_modifier is None:
                 self.value_modifier = feval.UnicodeString

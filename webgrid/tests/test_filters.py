@@ -936,7 +936,7 @@ class TestOptionsFilter(CheckFilterBase):
 
     @raises(ValueError,
             'value_modifier argument set to "auto", but the options set is empty and '
-            'the type can therefore not be determined')
+            'the type can therefore not be determined for NoOptionsFilter')
     def test_auto_validation_with_no_options(self):
         class NoOptionsFilter(OptionsFilterBase):
             pass
