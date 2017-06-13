@@ -527,12 +527,17 @@ class XLS(object):
         self.style = BlankObject()
         self.style.bold = xlwt.easyxf('font: bold True;')
 
+    def sanitize_sheet_name(self, sheet_name):
+        return sheet_name if len(sheet_name) <= 30 else (sheet_name[:27] + '...')
+
     def build_sheet(self, wb=None, sheet_name=None):
         if xlwt is None:
             raise ImportError('you must have xlwt installed to use Excel renderer')
         if wb is None:
             wb = xlwt.Workbook()
-        sheet = wb.add_sheet(sheet_name or self.grid.ident)
+        sheet = wb.add_sheet(
+            self.sanitize_sheet_name(sheet_name or self.grid.ident)
+        )
         xlh = Writer(sheet)
 
         self.sheet_header(xlh)

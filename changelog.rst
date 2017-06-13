@@ -1,10 +1,10 @@
 Changelog
 ---------
 
-0.1.33 released <in development>
+0.1.33 released 2017-06-13
 ==========================
 
- - ?
+ - limit XLS sheet names to 30 characters, per the Excel format limit
 
 0.1.32 released 2017-06-09
 ==========================

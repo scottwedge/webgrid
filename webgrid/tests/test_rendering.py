@@ -469,6 +469,18 @@ class TestExcelRenderer(object):
         wb.save(buffer)
         buffer.seek(0)
 
+    def test_long_grid_name(self):
+        class PeopleGridWithAReallyReallyLongName(PeopleGrid):
+            pass
+        g = PeopleGridWithAReallyReallyLongName()
+        buffer = BytesIO()
+        wb = g.xls()
+        wb.save(buffer)
+        buffer.seek(0)
+
+        book = xlrd.open_workbook(file_contents=buffer.getvalue())
+        book.sheet_by_name('people_grid_with_a_really_r...')
+
 
 class TestHideSection(object):
     @inrequest('/')
