@@ -721,6 +721,12 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
             )
             return any(r.match(a) for a in args.keys())
 
+        def args_have_session_override(args):
+            r = re.compile(
+                self.qs_prefix + 'session_override'
+            )
+            return any(r.match(a) for a in args.keys())
+
         def args_have_page(args):
             r = re.compile(
                 self.qs_prefix + '(onpage|perpage)'
@@ -744,8 +750,9 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
                 self.prefix_qs_arg_key('session_key'),
                 self.session_key
             )
-            if not args_have_op(args):
-                session_args = self.get_session_store(args)
+            session_override = args_have_session_override(args)
+            if not args_have_op(args) or session_override:
+                session_args = self.get_session_store(args, session_override)
                 # override paging if it exists in the query
                 if args_have_page(args):
                     session_args['onpage'] = args.get('onpage')
@@ -848,7 +855,7 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
         if to in ('xls',):
             self.export_to = to
 
-    def get_session_store(self, args):
+    def get_session_store(self, args, session_override=False):
         # check args for a session key. If the key is present,
         #   look it up in the session and use the saved args
         #   (if they have been saved under that key). If not,
@@ -867,6 +874,10 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
         else:
             def_key = '_{0}'.format(self.__class__.__name__)
             stored_args = dgsessions.get(def_key, None)
+        if stored_args and session_override:
+            for arg, value in args.items():
+                stored_args[arg] = value
+            stored_args.pop('session_override')
         return stored_args if (stored_args and not reset) else args
 
     def save_session_store(self, args):

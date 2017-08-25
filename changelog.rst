@@ -1,10 +1,10 @@
 Changelog
 ---------
 
-0.1.34 released <in development>
+0.1.34 released 2017-08-25
 ==========================
 
- - ?
+ - session_override GET arg added to allow patching additional operators into the session (rather than overriding session filters)
 
 0.1.33 released 2017-06-13
 ==========================
