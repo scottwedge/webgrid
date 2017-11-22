@@ -105,7 +105,9 @@ function datagrid_add_filter() {
 function datagrid_prep_filters(){
     $('.datagrid .filters tr').each(function(){
         jq_tr = $(this);
-        filter_key = jq_tr.attr('class');
+        // Added _filter to address CSS collision with Bootstrap
+        // Ref: https://github.com/level12/webgrid/issues/28
+        filter_key = jq_tr.attr('class').replace('_filter','');
         if( filter_key != 'add-filter') {
             op_select = jq_tr.find('.operator select');
             if( op_select.val() != '' ) {
@@ -128,7 +130,9 @@ function datagrid_prep_filters(){
 
 */
 function datagrid_activate_filter(filter_key) {
-    jq_tr = $('.datagrid .filters tr.' + filter_key);
+    // Added _filter to address CSS collision with Bootstrap
+    // Ref: https://github.com/level12/webgrid/issues/28
+    jq_tr = $('.datagrid .filters tr.' + filter_key+ "_filter");
     // show the filter's row of controls
     jq_tr.show();
 
@@ -149,7 +153,9 @@ function datagrid_activate_filter(filter_key) {
 function datagrid_on_operator_change() {
     jq_op_select = $(this);
     jq_tr = jq_op_select.closest('tr');
-    filter_key = jq_tr.attr('class');
+    // Added _filter to address CSS collision with Bootstrap
+    // Ref: https://github.com/level12/webgrid/issues/28
+    filter_key = jq_tr.attr('class').replace('_filter', '');
     datagrid_toggle_filter_inputs(jq_tr);
 }
 

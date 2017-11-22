@@ -355,7 +355,7 @@ class TestHtmlRenderer(object):
         g = PeopleGrid()
         g.key_column_map['firstname'].filter.html_extra = {'data-special-attr': 'foo'}
         filter_html = g.html.filtering_table_row(g.key_column_map['firstname'])
-        assert '<tr class="firstname" data-special-attr="foo">' in filter_html, filter_html
+        assert '<tr class="firstname_filter" data-special-attr="foo">' in filter_html, filter_html
 
     @inrequest('/thepage')
     def test_grid_rendering(self):
