@@ -75,7 +75,7 @@ def current_url(manager, root_only=False, host_only=False, strip_querystring=Fal
     return retval
 
 
-class OverridableAttributeProperty:
+class OverridableAttributeProperty(object):
     """
     Create an overridable attribute property.
 

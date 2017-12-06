@@ -6,7 +6,7 @@ from webgrid.utils import (
 )
 
 
-class Test_enumerate_class_attributes:
+class Test_enumerate_class_attributes(object):
     def test_attribute_enumeration(self):
         class A:
             a = 123
@@ -70,9 +70,9 @@ class Test_enumerate_class_attributes:
         eq_(enumerate_class_attributes(a), ['a'])
 
 
-class Test_OverridableAttributeProperty:
+class Test_OverridableAttributeProperty(object):
     def test_class_value(self):
-        class Foo:
+        class Foo(object):
             bar = 123
 
             bar = OverridableAttributeProperty('bar', bar)
@@ -80,7 +80,7 @@ class Test_OverridableAttributeProperty:
         eq_(Foo.bar, 123)
 
     def test_default_instance_value(self):
-        class Foo:
+        class Foo(object):
             bar = 123
 
             bar = OverridableAttributeProperty('bar', bar)
@@ -89,7 +89,7 @@ class Test_OverridableAttributeProperty:
         eq_(foo.bar, 123)
 
     def test_class_value_writable_by_default(self):
-        class Foo:
+        class Foo(object):
             bar = 123
 
             bar = OverridableAttributeProperty('bar', bar)
@@ -98,7 +98,7 @@ class Test_OverridableAttributeProperty:
         eq_(Foo.bar, 345)
 
     def test_instance_value_writable_by_default(self):
-        class Foo:
+        class Foo(object):
             bar = 123
 
             bar = OverridableAttributeProperty('bar', bar)
@@ -110,7 +110,7 @@ class Test_OverridableAttributeProperty:
         eq_(Foo.bar, 123)
 
     def test_setter(self):
-        class Foo:
+        class Foo(object):
             bar = 123
 
             bar = OverridableAttributeProperty('bar', bar)
@@ -125,7 +125,7 @@ class Test_OverridableAttributeProperty:
         eq_(foo.bar, 1)
 
     def test_instance_values_are_per_instance(self):
-        class Foo:
+        class Foo(object):
             bar = 123
 
             bar = OverridableAttributeProperty('bar', bar)
@@ -142,7 +142,7 @@ class Test_OverridableAttributeProperty:
         eq_(b.bar, 123)
 
     def test_behaves_in_init(self):
-        class Foo:
+        class Foo(object):
             bar = 123
 
             def __init__(self):
@@ -158,7 +158,7 @@ class Test_OverridableAttributeProperty:
         eq_(foo.bar, 400)
 
     def test_property_inherits_properly(self):
-        class Foo:
+        class Foo(object):
             bar = 123
 
             bar = OverridableAttributeProperty('bar', bar)
@@ -176,7 +176,7 @@ class Test_OverridableAttributeProperty:
         eq_(bar.bar, 400)
 
     def test_overriden_attribute_is_plain(self):
-        class Foo:
+        class Foo(object):
             bar = 123
 
             bar = OverridableAttributeProperty('bar', bar)
