@@ -1,5 +1,6 @@
 import inspect
 
+
 def enumerate_class_attributes(cls_or_instance):
     """
     Returns a sorted list of the class's attributes
@@ -139,5 +140,3 @@ class OverridableAttributeProperty:
 
     def setter(self, fset):
         return type(self)(self.name, self.class_value, fset)
-
-

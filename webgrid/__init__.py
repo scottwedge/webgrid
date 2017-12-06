@@ -146,6 +146,7 @@ class Column(object):
             self.filter = self.filter(self.expr)
 
     key = OverridableAttributeProperty('key', key)
+
     @key.setter
     def key(self, name, value):
         self.expr = None
@@ -174,6 +175,7 @@ class Column(object):
         setattr(self, name, value)
 
     render_in = OverridableAttributeProperty('render_in', render_in)
+
     @render_in.setter
     def render_in(self, name, value):
         setattr(self, name, ensure_tuple(value))

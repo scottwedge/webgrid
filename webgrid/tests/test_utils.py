@@ -5,6 +5,7 @@ from webgrid.utils import (
     OverridableAttributeProperty
 )
 
+
 class Test_enumerate_class_attributes:
     def test_attribute_enumeration(self):
         class A:
@@ -113,6 +114,7 @@ class Test_OverridableAttributeProperty:
             bar = 123
 
             bar = OverridableAttributeProperty('bar', bar)
+
             @bar.setter
             def bar(self, name, value):
                 setattr(self, name, 1000 - value)
@@ -127,6 +129,7 @@ class Test_OverridableAttributeProperty:
             bar = 123
 
             bar = OverridableAttributeProperty('bar', bar)
+
             @bar.setter
             def bar(self, name, value):
                 setattr(self, name, 1000 - value)
@@ -146,6 +149,7 @@ class Test_OverridableAttributeProperty:
                 self.bar = 200
 
             bar = OverridableAttributeProperty('bar', bar)
+
             @bar.setter
             def bar(self, name, value):
                 setattr(self, name, value * 2)
@@ -158,6 +162,7 @@ class Test_OverridableAttributeProperty:
             bar = 123
 
             bar = OverridableAttributeProperty('bar', bar)
+
             @bar.setter
             def bar(self, name, value):
                 setattr(self, name, value * 2)
@@ -175,6 +180,7 @@ class Test_OverridableAttributeProperty:
             bar = 123
 
             bar = OverridableAttributeProperty('bar', bar)
+
             @bar.setter
             def bar(self, name, value):
                 setattr(self, name, value * 2)
@@ -186,4 +192,3 @@ class Test_OverridableAttributeProperty:
         eq_(bar.bar, 500)
         bar.bar = 200
         eq_(bar.bar, 200)
-
