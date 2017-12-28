@@ -107,7 +107,7 @@ function datagrid_prep_filters(){
         jq_tr = $(this);
         // Added _filter to address CSS collision with Bootstrap
         // Ref: https://github.com/level12/webgrid/issues/28
-        filter_key = jq_tr.attr('class').replace('_filter','');
+        filter_key = jq_tr.attr('class').replace(new RegExp('_filter$'),'');
         if( filter_key != 'add-filter') {
             op_select = jq_tr.find('.operator select');
             if( op_select.val() != '' ) {
@@ -155,7 +155,7 @@ function datagrid_on_operator_change() {
     jq_tr = jq_op_select.closest('tr');
     // Added _filter to address CSS collision with Bootstrap
     // Ref: https://github.com/level12/webgrid/issues/28
-    filter_key = jq_tr.attr('class').replace('_filter', '');
+    filter_key = jq_tr.attr('class').replace(new RegExp('_filter$'), '');
     datagrid_toggle_filter_inputs(jq_tr);
 }
 
@@ -171,8 +171,10 @@ function datagrid_toggle_filter_inputs(jq_filter_tr) {
     fields1 =  jq_filter_tr.find('.inputs1').children();
     fields2 = jq_filter_tr.find('.inputs2').children();
     v1name = 'v1('+filter_key+')';
-
-    if( op_key == '') {
+    
+    if( op_key == null ) {
+        fields1.show();
+    } else if( op_key == '' ) {
         // destroy any multi-selects that have been created
         fields1.removeAttr('multiple');
         fields1.siblings('.ms-parent').hide();
