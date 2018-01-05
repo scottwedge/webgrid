@@ -91,7 +91,9 @@ class HTML(object):
                 _HTML.div(self.filtering_col_inputs1(col), class_='inputs1') +
                 _HTML.div(self.filtering_col_inputs2(col), class_='inputs2')
             ),
-            class_=col.key,
+            # Added _filter to address CSS collision with Bootstrap
+            # Ref: https://github.com/level12/webgrid/issues/28
+            class_=col.key + '_filter',
             **extra
         )
 
