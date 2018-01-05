@@ -61,6 +61,7 @@ function datagrid_activate_mselect_ui(jq_select) {
         jq_select.siblings('.ms-parent').show();
     } else {
         jq_select.multipleSelect({
+            container: 'body',
             onOpen: function() {
                 $('.ms-drop input').show();
             },

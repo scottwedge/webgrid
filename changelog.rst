@@ -1,10 +1,11 @@
 Changelog
 ---------
 
-0.1.35 released <in development>
+0.1.35 released 2018-01-05
 ==========================
 
- - ?
+ - fix CSS collision in tr classes with Bootstrap
+ - change multiselect to use body as the container for the multiselect list
 
 0.1.34 released 2017-08-25
 ==========================
