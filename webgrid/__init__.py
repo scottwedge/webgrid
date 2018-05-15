@@ -10,13 +10,14 @@ from blazeutils.datastructures import BlankObject, OrderedDict
 from blazeutils.helpers import ensure_tuple
 from blazeutils.numbers import decimalfmt
 from blazeutils.strings import case_cw2us, randchars
+from blazeutils.spreadsheets import xlsxwriter
 from formencode import Invalid
 import formencode.validators as fev
 import sqlalchemy.sql as sasql
 from webhelpers2.html.tags import link_to
 from werkzeug.datastructures import MultiDict
 
-from .renderers import HTML, XLS
+from .renderers import HTML, XLS, XLSX
 
 # conditional imports to support libs without requiring them
 try:
@@ -96,7 +97,7 @@ class Column(object):
     xls_width = None
     xls_num_format = None
     xls_style = None
-    render_in = 'html', 'xls'
+    render_in = 'html', 'xls', 'xlsx'
 
     def __new__(cls, *args, **kwargs):
         col_inst = super(Column, cls).__new__(cls)
@@ -356,6 +357,9 @@ class DateColumnBase(Column):
             data = data.replace(tzinfo=None)
         return data
 
+    def render_xlsx(self, record):
+        return self.render_xls(record)
+
     def xls_width_calc(self, value):
         if self.xls_width:
             return self.xls_width
@@ -444,14 +448,23 @@ class NumericColumn(Column):
         dec_places = '.'.ljust(self.places + 1, '0') if self.places else ''
         return fmt_str.format(dec_places=dec_places, neg_prefix=neg_prefix)
 
-    def xlwt_stymat_init(self):
-        num_format = None
+    def get_num_format(self):
         if self.format_as == 'general':
-            num_format = self.xls_construct_format(self.xls_fmt_general)
+            return self.xls_construct_format(self.xls_fmt_general)
         if self.format_as == 'percent':
-            num_format = self.xls_construct_format(self.xls_fmt_percent)
+            return self.xls_construct_format(self.xls_fmt_percent)
         if self.format_as == 'accounting':
-            num_format = self.xls_construct_format(self.xls_fmt_accounting)
+            return self.xls_construct_format(self.xls_fmt_accounting)
+        return None
+
+    @property
+    def xlsx_style(self):
+        return {
+            'num_format': self.get_num_format()
+        }
+
+    def xlwt_stymat_init(self):
+        num_format = self.get_num_format()
         if num_format:
             return xlwt.easyxf(self.xls_style, num_format)
         return Column.xlwt_stymat_init(self)
@@ -471,6 +484,8 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
     # enables page/grand subtotals: none|page|grand|all
     subtotals = 'none'
     manager = None
+    allowed_export_targets = ('xls', 'xlsx')
+    default_spreadsheet_format = 'xls'
 
     def __init__(self, ident=None, per_page=_None, on_page=_None, qs_prefix='', class_='datagrid',
                  **kwargs):
@@ -548,10 +563,8 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
 
     def set_renderers(self):
         self.html = HTML(self)
-        if xlwt is not None:
-            self.xls = XLS(self)
-        else:
-            self.xls = None
+        self.xls = XLS(self) if xlwt is not None else None
+        self.xlsx = XLSX(self) if xlsxwriter is not None else None
 
     def set_filter(self, key, op, value):
         self.clear_record_cache()
@@ -852,8 +865,14 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
             return None
 
     def set_export_to(self, to):
-        if to in ('xls',):
+        if to in self.allowed_export_targets:
             self.export_to = to
+
+    def export_as_response(self, wb=None, sheet_name=None):
+        if not self.export_to:
+            raise ValueError('No export format set')
+        exporter = getattr(self, self.export_to)
+        return exporter.as_response(wb, sheet_name)
 
     def get_session_store(self, args, session_override=False):
         # check args for a session key. If the key is present,

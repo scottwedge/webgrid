@@ -19,7 +19,7 @@ class ManagePeople(View):
     def default(self):
         pg = PeopleGrid()
         pg.apply_qs_args()
-        if pg.export_to == 'xls':
-            pg.xls.as_response()
+        if pg.export_to:
+            pg.export_as_response()
         self.assign('people_grid', pg)
         self.render_template()

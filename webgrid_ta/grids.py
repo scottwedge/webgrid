@@ -53,6 +53,7 @@ class PeopleGrid(Grid):
     DateTimeColumn('Created', Person.createdts, DateTimeFilter)
     DateColumn('Due Date', 'due_date')
     Column('Sort Order', Person.sortorder, render_in='xls')
+    Column('State', Person.state, render_in='xlsx')
     NumericColumn('Number', Person.numericcol, has_subtotal=True)
 
     def query_prep(self, query, has_sort, has_filters):

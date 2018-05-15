@@ -1,13 +1,16 @@
 from __future__ import absolute_import
+
+import io
+import warnings
 from collections import defaultdict
 import six
 from six.moves import range
 
-from blazeutils.containers import HTMLAttributes
+from blazeutils.containers import HTMLAttributes, LazyDict
 from blazeutils.datastructures import BlankObject
 from blazeutils.helpers import tolist
 from blazeutils.jsonh import jsonmod
-from blazeutils.spreadsheets import Writer
+from blazeutils.spreadsheets import Writer, WriterX, xlsxwriter
 from blazeutils.strings import reindent, randnumerics
 import jinja2 as jinja
 from webhelpers2.html import HTML as _HTML, literal, tags
@@ -511,11 +514,19 @@ class HTML(object):
 
         return self.current_url(**url_args)
 
+    def export_url(self, renderer=None):
+        if renderer is None:
+            renderer = self.grid.default_spreadsheet_format
+        return self.current_url(export_to=renderer)
+
     def xls_url(self):
-        return self.current_url(export_to='xls')
+        warnings.warn('xls_url is deprecated. Use export_url instead.', DeprecationWarning)
+        return self.export_url('xls')
 
 
 class XLS(object):
+    mime_type = 'application/vnd.ms-excel'
+
     def __init__(self, grid, max_col_width=150):
         self.grid = grid
         self.define_styles()
@@ -651,4 +662,149 @@ class XLS(object):
 
     def as_response(self, wb=None, sheet_name=None):
         wb = self.build_sheet(wb, sheet_name)
-        return self.grid.manager.xls_as_response(wb, self.file_name())
+        buffer = io.BytesIO()
+        wb.save(buffer)
+        buffer.seek(0)
+        return self.grid.manager.file_as_response(buffer, self.file_name(), self.mime_type)
+
+
+class XLSX(object):
+    mime_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+
+    def __init__(self, grid):
+        self.grid = grid
+        self.styles_cache = LazyDict()
+        self.default_style = {}
+        self.col_widths = {}
+
+    def style_for_column(self, wb, col):
+        if col.key not in self.styles_cache:
+            style_dict = getattr(col, 'xlsx_style', self.default_style).copy()
+            if col.xls_num_format:
+                style_dict['num_format'] = col.xls_num_format
+            self.styles_cache[col.key] = wb.add_format(style_dict)
+        return self.styles_cache[col.key]
+
+    def update_column_width(self, col, data):
+        l = max((col.xls_width_calc(data), self.col_widths.get(col.key, 0)))
+        self.col_widths[col.key] = l
+
+    def adjust_column_widths(self, writer):
+        for idx, col in enumerate(self.grid.iter_columns('xlsx')):
+            if col.key in self.col_widths:
+                writer.ws.set_column(idx, idx, self.col_widths[col.key])
+
+    def build_sheet(self, wb=None, sheet_name=None):
+        if xlsxwriter is None:
+            raise ImportError('you must have xlsxwriter installed to use the XLSX renderer')
+
+        if wb is None:
+            buf = io.BytesIO()
+            wb = xlsxwriter.Workbook(buf, options={'in_memory': True})
+
+        sheet = wb.add_worksheet(self.sanitize_sheet_name(sheet_name or self.grid.ident))
+        writer = WriterX(sheet)
+
+        self.sheet_header(writer, wb)
+        self.sheet_body(writer, wb)
+        self.sheet_footer(writer, wb)
+        self.adjust_column_widths(writer)
+
+        return wb
+
+    def __call__(self):
+        buf = io.BytesIO()
+        with xlsxwriter.Workbook(buf, options={'in_memory': True}) as wb:
+            return self.build_sheet(wb)
+
+    def sanitize_sheet_name(self, sheet_name):
+        return sheet_name if len(sheet_name) <= 30 else (sheet_name[:27] + '...')
+
+    def sheet_header(self, xlh, wb):
+        pass
+
+    def sheet_body(self, xlh, wb):
+        self.body_headings(xlh, wb)
+        self.body_records(xlh, wb)
+
+    def sheet_footer(self, xlh, wb):
+        pass
+
+    def body_headings(self, xlh, wb):
+        heading_style = wb.add_format({'bold': True})
+        for col in self.grid.iter_columns('xlsx'):
+            xlh.awrite(col.label, heading_style)
+            self.update_column_width(col, col.label)
+        xlh.nextrow()
+
+    def body_records(self, xlh, wb):
+        # turn off paging
+        self.grid.set_paging(None, None)
+
+        rownum = 0
+        for rownum, record in enumerate(self.grid.records):
+            self.record_row(xlh, rownum, record, wb)
+
+        # totals
+        if rownum and self.grid.subtotals != 'none' and self.grid.subtotal_cols:
+            self.totals_row(xlh, rownum + 1, self.grid.grand_totals, wb)
+
+    def record_row(self, xlh, rownum, record, wb):
+        for col in self.grid.iter_columns('xlsx'):
+            value = col.render('xlsx', record)
+            style = self.style_for_column(wb, col)
+            xlh.awrite(value, style)
+            self.update_column_width(col, value)
+        xlh.nextrow()
+
+    def totals_row(self, xlh, rownum, record, wb):
+        colspan = 0
+        firstcol = True
+        base_style_attrs = {
+            'bold': True,
+            'top': 6  # Double think border
+        }
+        base_style = wb.add_format(base_style_attrs)
+        for col in self.grid.iter_columns('xlsx'):
+            if col.key not in list(self.grid.subtotal_cols.keys()):
+                if firstcol:
+                    colspan += 1
+                else:
+                    xlh.awrite('', base_style)
+                continue
+            if firstcol:
+                numrecords = self.grid.record_count
+                bufferval = 'Totals ({0} record{1}):'.format(
+                    numrecords,
+                    's' if numrecords != 1 else '',
+                )
+                xlh.ws.merge_range(
+                    xlh.rownum,
+                    xlh.colnum,
+                    xlh.rownum,
+                    xlh.colnum + colspan - 1,
+                    bufferval,
+                    base_style
+                )
+                xlh.colnum = xlh.colnum + colspan
+                firstcol = False
+                colspan = 0
+
+            style = base_style_attrs.copy()
+            style.update(getattr(col, 'xlsx_style', self.default_style))
+            style = wb.add_format(style)
+            value = col.render('xlsx', record)
+            xlh.awrite(value, style)
+            self.update_column_width(col, value)
+
+        xlh.nextrow()
+
+    def file_name(self):
+        return '{0}_{1}.xlsx'.format(self.grid.ident, randnumerics(6))
+
+    def as_response(self, wb=None, sheet_name=None):
+        wb = self.build_sheet(wb, sheet_name)
+        if not wb.fileclosed:
+            wb.close()
+        wb.filename.seek(0)
+        return self.grid.manager.file_as_response(wb.filename, self.file_name(), self.mime_type)

@@ -47,3 +47,4 @@ Werkzeug
 wrapt
 xlrd
 xlwt
+xlsxwriter

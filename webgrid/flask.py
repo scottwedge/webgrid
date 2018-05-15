@@ -1,13 +1,13 @@
 from __future__ import absolute_import
 
-from io import BytesIO
+import io
+import warnings
 from os import path
 
 from flask import request, session, flash, Blueprint, url_for, send_file
 
 
 class WebGrid(object):
-
     def __init__(self, db=None):
         self.init_db(db)
 
@@ -44,9 +44,14 @@ class WebGrid(object):
         )
         app.register_blueprint(bp)
 
-    def xls_as_response(self, workbook, filename):
-        buf = BytesIO()
+    def file_as_response(self, data_stream, file_name, mime_type):
+        return send_file(data_stream, mimetype=mime_type, as_attachment=True,
+                         attachment_filename=file_name)
+
+    def xls_as_response(self, workbook, file_name):
+        warnings.warn('xls_as_response is deprecated. Use file_as_response instead',
+                      DeprecationWarning)
+        buf = io.BytesIO()
         workbook.save(buf)
         buf.seek(0)
-        return send_file(buf, mimetype='application/vnd.ms-excel',
-                         as_attachment=True, attachment_filename=filename)
+        return self.file_as_response(buf, file_name, 'application/vnd.ms-excel')

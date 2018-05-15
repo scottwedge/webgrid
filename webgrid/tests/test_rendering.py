@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import datetime as dt
+import warnings
 from io import BytesIO
 
 import arrow
@@ -45,6 +46,7 @@ def setup_module():
         p.lastname = 'ln%03d' % x
         p.sortorder = x
         p.numericcol = '2.13'
+        p.state = 'st%03d' % x
         if x != 2:
             p.createdts = dt.datetime(2012, 0o2, 22, 10, x, 16)
             p.due_date = dt.date(2012, 0o2, x)
@@ -171,6 +173,27 @@ class TestHtmlRenderer(object):
     def test_current_url_qs_prefix(self):
         g = self.get_grid(qs_prefix='dg_')
         eq_('/thepage?dg_perpage=10', g.html.current_url(perpage=10))
+
+    @inrequest('/thepage?perpage=5&onpage=1')
+    def test_xls_url(self):
+        g = self.get_grid()
+        with warnings.catch_warnings(record=True) as warn:
+            warnings.simplefilter("always")
+            url = g.html.xls_url()
+        eq_(url, '/thepage?export_to=xls&onpage=1&perpage=5')
+        eq_(len(warn), 1)
+        eq_(warn[0].category, DeprecationWarning)
+        eq_(str(warn[0].message), 'xls_url is deprecated. Use export_url instead.')
+
+    @inrequest('/thepage?perpage=5&onpage=1')
+    def test_export_url(self):
+        g = self.get_grid()
+        eq_(g.html.export_url(), '/thepage?export_to=xls&onpage=1&perpage=5')
+
+        g.default_spreadsheet_format = 'xlsx'
+        eq_(g.html.export_url(), '/thepage?export_to=xlsx&onpage=1&perpage=5')
+
+        eq_(g.html.export_url('xls'), '/thepage?export_to=xls&onpage=1&perpage=5')
 
     @inrequest('/thepage?onpage=3')
     def test_paging_url_first(self):
@@ -440,7 +463,7 @@ class TestStringExprTotals(PeopleGrid):
         assert '<td class="totals-label" colspan="7">Page Totals (3 records):</td>' in html
 
 
-class TestExcelRenderer(object):
+class TestXLSRenderer(object):
 
     def test_some_basics(self):
         g = PeopleGrid(per_page=1)
@@ -480,6 +503,55 @@ class TestExcelRenderer(object):
 
         book = xlrd.open_workbook(file_contents=buffer.getvalue())
         book.sheet_by_name('people_grid_with_a_really_r...')
+
+
+class TestXLSXRenderer(object):
+
+    def test_some_basics(self):
+        g = PeopleGrid(per_page=1)
+        wb = g.xlsx()
+        wb.filename.seek(0)
+
+        book = xlrd.open_workbook(file_contents=wb.filename.getvalue())
+        sh = book.sheet_by_name('people_grid')
+        # headers
+        eq_(sh.cell_value(0, 0), 'First Name')
+        eq_(sh.cell_value(0, 7), 'State')
+
+        # last data row
+        eq_(sh.cell_value(3, 0), 'fn001')
+        eq_(sh.cell_value(3, 7), 'st001')
+        eq_(sh.nrows, 4)
+
+    def test_subtotals_with_no_records(self):
+        g = PGGrandTotals()
+        g.column('firstname').filter.op = 'eq'
+        g.column('firstname').filter.value1 = 'foobar'
+        wb = g.xlsx()
+        wb.filename.seek(0)
+
+    def test_long_grid_name(self):
+        class PeopleGridWithAReallyReallyLongName(PeopleGrid):
+            pass
+        g = PeopleGridWithAReallyReallyLongName()
+        wb = g.xlsx()
+        wb.filename.seek(0)
+
+        book = xlrd.open_workbook(file_contents=wb.filename.getvalue())
+        book.sheet_by_name('people_grid_with_a_really_r...')
+
+    def test_totals(self):
+        g = PeopleGrid()
+        g.subtotals = 'grand'
+
+        wb = g.xlsx()
+        wb.filename.seek(0)
+
+        book = xlrd.open_workbook(file_contents=wb.filename.getvalue())
+        sheet = book.sheet_by_index(0)
+        eq_(sheet.nrows, 5)
+        eq_(sheet.cell_value(4, 0), 'Totals (3 records):')
+        eq_(sheet.cell_value(4, 8), 6.39)
 
 
 class TestHideSection(object):
