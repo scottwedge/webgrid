@@ -5,13 +5,14 @@ import warnings
 from io import BytesIO
 
 import arrow
-from nose.tools import eq_
+from nose.tools import eq_, raises
 from six.moves import range
 import xlrd
 
 from webgrid import Column, LinkColumnBase, YesNoColumn, BoolColumn, row_styler, col_filter, \
     col_styler
 from webgrid.filters import TextFilter
+from webgrid.renderers import RenderError, HTML, XLS, XLSX
 from webgrid_ta.model.entities import ArrowRecord, Person, Status, Email, db
 
 from webgrid_ta.grids import ArrowGrid, Grid, PeopleGrid as PG
@@ -404,6 +405,22 @@ class TestHtmlRenderer(object):
         assert '<th class="page">' not in g.html()
         assert '<th class="perpage">' not in g.html()
 
+    def test_can_render(self):
+        assert PeopleGrid().html.can_render() is True
+
+    @raises(RenderError)
+    def test_render_error(self):
+        class Renderer(HTML):
+            def can_render(self):
+                return False
+
+        class TestGrid(PeopleGrid):
+            def set_renderers(self):
+                super(TestGrid, self).set_renderers()
+                self.html = Renderer(self)
+
+        TestGrid().html()
+
 
 class PGPageTotals(PeopleGrid):
     subtotals = 'page'
@@ -504,6 +521,41 @@ class TestXLSRenderer(object):
         book = xlrd.open_workbook(file_contents=buffer.getvalue())
         book.sheet_by_name('people_grid_with_a_really_r...')
 
+    def test_can_render(self):
+        class FakeCountsGrid(PeopleGrid):
+            def __init__(self, record_count, col_count, has_subtotals):
+                self._num_records = record_count
+                self._col_count = col_count
+                self.subtotals = 'all' if has_subtotals else 'none'
+                super(FakeCountsGrid, self).__init__()
+
+            @property
+            def record_count(self):
+                return self._num_records
+
+            def iter_columns(self, render_type):
+                for _ in range(self._col_count):
+                    yield None
+
+        assert FakeCountsGrid(65535, 256, False).xls.can_render() is True
+        assert FakeCountsGrid(65536, 256, False).xls.can_render() is False
+        assert FakeCountsGrid(65535, 256, True).xls.can_render() is False
+        assert FakeCountsGrid(65534, 256, True).xls.can_render() is True
+        assert FakeCountsGrid(65535, 257, False).xls.can_render() is False
+
+    @raises(RenderError)
+    def test_render_error(self):
+        class Renderer(XLS):
+            def can_render(self):
+                return False
+
+        class TestGrid(PeopleGrid):
+            def set_renderers(self):
+                super(TestGrid, self).set_renderers()
+                self.xls = Renderer(self)
+
+        TestGrid().xls()
+
 
 class TestXLSXRenderer(object):
 
@@ -552,6 +604,41 @@ class TestXLSXRenderer(object):
         eq_(sheet.nrows, 5)
         eq_(sheet.cell_value(4, 0), 'Totals (3 records):')
         eq_(sheet.cell_value(4, 8), 6.39)
+
+    def test_can_render(self):
+        class FakeCountsGrid(PeopleGrid):
+            def __init__(self, record_count, col_count, has_subtotals):
+                self._num_records = record_count
+                self._col_count = col_count
+                self.subtotals = 'all' if has_subtotals else 'none'
+                super(FakeCountsGrid, self).__init__()
+
+            @property
+            def record_count(self):
+                return self._num_records
+
+            def iter_columns(self, render_type):
+                for _ in range(self._col_count):
+                    yield None
+
+        assert FakeCountsGrid(1048575, 16384, False).xlsx.can_render() is True
+        assert FakeCountsGrid(1048576, 16384, False).xlsx.can_render() is False
+        assert FakeCountsGrid(1048575, 16384, True).xlsx.can_render() is False
+        assert FakeCountsGrid(1048574, 16384, True).xlsx.can_render() is True
+        assert FakeCountsGrid(1048575, 16385, False).xlsx.can_render() is False
+
+    @raises(RenderError)
+    def test_render_error(self):
+        class Renderer(XLSX):
+            def can_render(self):
+                return False
+
+        class TestGrid(PeopleGrid):
+            def set_renderers(self):
+                super(TestGrid, self).set_renderers()
+                self.xlsx = Renderer(self)
+
+        TestGrid().xlsx()
 
 
 class TestHideSection(object):

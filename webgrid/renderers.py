@@ -24,6 +24,10 @@ except ImportError:
     xlwt = None
 
 
+class RenderError(Exception):
+    pass
+
+
 class HTML(object):
     # by default, the renderer will use the display value from the operator,
     # but that can be overriden by subclassing and setting this dictionary
@@ -44,7 +48,12 @@ class HTML(object):
     def __call__(self):
         return self.render()
 
+    def can_render(self):
+        return True
+
     def render(self):
+        if not self.can_render():
+            raise RenderError('Unable to render HTML table')
         return self.load_content('grid.html')
 
     def grid_otag(self):
@@ -536,6 +545,12 @@ class XLS(object):
     def __call__(self):
         return self.build_sheet()
 
+    def can_render(self):
+        total_rows = self.grid.record_count + 1
+        if self.grid.subtotals != 'none':
+            total_rows += 1
+        return total_rows <= 65536 and sum(1 for _ in self.grid.iter_columns('xls')) <= 256
+
     def define_styles(self):
         self.style = BlankObject()
         self.style.bold = xlwt.easyxf('font: bold True;')
@@ -546,6 +561,10 @@ class XLS(object):
     def build_sheet(self, wb=None, sheet_name=None):
         if xlwt is None:
             raise ImportError('you must have xlwt installed to use Excel renderer')
+
+        if not self.can_render():
+            raise RenderError('Unable to render XLS sheet')
+
         if wb is None:
             wb = xlwt.Workbook()
         sheet = wb.add_sheet(
@@ -698,6 +717,9 @@ class XLSX(object):
         if xlsxwriter is None:
             raise ImportError('you must have xlsxwriter installed to use the XLSX renderer')
 
+        if not self.can_render():
+            raise RenderError('Unable to render XLSX sheet')
+
         if wb is None:
             buf = io.BytesIO()
             wb = xlsxwriter.Workbook(buf, options={'in_memory': True})
@@ -716,6 +738,12 @@ class XLSX(object):
         buf = io.BytesIO()
         with xlsxwriter.Workbook(buf, options={'in_memory': True}) as wb:
             return self.build_sheet(wb)
+
+    def can_render(self):
+        total_rows = self.grid.record_count + 1
+        if self.grid.subtotals != 'none':
+            total_rows += 1
+        return total_rows <= 1048576 and sum(1 for _ in self.grid.iter_columns('xlsx')) <= 16384
 
     def sanitize_sheet_name(self, sheet_name):
         return sheet_name if len(sheet_name) <= 30 else (sheet_name[:27] + '...')
