@@ -1,6 +1,6 @@
 <div class="footer">
     {% if not grid.hide_excel_link %}
-        <p><a href="{{ renderer.export_url() }}">export to Excel</a></p>
+        <p><a class="export-link" href="{{ renderer.export_url() }}">export to Excel</a></p>
     {% endif %}
 
     {% if grid.pager_on %}

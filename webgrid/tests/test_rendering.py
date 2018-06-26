@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import datetime as dt
+import json
 import warnings
 from io import BytesIO
 
@@ -380,6 +381,17 @@ class TestHtmlRenderer(object):
         g.key_column_map['firstname'].filter.html_extra = {'data-special-attr': 'foo'}
         filter_html = g.html.filtering_table_row(g.key_column_map['firstname'])
         assert '<tr class="firstname_filter" data-special-attr="foo">' in filter_html, filter_html
+
+    @inrequest('/thepage')
+    def test_confirm_export(self):
+        g = PeopleGrid()
+        eq_(json.loads(g.html.confirm_export()), {'confirm_export': False, 'record_count': 3})
+
+        g.unconfirmed_export_limit = 2
+        eq_(json.loads(g.html.confirm_export()), {'confirm_export': True, 'record_count': 3})
+
+        g.unconfirmed_export_limit = None
+        eq_(json.loads(g.html.confirm_export()), {'confirm_export': False, 'record_count': 3})
 
     @inrequest('/thepage')
     def test_grid_rendering(self):

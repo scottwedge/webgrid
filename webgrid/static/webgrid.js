@@ -16,6 +16,7 @@ $(document).ready(function() {
     $('.inputs1 select').change(function() {
         $(this).siblings('input').val($(this).val());
     });
+    $('.datagrid .export-link').click(verify_export);
     _datagrid_is_loaded = true;
 });
 
@@ -291,4 +292,19 @@ function disable_sort(sb) {
     $('dl.sorting select[id!="'+$(sb).attr('id')+'"]').find(
         'option[value="'+sbval+'"], option[value="-'+sbval+'"]'
     ).attr('disabled', 'disabled');
+}
+
+function verify_export(event) {
+    if (!datagrid_confirm_export.confirm_export) {
+        return true;
+    }
+    var result = confirm(
+        'You are about to export ' + datagrid_confirm_export.record_count + ' records. ' +
+        'This operation may take a while, do you want to continue?'
+    );
+    if (!result) {
+        event.preventDefault();
+        return false;
+    }
+    return true;
 }

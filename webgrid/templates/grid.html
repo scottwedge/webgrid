@@ -1,5 +1,6 @@
 <script type="text/javascript">
     var datagrid_data = {{ renderer.filtering_json_data()|safe }};
+    var datagrid_confirm_export = {{ renderer.confirm_export()|safe }};
 </script>
 {{ renderer.grid_otag()|safe }}
     {% if not grid.hide_controls_box %}

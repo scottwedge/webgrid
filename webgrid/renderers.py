@@ -200,6 +200,17 @@ class HTML(object):
                 }
         return jsonmod.dumps(for_js)
 
+    def confirm_export(self):
+        count = self.grid.record_count
+        if self.grid.unconfirmed_export_limit is None:
+            confirmation_required = False
+        else:
+            confirmation_required = count > self.grid.unconfirmed_export_limit
+        return jsonmod.dumps({
+            'confirm_export': confirmation_required,
+            'record_count': count
+        })
+
     def header_sorting(self):
         return self.load_content('header_sorting.html')
 

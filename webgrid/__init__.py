@@ -487,6 +487,10 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
     allowed_export_targets = ('xls', 'xlsx')
     default_spreadsheet_format = 'xls'
 
+    # Will ask for confirmation before exporting more than this many records.
+    # Set to None to disable this check
+    unconfirmed_export_limit = 10000
+
     def __init__(self, ident=None, per_page=_None, on_page=_None, qs_prefix='', class_='datagrid',
                  **kwargs):
         self._ident = ident
