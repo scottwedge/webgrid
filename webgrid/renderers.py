@@ -24,7 +24,7 @@ except ImportError:
     xlwt = None
 
 
-class RenderError(Exception):
+class RenderLimitExceeded(Exception):
     pass
 
 
@@ -53,7 +53,7 @@ class HTML(object):
 
     def render(self):
         if not self.can_render():
-            raise RenderError('Unable to render HTML table')
+            raise RenderLimitExceeded('Unable to render HTML table')
         return self.load_content('grid.html')
 
     def grid_otag(self):
@@ -574,7 +574,7 @@ class XLS(object):
             raise ImportError('you must have xlwt installed to use Excel renderer')
 
         if not self.can_render():
-            raise RenderError('Unable to render XLS sheet')
+            raise RenderLimitExceeded('Unable to render XLS sheet')
 
         if wb is None:
             wb = xlwt.Workbook()
@@ -729,7 +729,7 @@ class XLSX(object):
             raise ImportError('you must have xlsxwriter installed to use the XLSX renderer')
 
         if not self.can_render():
-            raise RenderError('Unable to render XLSX sheet')
+            raise RenderLimitExceeded('Unable to render XLSX sheet')
 
         if wb is None:
             buf = io.BytesIO()
