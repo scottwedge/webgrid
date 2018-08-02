@@ -2,6 +2,10 @@
     {% if not grid.hide_excel_link %}
         <p><a class="export-link" href="{{ renderer.export_url() }}">export to Excel</a></p>
     {% endif %}
+    
+    {% if not grid.hide_csv_link %}
+        <p><a href="{{ renderer.csv_url()}}">export to CSV</a></p>
+    {% endif %}
 
     {% if grid.pager_on %}
     <ul class="paging">

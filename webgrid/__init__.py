@@ -17,7 +17,7 @@ import sqlalchemy.sql as sasql
 from webhelpers2.html.tags import link_to
 from werkzeug.datastructures import MultiDict
 
-from .renderers import HTML, XLS, XLSX
+from .renderers import HTML, XLS, XLSX, CSV
 
 # conditional imports to support libs without requiring them
 try:
@@ -97,7 +97,7 @@ class Column(object):
     xls_width = None
     xls_num_format = None
     xls_style = None
-    render_in = 'html', 'xls', 'xlsx'
+    render_in = 'html', 'xls', 'xlsx', 'csv'
 
     def __new__(cls, *args, **kwargs):
         col_inst = super(Column, cls).__new__(cls)
@@ -360,6 +360,19 @@ class DateColumnBase(Column):
     def render_xlsx(self, record):
         return self.render_xls(record)
 
+    def render_csv(self, record):
+        data = self.extract_and_format_data(record)
+        if not data:
+            return data
+        # if we have an arrow date, pull the underlying datetime, else the renderer won't know
+        #   how to handle it
+        if arrow and isinstance(data, arrow.Arrow):
+            data = data.datetime
+        # xlwt has no idea what to do with zone information
+        if isinstance(data, dt.datetime) and data.tzinfo is not None:
+            data = data.replace(tzinfo=None)
+        return data
+
     def xls_width_calc(self, value):
         if self.xls_width:
             return self.xls_width
@@ -569,6 +582,7 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
         self.html = HTML(self)
         self.xls = XLS(self) if xlwt is not None else None
         self.xlsx = XLSX(self) if xlsxwriter is not None else None
+        self.csv = CSV(self)
 
     def set_filter(self, key, op, value):
         self.clear_record_cache()

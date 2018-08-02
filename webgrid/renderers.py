@@ -17,6 +17,7 @@ from webhelpers2.html import HTML as _HTML, literal, tags
 from werkzeug import Href, MultiDict
 
 from .utils import current_url
+import csv
 
 try:
     import xlwt
@@ -543,6 +544,9 @@ class HTML(object):
         warnings.warn('xls_url is deprecated. Use export_url instead.', DeprecationWarning)
         return self.export_url('xls')
 
+    def csv_url(self):
+        return self.current_url(export_to='csv')
+
 
 class XLS(object):
     mime_type = 'application/vnd.ms-excel'
@@ -847,3 +851,47 @@ class XLSX(object):
             wb.close()
         wb.filename.seek(0)
         return self.grid.manager.file_as_response(wb.filename, self.file_name(), self.mime_type)
+        return self.grid.manager.xls_as_response(wb, self.file_name())
+
+
+class CSV(object):
+    mime_type = 'text/csv'
+
+    def __init__(self, grid):
+        self.grid = grid
+
+    def __call__(self):
+        return self.render()
+
+    def render(self):
+        self.output = io.StringIO()
+        self.writer = csv.writer(self.output, delimiter=',', quotechar='"')
+        self.body_headings()
+        self.body_records()
+
+    def file_name(self):
+        return '{0}_{1}.csv'.format(self.grid.ident, randnumerics(6))
+
+    def build_csv(self):
+        return io.StringIO(self.output.getvalue())
+
+    def body_headings(self):
+        headings = []
+        for col in self.grid.iter_columns('csv'):
+            headings.append(col.label)
+        self.writer.writerow(headings)
+
+    def body_records(self):
+        # turn off paging
+        self.grid.set_paging(None, None)
+
+        for rownum, record in enumerate(self.grid.records):
+            row = []
+            for col in self.grid.iter_columns('csv'):
+                row.append(col.render('csv', record))
+            self.writer.writerow(row)
+
+    def as_response(self):
+        buffer = self.build_csv()
+        buffer.seek(0)
+        return self.grid.manager.file_as_response(buffer, self.file_name(), self.mime_type)

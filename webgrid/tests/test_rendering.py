@@ -9,6 +9,7 @@ import arrow
 from nose.tools import eq_, raises
 from six.moves import range
 import xlrd
+import csv
 
 from webgrid import Column, LinkColumnBase, YesNoColumn, BoolColumn, row_styler, col_filter, \
     col_styler
@@ -651,6 +652,21 @@ class TestXLSXRenderer(object):
                 self.xlsx = Renderer(self)
 
         TestGrid().xlsx()
+
+
+class TestCSVRenderer(object):
+
+    def test_some_basics(self):
+        g = PeopleGrid(per_page=1)
+        g.csv()
+        csv_data = g.csv.build_csv()
+        reader = csv.reader(csv_data, delimiter=',', quotechar='"')
+        data = []
+        for row in reader:
+            data.append(row)
+        assert data[0][0] == 'First Name'
+        assert data[0][2] == 'Active'
+        assert data[1][0] == 'fn004'
 
 
 class TestHideSection(object):
