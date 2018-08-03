@@ -52,6 +52,10 @@ if six.PY2:
             eq_(r.headers['Content-Type'],
                 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
+        def test_csv_as_response(self):
+            r = self.ta.get('/people/manage?export_to=csv')
+            eq_(r.headers['Content-Type'], 'text/csv')
+
         @inrequest('/')
         def test_nonstandard_templating(self):
             from webgrid_blazeweb_ta.views import PeopleGrid as PGBase
