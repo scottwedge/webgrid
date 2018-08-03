@@ -4,10 +4,7 @@ import datetime as dt
 import json
 import warnings
 from io import BytesIO
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
+import six
 
 import arrow
 from nose.tools import eq_, raises
@@ -521,7 +518,7 @@ class TestXLSRenderer(object):
         g = PGGrandTotals()
         g.column('firstname').filter.op = 'eq'
         g.column('firstname').filter.value1 = 'foobar'
-        buffer = BytesIO()
+        buffer = six.BytesIO()
         wb = g.xls()
         wb.save(buffer)
         buffer.seek(0)
@@ -664,7 +661,7 @@ class TestCSVRenderer(object):
         g = PeopleGrid(per_page=1)
         csv_data = g.csv.build_csv()
         csv_data.seek(0)
-        byte_str = StringIO(csv_data.read().decode('utf-8'))
+        byte_str = six.StringIO(csv_data.read().decode('utf-8'))
         reader = csv.reader(byte_str, delimiter=',', quotechar='"')
         data = []
         for row in reader:
