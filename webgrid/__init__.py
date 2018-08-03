@@ -497,7 +497,7 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
     # enables page/grand subtotals: none|page|grand|all
     subtotals = 'none'
     manager = None
-    allowed_export_targets = ('xls', 'xlsx')
+    allowed_export_targets = ('xls', 'xlsx', 'csv')
     default_spreadsheet_format = 'xls'
 
     # Will ask for confirmation before exporting more than this many records.

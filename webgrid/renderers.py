@@ -17,6 +17,11 @@ from webhelpers2.html import HTML as _HTML, literal, tags
 from werkzeug import Href, MultiDict
 
 from .utils import current_url
+from io import BytesIO
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 import csv
 
 try:
@@ -864,7 +869,7 @@ class CSV(object):
         return self.render()
 
     def render(self):
-        self.output = io.StringIO()
+        self.output = StringIO()
         self.writer = csv.writer(self.output, delimiter=',', quotechar='"')
         self.body_headings()
         self.body_records()
@@ -873,7 +878,10 @@ class CSV(object):
         return '{0}_{1}.csv'.format(self.grid.ident, randnumerics(6))
 
     def build_csv(self):
-        return io.StringIO(self.output.getvalue())
+        self.render()
+        byte_data = BytesIO()
+        byte_data.write(self.output.getvalue().encode('utf-8'))
+        return byte_data
 
     def body_headings(self):
         headings = []

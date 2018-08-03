@@ -4,6 +4,10 @@ import datetime as dt
 import json
 import warnings
 from io import BytesIO
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 import arrow
 from nose.tools import eq_, raises
@@ -658,9 +662,10 @@ class TestCSVRenderer(object):
 
     def test_some_basics(self):
         g = PeopleGrid(per_page=1)
-        g.csv()
         csv_data = g.csv.build_csv()
-        reader = csv.reader(csv_data, delimiter=',', quotechar='"')
+        csv_data.seek(0)
+        byte_str = StringIO(csv_data.read().decode('utf-8'))
+        reader = csv.reader(byte_str, delimiter=',', quotechar='"')
         data = []
         for row in reader:
             data.append(row)
