@@ -890,7 +890,9 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
         if not self.export_to:
             raise ValueError('No export format set')
         exporter = getattr(self, self.export_to)
-        return exporter.as_response(wb, sheet_name)
+        if self.export_to != 'csv':
+            return exporter.as_response(wb, sheet_name)
+        return exporter.as_response()
 
     def get_session_store(self, args, session_override=False):
         # check args for a session key. If the key is present,

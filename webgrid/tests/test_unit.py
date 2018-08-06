@@ -212,6 +212,8 @@ class TestGrid(object):
             BoolColumn('C3', Person.inactive, render_in=('xls', 'html'))
             YesNoColumn('C4', Person.inactive.label('yesno'), render_in='html')
             Column('C5', Person.firstname.label('fn3'), render_in='xlsx')
+            Column('C6', Person.firstname.label('fn4'), render_in=('csv'))
+
         tg = TG()
 
         html_cols = tuple(tg.iter_columns('html'))
@@ -230,6 +232,10 @@ class TestGrid(object):
         assert len(xlsx_cols) == 2
         eq_(xlsx_cols[0].key, 'firstname')
         eq_(xlsx_cols[1].key, 'fn3')
+        csv_cols = tuple(tg.iter_columns('csv'))
+        assert len(csv_cols) == 2
+        eq_(xls_cols[0].key, 'firstname')
+        eq_(csv_cols[1].key, 'fn4')
 
     def test_grid_inheritance(self):
         class SomeGrid(Grid):
