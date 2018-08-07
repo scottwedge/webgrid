@@ -364,13 +364,8 @@ class DateColumnBase(Column):
         data = self.extract_and_format_data(record)
         if not data:
             return data
-        # if we have an arrow date, pull the underlying datetime, else the renderer won't know
-        #   how to handle it
         if arrow and isinstance(data, arrow.Arrow):
             data = data.datetime
-        # xlwt has no idea what to do with zone information
-        if isinstance(data, dt.datetime) and data.tzinfo is not None:
-            data = data.replace(tzinfo=None)
         return data
 
     def xls_width_calc(self, value):
@@ -492,6 +487,7 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
     on_page = 1
     hide_controls_box = False
     hide_excel_link = False
+    hide_csv_link = True
     # enables keyed session store of grid arguments
     session_on = False
     # enables page/grand subtotals: none|page|grand|all

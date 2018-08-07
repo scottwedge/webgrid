@@ -670,6 +670,22 @@ class TestCSVRenderer(object):
         assert data[0][2] == 'Active'
         assert data[1][0] == 'fn004'
 
+    def test_it_renders_date_time_with_tz(self):
+        ArrowRecord.query.delete()
+        ArrowRecord.testing_create(
+            created_utc=arrow.Arrow(2016, 8, 10, 1, 2, 3)
+        )
+        g = ArrowGrid()
+        csv_data = g.csv.build_csv()
+        csv_data.seek(0)
+        byte_str = six.StringIO(csv_data.read().decode('utf-8'))
+        reader = csv.reader(byte_str, delimiter=',', quotechar='"')
+        data = []
+        for row in reader:
+            data.append(row)
+        assert data[0][0] == 'Created'
+        assert data[1][0] == '2016-08-10 01:02:03+00:00'
+
 
 class TestHideSection(object):
     @inrequest('/')
