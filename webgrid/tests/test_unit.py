@@ -251,6 +251,7 @@ class TestGrid(object):
     def test_export_as_response(self):
         export_xls = mock.MagicMock()
         export_xlsx = mock.MagicMock()
+        export_csv = mock.MagicMock()
 
         class TG(Grid):
             Column('First Name', Person.firstname)
@@ -259,6 +260,7 @@ class TestGrid(object):
                 super(TG, self).set_renderers()
                 self.xls = export_xls
                 self.xlsx = export_xlsx
+                self.csv = export_csv
 
         grid = TG()
         grid.set_export_to('xls')
@@ -271,7 +273,17 @@ class TestGrid(object):
         grid.set_export_to('xlsx')
         grid.export_as_response()
         export_xls.as_response.assert_not_called()
+        export_csv.as_response.assert_not_called()
         export_xlsx.as_response.assert_called_once_with(None, None)
+
+        export_xls.reset_mock()
+        export_xlsx.reset_mock()
+
+        grid.set_export_to('csv')
+        grid.export_as_response()
+        export_csv.as_response.assert_called_once_with()
+        export_xls.as_response.assert_not_called()
+        export_xlsx.as_response.assert_not_called()
 
         grid = TG()
         try:

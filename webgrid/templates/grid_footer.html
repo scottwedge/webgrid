@@ -4,7 +4,7 @@
     {% endif %}
     
     {% if not grid.hide_csv_link %}
-        <p><a href="{{ renderer.csv_url()}}">export to CSV</a></p>
+        <p><a href="{{ renderer.export_url('csv')}}">export to CSV</a></p>
     {% endif %}
 
     {% if grid.pager_on %}

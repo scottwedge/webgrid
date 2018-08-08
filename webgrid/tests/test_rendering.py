@@ -198,6 +198,8 @@ class TestHtmlRenderer(object):
         eq_(g.html.export_url(), '/thepage?export_to=xlsx&onpage=1&perpage=5')
 
         eq_(g.html.export_url('xls'), '/thepage?export_to=xls&onpage=1&perpage=5')
+        g.default_spreadsheet_format = 'csv'
+        eq_(g.html.export_url(), '/thepage?export_to=csv&onpage=1&perpage=5')
 
     @inrequest('/thepage?onpage=3')
     def test_paging_url_first(self):
