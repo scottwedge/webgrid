@@ -4,6 +4,7 @@ import inspect
 import re
 import sys
 import six
+import warnings
 
 from blazeutils.containers import HTMLAttributes
 from blazeutils.datastructures import BlankObject, OrderedDict
@@ -17,7 +18,7 @@ import sqlalchemy.sql as sasql
 from webhelpers2.html.tags import link_to
 from werkzeug.datastructures import MultiDict
 
-from .renderers import HTML, XLS, XLSX, CSV
+from .renderers import HTML, XLS, XLSX
 
 # conditional imports to support libs without requiring them
 try:
@@ -487,14 +488,12 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
     on_page = 1
     hide_controls_box = False
     hide_excel_link = False
-    hide_csv_link = True
     # enables keyed session store of grid arguments
     session_on = False
     # enables page/grand subtotals: none|page|grand|all
     subtotals = 'none'
     manager = None
-    allowed_export_targets = ('xls', 'xlsx', 'csv')
-    default_spreadsheet_format = 'xls'
+    allowed_export_targets = None
 
     # Will ask for confirmation before exporting more than this many records.
     # Set to None to disable this check
@@ -515,6 +514,19 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
         self._records = None
         self._page_totals = None
         self._grand_totals = None
+        if self.hide_excel_link is True:
+            warnings.warn("""
+            Hide excel link is deprecated, you should just override
+            allowed_export_targets instead
+            """, DeprecationWarning)
+        if self.allowed_export_targets is None:
+            self.allowed_export_targets = {}
+            # If the grid doesn't define any export targets
+            # lets setup the export targets for xls and xlsx if we have the requirement
+            if xlwt is not None:
+                self.allowed_export_targets['xls'] = XLS
+            if xlsxwriter is not None:
+                self.allowed_export_targets['xlsx'] = XLSX
         self.set_renderers()
         self.export_to = None
         # when session feature is enabled, key is the unique string
@@ -576,9 +588,8 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
 
     def set_renderers(self):
         self.html = HTML(self)
-        self.xls = XLS(self) if xlwt is not None else None
-        self.xlsx = XLSX(self) if xlsxwriter is not None else None
-        self.csv = CSV(self)
+        for key, value in self.allowed_export_targets.items():
+            setattr(self, key, value(self))
 
     def set_filter(self, key, op, value):
         self.clear_record_cache()
@@ -886,7 +897,7 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
         if not self.export_to:
             raise ValueError('No export format set')
         exporter = getattr(self, self.export_to)
-        if self.export_to != 'csv':
+        if self.export_to in ['xls', 'xlsx']:
             return exporter.as_response(wb, sheet_name)
         return exporter.as_response()
 

@@ -15,14 +15,31 @@ import csv
 from webgrid import Column, LinkColumnBase, YesNoColumn, BoolColumn, row_styler, col_filter, \
     col_styler
 from webgrid.filters import TextFilter
-from webgrid.renderers import RenderLimitExceeded, HTML, XLS, XLSX
+from webgrid.renderers import RenderLimitExceeded, HTML, XLS, XLSX, CSV
 from webgrid_ta.model.entities import ArrowRecord, Person, Status, Email, db
 
-from webgrid_ta.grids import ArrowGrid, Grid, PeopleGrid as PG
+from webgrid_ta.grids import ArrowGrid, Grid, PeopleGrid as PG, ArrowCSVGrid
 from .helpers import inrequest, eq_html
 
 
 class PeopleGrid(PG):
+    def query_prep(self, query, has_sort, has_filters):
+        query = PG.query_prep(self, query, True, True)
+
+        # default sort
+        if not has_sort:
+            query = query.order_by(Person.id.desc())
+
+        # default filter
+        if not has_filters:
+            query = query.filter(Person.id != 3)
+
+        return query
+
+
+class PeopleCSVGrid(PG):
+    allowed_export_targets = {'csv': CSV}
+
     def query_prep(self, query, has_sort, has_filters):
         query = PG.query_prep(self, query, True, True)
 
@@ -192,14 +209,9 @@ class TestHtmlRenderer(object):
     @inrequest('/thepage?perpage=5&onpage=1')
     def test_export_url(self):
         g = self.get_grid()
-        eq_(g.html.export_url(), '/thepage?export_to=xls&onpage=1&perpage=5')
-
-        g.default_spreadsheet_format = 'xlsx'
-        eq_(g.html.export_url(), '/thepage?export_to=xlsx&onpage=1&perpage=5')
-
+        eq_(g.html.export_url('xlsx'), '/thepage?export_to=xlsx&onpage=1&perpage=5')
         eq_(g.html.export_url('xls'), '/thepage?export_to=xls&onpage=1&perpage=5')
-        g.default_spreadsheet_format = 'csv'
-        eq_(g.html.export_url(), '/thepage?export_to=csv&onpage=1&perpage=5')
+        eq_(g.html.export_url('csv'), '/thepage?export_to=csv&onpage=1&perpage=5')
 
     @inrequest('/thepage?onpage=3')
     def test_paging_url_first(self):
@@ -660,7 +672,7 @@ class TestXLSXRenderer(object):
 class TestCSVRenderer(object):
 
     def test_some_basics(self):
-        g = PeopleGrid(per_page=1)
+        g = PeopleCSVGrid(per_page=1)
         csv_data = g.csv.build_csv()
         csv_data.seek(0)
         byte_str = six.StringIO(csv_data.read().decode('utf-8'))
@@ -677,7 +689,8 @@ class TestCSVRenderer(object):
         ArrowRecord.testing_create(
             created_utc=arrow.Arrow(2016, 8, 10, 1, 2, 3)
         )
-        g = ArrowGrid()
+        g = ArrowCSVGrid()
+        g.allowed_export_targets = {'csv': CSV}
         csv_data = g.csv.build_csv()
         csv_data.seek(0)
         byte_str = six.StringIO(csv_data.read().decode('utf-8'))

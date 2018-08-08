@@ -4,6 +4,7 @@ from webgrid.blazeweb import Grid
 from webgrid.filters import TextFilter, OptionsFilterBase, Operator, \
     DateTimeFilter, ops
 from webgrid_blazeweb_ta.model.orm import Person, Status
+from webgrid.renderers import XLSX, CSV, XLS
 
 
 class FirstNameColumn(LinkColumnBase):
@@ -32,7 +33,7 @@ class StatusFilter(OptionsFilterBase):
 
 class PeopleGrid(Grid):
     session_on = True
-
+    allowed_export_targets = {'csv': CSV, 'xls': XLS, 'xlsx': XLSX}
     FirstNameColumn('First Name', Person.firstname, TextFilter)
     FullNameColumn('Full Name')
     YesNoColumn('Active', Person.inactive, reverse=True)

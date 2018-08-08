@@ -535,9 +535,7 @@ class HTML(object):
 
         return self.current_url(**url_args)
 
-    def export_url(self, renderer=None):
-        if renderer is None:
-            renderer = self.grid.default_spreadsheet_format
+    def export_url(self, renderer):
         return self.current_url(export_to=renderer)
 
     def xls_url(self):
