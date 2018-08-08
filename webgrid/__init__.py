@@ -515,10 +515,10 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
         self._page_totals = None
         self._grand_totals = None
         if self.hide_excel_link is True:
-            warnings.warn("""
-            Hide excel link is deprecated, you should just override
-            allowed_export_targets instead
-            """, DeprecationWarning)
+            warnings.warn(
+                """Hide excel link is deprecated, you should just override allowed_export_targets instead""", # noqa
+                DeprecationWarning
+            )
         if self.allowed_export_targets is None:
             self.allowed_export_targets = {}
             # If the grid doesn't define any export targets

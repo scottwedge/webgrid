@@ -53,8 +53,7 @@ class WebGrid(object):
         abort(rp)
 
     def xls_as_response(self, wb, file_name):
-        warnings.warn('xls_as_response is deprecated. Use file_as_response instead',
-                      DeprecationWarning)
+        warnings.warn('xls_as_response is deprecated. Use file_as_response instead')
         data = io.BytesIO()
         wb.save(data)
         data.seek(0)
