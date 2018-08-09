@@ -1,7 +1,8 @@
 Changelog
 ---------
 
-0.1.37 released <in development>
+
+0.1.36 released <in development>
 ==========================
 
 - Add support for XLSX, and CSV renderers
@@ -11,12 +12,6 @@ Changelog
     `g.export_as_response()` which will select the correct renderer and return
     the response correctly
   - If xlsx is enabled you will need to make this above change to enable xlsx exporting
-
-
-0.1.36 released <in development>
-==========================
-
- - ?
 
 0.1.35 released 2018-01-05
 ==========================
