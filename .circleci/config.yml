@@ -1,0 +1,37 @@
+version: 2
+jobs:
+    build:
+        docker:
+            - image: level12/python-test-multi
+
+        steps:
+            - checkout
+
+            - run:
+                name: folder listing for debugging
+                command: ls -al
+
+            - run:
+                name: install tox from wheelhouse
+                command: >
+                    python3.5 -m pip install --upgrade --force-reinstall --quiet
+                    --no-index --find-links=requirements/wheelhouse
+                    tox
+
+            - run:
+                name: version checks
+                command: |
+                    python --version
+                    pip --version
+                    tox --version
+
+            - run:
+                name: run tox
+                command: python3.5 -m tox
+
+            - store_test_results:
+                path: .circleci/test-reports/
+
+            - run:
+                name: push code coverage
+                command: bash <(curl -s https://codecov.io/bash) -X coveragepy -t "f52ea144-6e93-4cda-b927-1f578a6e814c"
