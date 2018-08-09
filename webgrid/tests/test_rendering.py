@@ -490,6 +490,24 @@ class TestGrandTotals(object):
         assert '<td class="totals-label" colspan="7">Page Totals (3 records):</td>' not in g.html()
 
 
+class TestFooterRendersCorrectly(object):
+    @inrequest('/')
+    def test_people_html_footer(self):
+        g = PeopleGrid()
+        g.html
+        assert '<a class="export-link" href="/?export_to=xlsx">XLSX</a>' in g.html()
+        assert '<a class="export-link" href="/?export_to=xls">XLS</a>' in g.html()
+        # make sure we are rendering the seperator
+        assert '&nbsp;|' in g.html()
+
+    @inrequest('/')
+    def test_people_html_footer_only_csv(self):
+        g = PeopleCSVGrid()
+        g.html
+        assert '<a class="export-link" href="/?export_to=xls">XLS</a>' not in g.html()
+        assert '<a class="export-link" href="/?export_to=csv">CSV</a>' in g.html()
+
+
 class PGAllTotals(PeopleGrid):
     subtotals = 'all'
 

@@ -542,9 +542,6 @@ class HTML(object):
         warnings.warn('xls_url is deprecated. Use export_url instead.', DeprecationWarning)
         return self.export_url('xls')
 
-    def csv_url(self):
-        return self.current_url(export_to='csv')
-
 
 class XLS(object):
     mime_type = 'application/vnd.ms-excel'
@@ -849,7 +846,6 @@ class XLSX(object):
             wb.close()
         wb.filename.seek(0)
         return self.grid.manager.file_as_response(wb.filename, self.file_name(), self.mime_type)
-        return self.grid.manager.xls_as_response(wb, self.file_name())
 
 
 class CSV(object):

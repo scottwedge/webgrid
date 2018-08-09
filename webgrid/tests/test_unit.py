@@ -15,6 +15,7 @@ from webgrid.filters import TextFilter, IntFilter
 from webgrid_ta.model.entities import Person, Status, db
 from webgrid_ta.grids import Grid, PeopleGrid
 from .helpers import assert_in_query, assert_not_in_query, query_to_str, inrequest
+from webgrid.renderers import CSV
 
 
 class TestGrid(object):
@@ -276,6 +277,29 @@ class TestGrid(object):
         grid = TG()
         try:
             grid.export_as_response()
+            assert False, 'Expected ValueError'
+        except ValueError as exc:
+            eq_(str(exc), 'No export format set')
+
+    def test_export_as_response_with_csv(self):
+        export_csv = mock.MagicMock()
+
+        class TG(Grid):
+            Column('First Name', Person.firstname)
+            allowed_export_targets = {'csv': CSV}
+
+            def set_renderers(self):
+                super(TG, self).set_renderers()
+                self.csv = export_csv
+
+        grid = TG()
+        grid.set_export_to('csv')
+        grid.export_as_response()
+        export_csv.as_response.assert_called_once_with()
+
+        grid = TG()
+        try:
+            grid.export_as_response('xls')
             assert False, 'Expected ValueError'
         except ValueError as exc:
             eq_(str(exc), 'No export format set')
