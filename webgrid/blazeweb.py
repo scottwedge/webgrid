@@ -1,5 +1,7 @@
 from __future__ import absolute_import
 
+import io
+import warnings
 from os import path
 
 from blazeweb.content import getcontent
@@ -44,12 +46,21 @@ class WebGrid(object):
     def static_url(self, url_tail):
         return abs_static_url('component/webgrid/{0}'.format(url_tail))
 
-    def xls_as_response(self, wb, file_name):
-        rp = StreamResponse()
-        rp.headers['Content-Type'] = 'application/vnd.ms-excel'
-        rp.headers['Content-Disposition'] = 'attachment; filename={0}'.format(file_name)
-        wb.save(rp.stream)
+    def file_as_response(self, data_stream, file_name, mime_type):
+        rp = StreamResponse(data_stream)
+        rp.headers['Content-Type'] = mime_type
+        rp.headers['Content-Disposition'] = 'attachment; filename={}'.format(file_name)
         abort(rp)
+
+    def xls_as_response(self, wb, file_name):
+        warnings.warn(
+            'xls_as_response is deprecated. Use file_as_response instead',
+            DeprecationWarning
+        )
+        data = io.BytesIO()
+        wb.save(data)
+        data.seek(0)
+        self.file_as_response(data, file_name, 'application/vnd.ms-excel')
 
     def render_template(self, endpoint, **kwargs):
         try:

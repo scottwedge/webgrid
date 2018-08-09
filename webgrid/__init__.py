@@ -4,19 +4,21 @@ import inspect
 import re
 import sys
 import six
+import warnings
 
 from blazeutils.containers import HTMLAttributes
 from blazeutils.datastructures import BlankObject, OrderedDict
 from blazeutils.helpers import ensure_tuple
 from blazeutils.numbers import decimalfmt
 from blazeutils.strings import case_cw2us, randchars
+from blazeutils.spreadsheets import xlsxwriter
 from formencode import Invalid
 import formencode.validators as fev
 import sqlalchemy.sql as sasql
 from webhelpers2.html.tags import link_to
 from werkzeug.datastructures import MultiDict
 
-from .renderers import HTML, XLS
+from .renderers import HTML, XLS, XLSX
 
 # conditional imports to support libs without requiring them
 try:
@@ -96,7 +98,7 @@ class Column(object):
     xls_width = None
     xls_num_format = None
     xls_style = None
-    render_in = 'html', 'xls'
+    render_in = 'html', 'xls', 'xlsx', 'csv'
 
     def __new__(cls, *args, **kwargs):
         col_inst = super(Column, cls).__new__(cls)
@@ -356,6 +358,17 @@ class DateColumnBase(Column):
             data = data.replace(tzinfo=None)
         return data
 
+    def render_xlsx(self, record):
+        return self.render_xls(record)
+
+    def render_csv(self, record):
+        data = self.extract_and_format_data(record)
+        if not data:
+            return data
+        if arrow and isinstance(data, arrow.Arrow):
+            data = data.datetime
+        return data
+
     def xls_width_calc(self, value):
         if self.xls_width:
             return self.xls_width
@@ -444,14 +457,23 @@ class NumericColumn(Column):
         dec_places = '.'.ljust(self.places + 1, '0') if self.places else ''
         return fmt_str.format(dec_places=dec_places, neg_prefix=neg_prefix)
 
-    def xlwt_stymat_init(self):
-        num_format = None
+    def get_num_format(self):
         if self.format_as == 'general':
-            num_format = self.xls_construct_format(self.xls_fmt_general)
+            return self.xls_construct_format(self.xls_fmt_general)
         if self.format_as == 'percent':
-            num_format = self.xls_construct_format(self.xls_fmt_percent)
+            return self.xls_construct_format(self.xls_fmt_percent)
         if self.format_as == 'accounting':
-            num_format = self.xls_construct_format(self.xls_fmt_accounting)
+            return self.xls_construct_format(self.xls_fmt_accounting)
+        return None
+
+    @property
+    def xlsx_style(self):
+        return {
+            'num_format': self.get_num_format()
+        }
+
+    def xlwt_stymat_init(self):
+        num_format = self.get_num_format()
         if num_format:
             return xlwt.easyxf(self.xls_style, num_format)
         return Column.xlwt_stymat_init(self)
@@ -471,6 +493,11 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
     # enables page/grand subtotals: none|page|grand|all
     subtotals = 'none'
     manager = None
+    allowed_export_targets = None
+
+    # Will ask for confirmation before exporting more than this many records.
+    # Set to None to disable this check
+    unconfirmed_export_limit = 10000
 
     def __init__(self, ident=None, per_page=_None, on_page=_None, qs_prefix='', class_='datagrid',
                  **kwargs):
@@ -487,6 +514,19 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
         self._records = None
         self._page_totals = None
         self._grand_totals = None
+        if self.hide_excel_link is True:
+            warnings.warn(
+                "Hide excel link is deprecated, you should just override allowed_export_targets instead", # noqa
+                DeprecationWarning
+            )
+        if self.allowed_export_targets is None:
+            self.allowed_export_targets = {}
+            # If the grid doesn't define any export targets
+            # lets setup the export targets for xls and xlsx if we have the requirement
+            if xlwt is not None:
+                self.allowed_export_targets['xls'] = XLS
+            if xlsxwriter is not None:
+                self.allowed_export_targets['xlsx'] = XLSX
         self.set_renderers()
         self.export_to = None
         # when session feature is enabled, key is the unique string
@@ -548,10 +588,8 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
 
     def set_renderers(self):
         self.html = HTML(self)
-        if xlwt is not None:
-            self.xls = XLS(self)
-        else:
-            self.xls = None
+        for key, value in self.allowed_export_targets.items():
+            setattr(self, key, value(self))
 
     def set_filter(self, key, op, value):
         self.clear_record_cache()
@@ -852,8 +890,16 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
             return None
 
     def set_export_to(self, to):
-        if to in ('xls',):
+        if to in self.allowed_export_targets:
             self.export_to = to
+
+    def export_as_response(self, wb=None, sheet_name=None):
+        if not self.export_to:
+            raise ValueError('No export format set')
+        exporter = getattr(self, self.export_to)
+        if self.export_to in ['xls', 'xlsx']:
+            return exporter.as_response(wb, sheet_name)
+        return exporter.as_response()
 
     def get_session_store(self, args, session_override=False):
         # check args for a session key. If the key is present,

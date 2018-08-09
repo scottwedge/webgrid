@@ -6,6 +6,7 @@ from webgrid.filters import TextFilter, OptionsFilterBase, Operator, \
 from .model.entities import ArrowRecord, Person, Status
 
 from .app import webgrid
+from webgrid.renderers import CSV
 
 
 class Grid(BaseGrid):
@@ -53,6 +54,7 @@ class PeopleGrid(Grid):
     DateTimeColumn('Created', Person.createdts, DateTimeFilter)
     DateColumn('Due Date', 'due_date')
     Column('Sort Order', Person.sortorder, render_in='xls')
+    Column('State', Person.state, render_in='xlsx')
     NumericColumn('Number', Person.numericcol, has_subtotal=True)
 
     def query_prep(self, query, has_sort, has_filters):
@@ -77,6 +79,19 @@ class DefaultOpGrid(Grid):
 class ArrowGrid(Grid):
     session_on = True
 
+    DateTimeColumn('Created', ArrowRecord.created_utc, DateTimeFilter)
+
+    def query_prep(self, query, has_sort, has_filters):
+        # default sort
+        if not has_sort:
+            query = query.order_by(ArrowRecord.id)
+
+        return query
+
+
+class ArrowCSVGrid(Grid):
+    session_on = True
+    allowed_export_targets = {'csv': CSV}
     DateTimeColumn('Created', ArrowRecord.created_utc, DateTimeFilter)
 
     def query_prep(self, query, has_sort, has_filters):

@@ -5,6 +5,7 @@ from decimal import Decimal
 from os import path
 
 import flask
+from mock import mock
 from nose.tools import eq_
 import sqlalchemy.sql as sasql
 from werkzeug.datastructures import MultiDict
@@ -14,6 +15,7 @@ from webgrid.filters import TextFilter, IntFilter
 from webgrid_ta.model.entities import Person, Status, db
 from webgrid_ta.grids import Grid, PeopleGrid
 from .helpers import assert_in_query, assert_not_in_query, query_to_str, inrequest
+from webgrid.renderers import CSV
 
 
 class TestGrid(object):
@@ -210,17 +212,31 @@ class TestGrid(object):
             Column('C2', Person.lastname, render_in='xls')
             BoolColumn('C3', Person.inactive, render_in=('xls', 'html'))
             YesNoColumn('C4', Person.inactive.label('yesno'), render_in='html')
+            Column('C5', Person.firstname.label('fn3'), render_in='xlsx')
+            Column('C6', Person.firstname.label('fn4'), render_in=('csv'))
+
         tg = TG()
 
         html_cols = tuple(tg.iter_columns('html'))
+        assert len(html_cols) == 3
         eq_(html_cols[0].key, 'firstname')
         eq_(html_cols[1].key, 'inactive')
         eq_(html_cols[2].key, 'yesno')
 
         xls_cols = tuple(tg.iter_columns('xls'))
+        assert len(xls_cols) == 3
         eq_(xls_cols[0].key, 'firstname')
         eq_(xls_cols[1].key, 'lastname')
         eq_(xls_cols[2].key, 'inactive')
+
+        xlsx_cols = tuple(tg.iter_columns('xlsx'))
+        assert len(xlsx_cols) == 2
+        eq_(xlsx_cols[0].key, 'firstname')
+        eq_(xlsx_cols[1].key, 'fn3')
+        csv_cols = tuple(tg.iter_columns('csv'))
+        assert len(csv_cols) == 2
+        eq_(xls_cols[0].key, 'firstname')
+        eq_(csv_cols[1].key, 'fn4')
 
     def test_grid_inheritance(self):
         class SomeGrid(Grid):
@@ -232,6 +248,61 @@ class TestGrid(object):
         pg = SomeGrid2()
         eq_(len(pg.columns), 2)
         assert pg.columns[1].key == 'lastname'
+
+    def test_export_as_response(self):
+        export_xls = mock.MagicMock()
+        export_xlsx = mock.MagicMock()
+
+        class TG(Grid):
+            Column('First Name', Person.firstname)
+
+            def set_renderers(self):
+                super(TG, self).set_renderers()
+                self.xls = export_xls
+                self.xlsx = export_xlsx
+
+        grid = TG()
+        grid.set_export_to('xls')
+        grid.export_as_response()
+        export_xls.as_response.assert_called_once_with(None, None)
+        export_xlsx.as_response.assert_not_called()
+
+        export_xls.reset_mock()
+
+        grid.set_export_to('xlsx')
+        grid.export_as_response()
+        export_xls.as_response.assert_not_called()
+        export_xlsx.as_response.assert_called_once_with(None, None)
+
+        grid = TG()
+        try:
+            grid.export_as_response()
+            assert False, 'Expected ValueError'
+        except ValueError as exc:
+            eq_(str(exc), 'No export format set')
+
+    def test_export_as_response_with_csv(self):
+        export_csv = mock.MagicMock()
+
+        class TG(Grid):
+            Column('First Name', Person.firstname)
+            allowed_export_targets = {'csv': CSV}
+
+            def set_renderers(self):
+                super(TG, self).set_renderers()
+                self.csv = export_csv
+
+        grid = TG()
+        grid.set_export_to('csv')
+        grid.export_as_response()
+        export_csv.as_response.assert_called_once_with()
+
+        grid = TG()
+        try:
+            grid.export_as_response('xls')
+            assert False, 'Expected ValueError'
+        except ValueError as exc:
+            eq_(str(exc), 'No export format set')
 
 
 class TestQueryStringArgs(object):
@@ -478,10 +549,16 @@ class TestQueryStringArgs(object):
         g.records
 
     @inrequest('/thepage?export_to=xls')
-    def test_export_to(self):
+    def test_export_to_xls(self):
         g = PeopleGrid()
         g.apply_qs_args()
         eq_(g.export_to, 'xls')
+
+    @inrequest('/thepage?export_to=xlsx')
+    def test_export_to_xlsx(self):
+        g = PeopleGrid()
+        g.apply_qs_args()
+        eq_(g.export_to, 'xlsx')
 
     @inrequest('/thepage?export_to=foo')
     def test_export_to_unrecognized(self):

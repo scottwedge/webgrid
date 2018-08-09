@@ -19,6 +19,6 @@ def index():
 
     pg = PeopleGrid(class_='datagrid')
     pg.apply_qs_args()
-    if pg.export_to == 'xls':
-        pg.xls.as_response()
+    if pg.export_to:
+        pg.export_as_response()
     return render_template('index.html', people_grid=pg)
