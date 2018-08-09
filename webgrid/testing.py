@@ -47,13 +47,13 @@ def assert_rendered_xls_matches(rendered_xls, xls_headers, xls_rows):
     the given parameters.
 
     NOTE: This method does not perform in-depth analysis of complex workbooks!
+          Assumes up to one row of headers, and data starts immediately after.
           Multiple worksheets or complex (multi-row) headers *are not verified!*
 
-    :param rendered_xls:
-    :param xls_headers:
-    :param xls_rows:
+    :param rendered_xls: binary data passed to xlrd as file_contents
+    :param xls_headers: iterable with length, represents single row of column headers
+    :param xls_rows: list of rows in order as they will appear in the worksheet
     :return:
-    :rtype: bool
     """
     assert rendered_xls
     workbook = xlrd.open_workbook(file_contents=rendered_xls)
