@@ -9,7 +9,9 @@ except ImportError:
 
 # pip install -e .[develop]
 develop_requires = [
+    'arrow',
     'BlazeWeb',
+    'coverage',
     # tests rely on SQL string comparison which fails with SA < 0.9
     'SQLAlchemy>=0.9.0'
     'SQLAlchemyBWC',
@@ -19,9 +21,11 @@ develop_requires = [
     'Flask-Bootstrap',
     'Flask-SQLAlchemy',
     'Flask-WebTest',
+    'sqlalchemy_utils',
     'sqlalchemybwc',
     'wrapt',
     'xlrd',
+    'xlsxwriter',
     'xlwt',
 ]
 

@@ -2,7 +2,7 @@ from __future__ import absolute_import
 import datetime as dt
 from decimal import Decimal as D
 
-from flask.ext.sqlalchemy import SQLAlchemy
+from flask_sqlalchemy import SQLAlchemy
 from six.moves import range
 
 db = SQLAlchemy()

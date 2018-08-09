@@ -52,6 +52,7 @@ class Test(Default):
         # from os import path
         # self.db.url = 'sqlite:///%s' % path.join(self.dirs.data, 'test_application.db')
 
+
 try:
     from site_settings import *  # noqa
 except ImportError as e:

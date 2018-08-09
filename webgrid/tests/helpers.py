@@ -3,7 +3,7 @@ from os import path as opath
 
 from blazeutils.testing import assert_equal_txt
 import flask
-from flask.ext import webtest
+from flask_webtest import SessionScope
 import sqlalchemy.orm
 from werkzeug.datastructures import MultiDict
 import wrapt
@@ -12,7 +12,7 @@ from webgrid_ta.model import db
 
 cdir = opath.dirname(__file__)
 
-db_sess_scope = webtest.SessionScope(db)
+db_sess_scope = SessionScope(db)
 
 
 class ModelBase(object):

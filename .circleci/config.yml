@@ -14,9 +14,7 @@ jobs:
             - run:
                 name: install tox from wheelhouse
                 command: >
-                    python3.5 -m pip install --upgrade --force-reinstall --quiet
-                    --no-index --find-links=requirements/wheelhouse
-                    tox
+                    python3.5 -m pip install --upgrade --force-reinstall tox
 
             - run:
                 name: version checks

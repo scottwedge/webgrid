@@ -2,7 +2,7 @@ from __future__ import absolute_import
 import warnings
 
 from flask import Flask
-from flask.ext.bootstrap import Bootstrap
+from flask_bootstrap import Bootstrap
 
 from webgrid.flask import WebGrid
 

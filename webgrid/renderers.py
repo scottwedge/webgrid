@@ -715,8 +715,8 @@ class XLSX(object):
         return self.styles_cache[col.key]
 
     def update_column_width(self, col, data):
-        l = max((col.xls_width_calc(data), self.col_widths.get(col.key, 0)))
-        self.col_widths[col.key] = l
+        width = max((col.xls_width_calc(data), self.col_widths.get(col.key, 0)))
+        self.col_widths[col.key] = width
 
     def adjust_column_widths(self, writer):
         for idx, col in enumerate(self.grid.iter_columns('xlsx')):

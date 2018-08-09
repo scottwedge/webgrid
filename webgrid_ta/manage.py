@@ -4,7 +4,7 @@ import logging
 import urllib
 
 import flask
-from flask.ext.script import Manager, Command, Option
+from flask_script import Manager, Command, Option
 
 from webgrid_ta.app import create_app
 import webgrid_ta.model as model

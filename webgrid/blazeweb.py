@@ -69,6 +69,8 @@ class WebGrid(object):
             if ':' in endpoint:
                 raise
             return getcontent('{0}:{1}'.format(self.component, endpoint), **kwargs)
+
+
 wg_blaze_manager = WebGrid()
 
 

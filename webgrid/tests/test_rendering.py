@@ -753,7 +753,7 @@ class TestArrowDate(object):
         assert '<td>08/10/2016 01:02 AM</td>' in g.html(), g.html()
 
         g.column('created_utc').html_format = 'YYYY-MM-DD HH:mm:ss ZZ'
-        assert '<td>2016-08-10 01:02:03 -00:00</td>' in g.html(), g.html()
+        assert '<td>2016-08-10 01:02:03 +00:00</td>' in g.html(), g.html()
 
     @inrequest('/')
     def test_arrow_timezone(self):
@@ -764,7 +764,7 @@ class TestArrowDate(object):
         assert '<td>08/10/2016 01:02 AM</td>' in g.html(), g.html()
 
         g.column('created_utc').html_format = 'YYYY-MM-DD HH:mm:ss ZZ'
-        assert '<td>2016-08-10 01:02:03 -00:00</td>' in g.html(), g.html()
+        assert '<td>2016-08-10 01:02:03 +00:00</td>' in g.html(), g.html()
 
     def test_xls(self):
         ArrowRecord.query.delete()
