@@ -1,7 +1,14 @@
 <div class="footer">
-    {% if not grid.hide_excel_link %}
-        <p><a class="export-link" href="{{ renderer.export_url() }}">export to Excel</a></p>
+    {% if grid.hide_excel_link is none or not grid.hide_excel_link %}
+        {% for key, value in grid.allowed_export_targets.items() %}
+            <p> 
+                {% if loop.index == 1 %} Export to {% endif %} 
+                {% if loop.index != 1 %}&nbsp;|{% endif %} 
+                <a class="export-link" href="{{ renderer.export_url(key) }}">{{ key | upper }}</a>
+            </p>
+        {% endfor %}
     {% endif %}
+    
 
     {% if grid.pager_on %}
     <ul class="paging">

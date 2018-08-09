@@ -4,23 +4,42 @@ import datetime as dt
 import json
 import warnings
 from io import BytesIO
+import six
 
 import arrow
 from nose.tools import eq_, raises
 from six.moves import range
 import xlrd
+import csv
 
 from webgrid import Column, LinkColumnBase, YesNoColumn, BoolColumn, row_styler, col_filter, \
     col_styler
 from webgrid.filters import TextFilter
-from webgrid.renderers import RenderLimitExceeded, HTML, XLS, XLSX
+from webgrid.renderers import RenderLimitExceeded, HTML, XLS, XLSX, CSV
 from webgrid_ta.model.entities import ArrowRecord, Person, Status, Email, db
 
-from webgrid_ta.grids import ArrowGrid, Grid, PeopleGrid as PG
+from webgrid_ta.grids import ArrowGrid, Grid, PeopleGrid as PG, ArrowCSVGrid
 from .helpers import inrequest, eq_html
 
 
 class PeopleGrid(PG):
+    def query_prep(self, query, has_sort, has_filters):
+        query = PG.query_prep(self, query, True, True)
+
+        # default sort
+        if not has_sort:
+            query = query.order_by(Person.id.desc())
+
+        # default filter
+        if not has_filters:
+            query = query.filter(Person.id != 3)
+
+        return query
+
+
+class PeopleCSVGrid(PG):
+    allowed_export_targets = {'csv': CSV}
+
     def query_prep(self, query, has_sort, has_filters):
         query = PG.query_prep(self, query, True, True)
 
@@ -159,6 +178,20 @@ class TestHtmlRenderer(object):
         tg = TGrid()
         assert 'Add Filter' not in tg.html()
 
+    @inrequest('/')
+    def test_hide_excel_deprecated(self):
+        class TGrid(Grid):
+            hide_excel_link = True
+            Column('Test', Person.id)
+        with warnings.catch_warnings(record=True) as warn:
+            warnings.simplefilter("always")
+            TGrid()
+        eq_(warn[0].category, DeprecationWarning)
+        eq_(
+            str(warn[0].message),
+            "Hide excel link is deprecated, you should just override allowed_export_targets instead" # noqa
+        )
+
     def get_grid(self, **kwargs):
         g = SimpleGrid(**kwargs)
         g.set_records(self.key_data)
@@ -190,12 +223,9 @@ class TestHtmlRenderer(object):
     @inrequest('/thepage?perpage=5&onpage=1')
     def test_export_url(self):
         g = self.get_grid()
-        eq_(g.html.export_url(), '/thepage?export_to=xls&onpage=1&perpage=5')
-
-        g.default_spreadsheet_format = 'xlsx'
-        eq_(g.html.export_url(), '/thepage?export_to=xlsx&onpage=1&perpage=5')
-
+        eq_(g.html.export_url('xlsx'), '/thepage?export_to=xlsx&onpage=1&perpage=5')
         eq_(g.html.export_url('xls'), '/thepage?export_to=xls&onpage=1&perpage=5')
+        eq_(g.html.export_url('csv'), '/thepage?export_to=csv&onpage=1&perpage=5')
 
     @inrequest('/thepage?onpage=3')
     def test_paging_url_first(self):
@@ -460,6 +490,24 @@ class TestGrandTotals(object):
         assert '<td class="totals-label" colspan="7">Page Totals (3 records):</td>' not in g.html()
 
 
+class TestFooterRendersCorrectly(object):
+    @inrequest('/')
+    def test_people_html_footer(self):
+        g = PeopleGrid()
+        g.html
+        assert '<a class="export-link" href="/?export_to=xlsx">XLSX</a>' in g.html()
+        assert '<a class="export-link" href="/?export_to=xls">XLS</a>' in g.html()
+        # make sure we are rendering the seperator
+        assert '&nbsp;|' in g.html()
+
+    @inrequest('/')
+    def test_people_html_footer_only_csv(self):
+        g = PeopleCSVGrid()
+        g.html
+        assert '<a class="export-link" href="/?export_to=xls">XLS</a>' not in g.html()
+        assert '<a class="export-link" href="/?export_to=csv">CSV</a>' in g.html()
+
+
 class PGAllTotals(PeopleGrid):
     subtotals = 'all'
 
@@ -516,7 +564,7 @@ class TestXLSRenderer(object):
         g = PGGrandTotals()
         g.column('firstname').filter.op = 'eq'
         g.column('firstname').filter.value1 = 'foobar'
-        buffer = BytesIO()
+        buffer = six.BytesIO()
         wb = g.xls()
         wb.save(buffer)
         buffer.seek(0)
@@ -651,6 +699,39 @@ class TestXLSXRenderer(object):
                 self.xlsx = Renderer(self)
 
         TestGrid().xlsx()
+
+
+class TestCSVRenderer(object):
+
+    def test_some_basics(self):
+        g = PeopleCSVGrid(per_page=1)
+        csv_data = g.csv.build_csv()
+        csv_data.seek(0)
+        byte_str = six.StringIO(csv_data.read().decode('utf-8'))
+        reader = csv.reader(byte_str, delimiter=',', quotechar='"')
+        data = []
+        for row in reader:
+            data.append(row)
+        assert data[0][0] == 'First Name'
+        assert data[0][2] == 'Active'
+        assert data[1][0] == 'fn004'
+
+    def test_it_renders_date_time_with_tz(self):
+        ArrowRecord.query.delete()
+        ArrowRecord.testing_create(
+            created_utc=arrow.Arrow(2016, 8, 10, 1, 2, 3)
+        )
+        g = ArrowCSVGrid()
+        g.allowed_export_targets = {'csv': CSV}
+        csv_data = g.csv.build_csv()
+        csv_data.seek(0)
+        byte_str = six.StringIO(csv_data.read().decode('utf-8'))
+        reader = csv.reader(byte_str, delimiter=',', quotechar='"')
+        data = []
+        for row in reader:
+            data.append(row)
+        assert data[0][0] == 'Created'
+        assert data[1][0] == '2016-08-10 01:02:03+00:00'
 
 
 class TestHideSection(object):

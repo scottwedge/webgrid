@@ -15,6 +15,7 @@ from webgrid.filters import TextFilter, IntFilter
 from webgrid_ta.model.entities import Person, Status, db
 from webgrid_ta.grids import Grid, PeopleGrid
 from .helpers import assert_in_query, assert_not_in_query, query_to_str, inrequest
+from webgrid.renderers import CSV
 
 
 class TestGrid(object):
@@ -212,6 +213,8 @@ class TestGrid(object):
             BoolColumn('C3', Person.inactive, render_in=('xls', 'html'))
             YesNoColumn('C4', Person.inactive.label('yesno'), render_in='html')
             Column('C5', Person.firstname.label('fn3'), render_in='xlsx')
+            Column('C6', Person.firstname.label('fn4'), render_in=('csv'))
+
         tg = TG()
 
         html_cols = tuple(tg.iter_columns('html'))
@@ -230,6 +233,10 @@ class TestGrid(object):
         assert len(xlsx_cols) == 2
         eq_(xlsx_cols[0].key, 'firstname')
         eq_(xlsx_cols[1].key, 'fn3')
+        csv_cols = tuple(tg.iter_columns('csv'))
+        assert len(csv_cols) == 2
+        eq_(xls_cols[0].key, 'firstname')
+        eq_(csv_cols[1].key, 'fn4')
 
     def test_grid_inheritance(self):
         class SomeGrid(Grid):
@@ -270,6 +277,29 @@ class TestGrid(object):
         grid = TG()
         try:
             grid.export_as_response()
+            assert False, 'Expected ValueError'
+        except ValueError as exc:
+            eq_(str(exc), 'No export format set')
+
+    def test_export_as_response_with_csv(self):
+        export_csv = mock.MagicMock()
+
+        class TG(Grid):
+            Column('First Name', Person.firstname)
+            allowed_export_targets = {'csv': CSV}
+
+            def set_renderers(self):
+                super(TG, self).set_renderers()
+                self.csv = export_csv
+
+        grid = TG()
+        grid.set_export_to('csv')
+        grid.export_as_response()
+        export_csv.as_response.assert_called_once_with()
+
+        grid = TG()
+        try:
+            grid.export_as_response('xls')
             assert False, 'Expected ValueError'
         except ValueError as exc:
             eq_(str(exc), 'No export format set')

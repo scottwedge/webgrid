@@ -209,7 +209,7 @@ class TestColumn(object):
             DateColumn('DateTime', Person.createdts, render_in='xls')
         g = TG()
 
-        eq_(g.columns[0].render_in, ('html', 'xls', 'xlsx'))
+        eq_(g.columns[0].render_in, ('html', 'xls', 'xlsx', 'csv'))
         eq_(g.columns[1].render_in, ())
         eq_(g.columns[2].render_in, ('xls',))
         eq_(g.columns[3].render_in, ('xls', 'html'))
