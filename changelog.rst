@@ -2,9 +2,10 @@ Changelog
 ---------
 
 
-0.1.36 released <in development>
+0.1.36 released 2018-08-09
 ==========================
 
+- Add test helper `assert_rendered_xls_matches` in `webgrid.testing`
 - Add support for XLSX, and CSV renderers
   - If you have xlsxwriter installed, xlsx export link will appear
 - DEPRECATED old export mechanism
