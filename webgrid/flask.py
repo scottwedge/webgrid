@@ -6,6 +6,9 @@ from os import path
 
 from flask import request, session, flash, Blueprint, url_for, send_file
 
+from morphi.helpers.jinja import configure_jinja_environment
+from webgrid.extensions import translation_manager
+
 
 class WebGrid(object):
     def __init__(self, db=None):
@@ -43,6 +46,7 @@ class WebGrid(object):
             static_url_path=app.static_url_path + '/webgrid'
         )
         app.register_blueprint(bp)
+        configure_jinja_environment(app.jinja_env, translation_manager)
 
     def file_as_response(self, data_stream, file_name, mime_type):
         return send_file(data_stream, mimetype=mime_type, as_attachment=True,

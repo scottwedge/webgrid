@@ -1,6 +1,6 @@
 {% extends "bootstrap/base.html" %}
 
-{% block title %}Manage People Grid{% endblock %}
+{% block title %}{{ _('Manage People Grid') }}{% endblock %}
 
 
 {% block styles %}
@@ -11,13 +11,35 @@
 
 {% block content %}
     <div class="container">
-    <h2>Manage People</h2>
+    <h2>{{ _('Manage People') }}</h2>
     {{ people_grid.html()|safe}}
     </div>
 {% endblock %}
 
 {% block scripts %}
     {{super()}}
+    <script src="{{url_for('webgrid.static', filename='gettext.min.js')}}"></script>
+    <script>
+        var i18n = window.i18n({});
+        window._ = function(msgid, domain) {
+            return i18n.dcnpgettext.apply(
+                i18n,
+                [domain, undefined, msgid, undefined, undefined].concat(
+                    Array.prototype.slice.call(arguments, 1)
+                )
+            );
+        };
+        {% set json_filename = find_mo_filename(package_name='webgrid', extension='json', localedir='static/i18n') %}
+        {% if json_filename %}
+            {# strip off the leading 'static/' portion of the filename #}
+            {% set json_filename = json_filename[7:] %}
+        $.getJSON(
+            '{{ url_for("webgrid.static", filename=json_filename) }}'
+        ).then(function (result) {
+            i18n.loadJSON(result, 'webgrid');
+        });
+        {% endif %}
+    </script>
     <script src="{{url_for('webgrid.static', filename='jquery.multiple.select.js')}}"></script>
     <script src="{{url_for('webgrid.static', filename='webgrid.js')}}"></script>
 {% endblock %}

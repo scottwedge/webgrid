@@ -1,4 +1,3 @@
-import sys
 import os.path as osp
 try:
     from setuptools import setup, find_packages
@@ -6,6 +5,7 @@ except ImportError:
     from ez_setup import use_setuptools
     use_setuptools()
     from setuptools import setup
+
 
 # pip install -e .[develop]
 develop_requires = [
@@ -56,11 +56,16 @@ setup(
     extras_require={'develop': develop_requires},
     zip_safe=False,
     include_package_data=True,
+    setup_requires=[
+        'Babel'
+    ],
     install_requires=[
         'BlazeUtils',
         'FormEncode',
+        'Flask-Script',
         'SQLAlchemy',
         'jinja2',
+        'morphi',
         'python-dateutil',
         'webhelpers2',
         'Werkzeug',

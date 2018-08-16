@@ -35,7 +35,7 @@ function datagrid_toggle_mselect(){
     jq_img = $(this);
     jq_select = jq_img.siblings('select');
     select_name = jq_select.attr('name');
-    multiple_attr = jq_select.attr('multiple')
+    multiple_attr = jq_select.attr('multiple');
     if (typeof multiple_attr !== 'undefined' && multiple_attr !== false) {
         jq_select.removeAttr('multiple');
         jq_select.siblings('.ms-parent').hide();
@@ -53,7 +53,7 @@ function datagrid_toggle_mselect(){
 */
 function datagrid_activate_mselect_ui(jq_select) {
     var all_opt = $(jq_select).find('option[value="-1"]');
-    var use_all_opt = (all_opt.text() == '-- All --');
+    var use_all_opt = (all_opt.text() == _('-- All --', 'webgrid'));
     if ( use_all_opt ) {
         $(all_opt).detach();
     }

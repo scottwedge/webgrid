@@ -14,6 +14,11 @@ from sqlalchemy.sql import or_, and_
 import sqlalchemy as sa
 import six
 
+from .extensions import (
+    gettext,
+    lazy_gettext as _
+)
+
 
 class UnrecognizedOperator(ValueError):
     pass
@@ -34,30 +39,30 @@ class Operator(object):
 
 
 class ops(object):
-    eq = Operator('eq', 'is', 'input')
-    not_eq = Operator('!eq', 'is not', 'input')
-    is_ = Operator('is', 'is', 'select')
-    not_is = Operator('!is', 'is not', 'select')
-    empty = Operator('empty', 'empty', None)
-    not_empty = Operator('!empty', 'not empty', None)
-    contains = Operator('contains', 'contains', 'input')
-    not_contains = Operator('!contains', 'doesn\'t contain', 'input')
-    less_than_equal = Operator('lte', 'less than or equal', 'input')
-    greater_than_equal = Operator('gte', 'greater than or equal', 'input')
-    between = Operator('between', 'between', '2inputs')
-    not_between = Operator('!between', 'not between', '2inputs')
-    days_ago = Operator('da', 'days ago', 'input', 'days')
-    less_than_days_ago = Operator('ltda', 'less than days ago', 'input', 'days')
-    more_than_days_ago = Operator('mtda', 'more than days ago', 'input', 'days')
-    today = Operator('today', 'today', None)
-    this_week = Operator('thisweek', 'this week', None)
-    in_less_than_days = Operator('iltd', 'in less than days', 'input', 'days')
-    in_more_than_days = Operator('imtd', 'in more than days', 'input', 'days')
-    in_days = Operator('ind', 'in days', 'input', 'days')
-    this_month = Operator('thismonth', 'this month', None)
-    last_month = Operator('lastmonth', 'last month', None)
-    select_month = Operator('selmonth', 'select month', 'select+input')
-    this_year = Operator('thisyear', 'this year', None)
+    eq = Operator('eq', _('is'), 'input')
+    not_eq = Operator('!eq', _('is not'), 'input')
+    is_ = Operator('is', _('is'), 'select')
+    not_is = Operator('!is', _('is not'), 'select')
+    empty = Operator('empty', _('empty'), None)
+    not_empty = Operator('!empty', _('not empty'), None)
+    contains = Operator('contains', _('contains'), 'input')
+    not_contains = Operator('!contains', _('doesn\'t contain'), 'input')
+    less_than_equal = Operator('lte', _('less than or equal'), 'input')
+    greater_than_equal = Operator('gte', _('greater than or equal'), 'input')
+    between = Operator('between', _('between'), '2inputs')
+    not_between = Operator('!between', _('not between'), '2inputs')
+    days_ago = Operator('da', _('days ago'), 'input', 'days')
+    less_than_days_ago = Operator('ltda', _('less than days ago'), 'input', 'days')
+    more_than_days_ago = Operator('mtda', _('more than days ago'), 'input', 'days')
+    today = Operator('today', _('today'), None)
+    this_week = Operator('thisweek', _('this week'), None)
+    in_less_than_days = Operator('iltd', _('in less than days'), 'input', 'days')
+    in_more_than_days = Operator('imtd', _('in more than days'), 'input', 'days')
+    in_days = Operator('ind', _('in days'), 'input', 'days')
+    this_month = Operator('thismonth', _('this month'), None)
+    last_month = Operator('lastmonth', _('last month'), None)
+    select_month = Operator('selmonth', _('select month'), 'select+input')
+    this_year = Operator('thisyear', _('this year'), None)
 
 
 class FilterBase(object):
@@ -157,7 +162,7 @@ class FilterBase(object):
             raise
 
     def raise_unrecognized_op(self):
-        raise UnrecognizedOperator('unrecognized operator: {0}'.format(self.op))
+        raise UnrecognizedOperator(_('unrecognized operator: {op}', op=self.op))
 
     def apply(self, query):
         if self.op == self.default_op and self.value1 is None:
@@ -237,7 +242,7 @@ class OptionsFilterBase(FilterBase):
                     raise
                 self._options_seq = self.options_from
             if self.default_op:
-                self._options_seq = [(-1, '-- All --')] + list(self._options_seq)
+                self._options_seq = [(-1, _('-- All --'))] + list(self._options_seq)
         return self._options_seq
 
     @property
@@ -251,15 +256,12 @@ class OptionsFilterBase(FilterBase):
         # a set() operation should be converted to
         if self.value_modifier == 'auto' or self.value_modifier is None:
             if self.value_modifier and len(self.option_keys) == 0:
-                raise ValueError('value_modifier argument set to "auto", but '
-                                 'the options set is empty and the type can therefore not '
-                                 'be determined for {}'.format(self.__class__.__name__))
+                raise ValueError(_('value_modifier argument set to "auto", but '
+                                   'the options set is empty and the type can therefore not '
+                                   'be determined for {name}', name=self.__class__.__name__))
             first_key = self.option_keys[0]
             if isinstance(first_key, six.string_types) or self.value_modifier is None:
                 self.value_modifier = feval.UnicodeString
-            # this didn't work right, so commenting out for now
-            # elif isinstance(first_key, bool):
-            #    self.value_modifier = formencode.compound.Any(feval.Bool, feval.StringBoolean)
             elif isinstance(first_key, int):
                 self.value_modifier = feval.Int
             elif isinstance(first_key, float):
@@ -268,9 +270,8 @@ class OptionsFilterBase(FilterBase):
                 self.value_modifier = feval.Wrapper(to_python=D)
             else:
                 raise TypeError(
-                    "can't use value_modifier='auto' when option keys are {0}".format(
-                        type(first_key)
-                    )
+                    _("can't use value_modifier='auto' when option keys are {key_type}",
+                      key_type=type(first_key))
                 )
         else:
             # if its not the string 'auto' and its not a formencode validator, assume
@@ -278,8 +279,8 @@ class OptionsFilterBase(FilterBase):
             if not hasattr(self.value_modifier, 'to_python'):
                 if not hasattr(self.value_modifier, '__call__'):
                     raise TypeError(
-                        'value_modifier must be the string "auto", have a "to_python" attribute, '
-                        'or be a callable'
+                        _('value_modifier must be the string "auto", have a "to_python" attribute, '
+                          'or be a callable')
                     )
                 self.value_modifier = feval.Wrapper(to_python=self.value_modifier)
 
@@ -423,16 +424,16 @@ class NumberFilter(NumberFilterBase):
 
 class _DateMixin(object):
     options_from = [
-        (1, '01-Jan'), (2, '02-Feb'), (3, '03-Mar'), (4, '04-Apr'),
-        (5, '05-May'), (6, '06-Jun'), (7, '07-Jul'), (8, '08-Aug'),
-        (9, '09-Sep'), (10, '10-Oct'), (11, '11-Nov'), (12, '12-Dec'),
+        (1, _('01-Jan')), (2, _('02-Feb')), (3, _('03-Mar')), (4, _('04-Apr')),
+        (5, _('05-May')), (6, _('06-Jun')), (7, _('07-Jul')), (8, _('08-Aug')),
+        (9, _('09-Sep')), (10, _('10-Oct')), (11, _('11-Nov')), (12, _('12-Dec')),
     ]
 
     @property
     def options_seq(self):
         _options_seq = self.options_from
         if self.default_op:
-            _options_seq = [(-1, '-- All --')] + _options_seq
+            _options_seq = [(-1, _('-- All --'))] + _options_seq
         return _options_seq
 
     def format_display_vals(self):
@@ -444,25 +445,27 @@ class _DateMixin(object):
             ops.between.key,
             ops.not_between.key
         ):
+            # !!!: localize
             self.value1_set_with = self.value1.strftime('%m/%d/%Y')
         if isinstance(self.value2, dt.date) and self.op in (
             ops.between.key,
             ops.not_between.key
         ):
+            # !!!: localize
             self.value2_set_with = self.value2.strftime('%m/%d/%Y')
 
-    """
-        String description of the filter operation and values
-        - Useful for Excel reports
-    """
     @property
     def description(self):
+        """
+            String description of the filter operation and values
+            - Useful for Excel reports
+        """
         today = self._get_today()
         last_day = first_day = None
         prefix = ''
 
         if self.error:
-            return 'invalid'
+            return _('invalid')
 
         # these filters can be set as default ops without input values, so don't ignore them
         if self.op == ops.this_month:
@@ -487,16 +490,17 @@ class _DateMixin(object):
                 )
             )
         ):
-            return 'all'
+            return _('all')
 
         # ops with both dates populated
         if self.op == ops.select_month:
             if not (
                 isinstance(self.value1, int) and isinstance(self.value2, int)
             ):
-                return 'All'
+                return _('All')
             if self.value1 < 1 or self.value1 > 12:
                 return self.value2
+            # !!!: localize
             return dt.date(self.value2, self.value1, 1).strftime('%b %Y')
         elif self.op in (ops.between, ops.not_between):
             if self.value1 <= self.value2:
@@ -506,7 +510,7 @@ class _DateMixin(object):
                 first_day = self.value2
                 last_day = self.value1
             if self.op == ops.not_between:
-                prefix = 'excluding '
+                prefix = _('excluding ')
         elif self.op == ops.less_than_days_ago:
             first_day = today - dt.timedelta(days=self.value1)
             last_day = today
@@ -515,37 +519,37 @@ class _DateMixin(object):
             first_day = today
 
         if last_day and first_day:
-            return '{0}{1} - {2}'.format(
-                prefix,
-                first_day.strftime('%m/%d/%Y'),
-                last_day.strftime('%m/%d/%Y')
-            )
+            # !!!: localize dates
+            return _('{descriptor}{first_date} - {second_date}',
+                     descriptor=prefix,
+                     first_date=first_day.strftime('%m/%d/%Y'),
+                     second_date=last_day.strftime('%m/%d/%Y'))
 
         # ops with single date populated
         if self.op in (ops.days_ago, ops.more_than_days_ago):
             first_day = today - dt.timedelta(days=self.value1)
             if self.op == ops.more_than_days_ago:
-                prefix = 'before '
+                prefix = _('before ')
         elif self.op in (ops.in_days, ops.in_more_than_days):
             first_day = today + dt.timedelta(days=self.value1)
             if self.op == ops.in_more_than_days:
-                prefix = 'after '
+                prefix = _('after ')
         elif self.op == ops.empty:
-            return 'date not specified'
+            return _('date not specified')
         elif self.op == ops.not_empty:
-            return 'any date'
+            return _('any date')
         elif self.op in (ops.eq, ops.not_eq, ops.less_than_equal, ops.greater_than_equal):
             first_day = self.value1
             if self.op == ops.not_eq:
-                prefix = 'excluding '
+                prefix = _('excluding ')
             elif self.op == ops.less_than_equal:
-                prefix = 'up to '
+                prefix = _('up to ')
             elif self.op == ops.greater_than_equal:
-                prefix = 'beginning '
-        return '{0}{1}'.format(
-            prefix,
-            first_day.strftime('%m/%d/%Y')
-        )
+                prefix = _('beginning ')
+        # !!!: localize
+        return _('{descriptor}{date}',
+                 descriptor=prefix,
+                 date=first_day.strftime('%m/%d/%Y'))
 
 
 class DateFilter(FilterBase, _DateMixin):
@@ -727,13 +731,15 @@ class DateFilter(FilterBase, _DateMixin):
                 try:
                     self._get_today() - dt.timedelta(days=filter_value)
                 except OverflowError:
-                    raise formencode.Invalid('date filter given is out of range', value, self)
+                    raise formencode.Invalid(gettext('date filter given is out of range'),
+                                             value, self)
 
             if self.op in (ops.in_days, ops.in_less_than_days, ops.in_more_than_days):
                 try:
                     self._get_today() + dt.timedelta(days=filter_value)
                 except OverflowError:
-                    raise formencode.Invalid('date filter given is out of range', value, self)
+                    raise formencode.Invalid(gettext('date filter given is out of range'),
+                                             value, self)
 
             return filter_value
 
@@ -749,7 +755,7 @@ class DateFilter(FilterBase, _DateMixin):
             if is_value2 and not value:
                 return dt.date.today()
 
-            raise formencode.Invalid('invalid date', value, self)
+            raise formencode.Invalid(gettext('invalid date'), value, self)
 
 
 class DateTimeFilter(DateFilter):
@@ -772,12 +778,16 @@ class DateTimeFilter(DateFilter):
             ops.not_between.key
         )
         if isinstance(self.value1, dt.datetime) and self.op in ops_single_val + ops_double_val:
+            # !!!: localize
             self.value1_set_with = self.value1.strftime('%m/%d/%Y %I:%M %p')
             if self.op in ops_single_val and self._has_date_only1:
+                # !!!: localize
                 self.value1_set_with = self.value1.strftime('%m/%d/%Y')
         if isinstance(self.value2, dt.datetime) and self.op in ops_double_val:
+            # !!!: localize
             self.value2_set_with = self.value2.strftime('%m/%d/%Y %I:%M %p')
             if self._has_date_only2:
+                # !!!: localize
                 self.value2_set_with = self.value2.strftime('%m/%d/%Y 11:59 PM')
 
     def process(self, value, is_value2):
@@ -802,13 +812,15 @@ class DateTimeFilter(DateFilter):
                 try:
                     self._get_today() - dt.timedelta(days=filter_value)
                 except OverflowError:
-                    raise formencode.Invalid('date filter given is out of range', value, self)
+                    raise formencode.Invalid(gettext('date filter given is out of range'),
+                                             value, self)
 
             if self.op in (ops.in_days, ops.in_less_than_days, ops.in_more_than_days):
                 try:
                     self._get_today() + dt.timedelta(days=filter_value)
                 except OverflowError:
-                    raise formencode.Invalid('date filter given is out of range', value, self)
+                    raise formencode.Invalid(gettext('date filter given is out of range'),
+                                             value, self)
 
             return filter_value
         elif value == '' and self.op in self.no_value_operators:
@@ -817,7 +829,7 @@ class DateTimeFilter(DateFilter):
         try:
             dt_value = parse(value)
         except ValueError:
-            raise formencode.Invalid('invalid date', value, self)
+            raise formencode.Invalid(gettext('invalid date'), value, self)
 
         if is_value2:
             self._has_date_only2 = self._has_date_only(dt_value, value)
@@ -950,6 +962,7 @@ class TimeFilter(FilterBase):
                  ops.not_between, ops.empty, ops.not_empty)
     input_types = 'input', 'input2'
 
+    # !!!: localize
     time_format = '%I:%M %p'
 
     def apply(self, query):
@@ -990,14 +1003,14 @@ class TimeFilter(FilterBase):
         try:
             return dt.datetime.strptime(value, self.time_format).time()
         except ValueError:
-            raise formencode.Invalid('invalid time', value, self)
+            raise formencode.Invalid(_('invalid time'), value, self)
 
 
 class YesNoFilter(FilterBase):
     class ops(object):
-        all = Operator('a', 'all', None)
-        yes = Operator('y', 'yes', None)
-        no = Operator('n', 'no', None)
+        all = Operator('a', _('all'), None)
+        yes = Operator('y', _('yes'), None)
+        no = Operator('n', _('no'), None)
 
     operators = (
         ops.all,

@@ -1,42 +1,42 @@
 <div class="footer">
     {% if grid.hide_excel_link is none or not grid.hide_excel_link %}
         {% for key, value in grid.allowed_export_targets.items() %}
-            <p> 
-                {% if loop.index == 1 %} Export to {% endif %} 
-                {% if loop.index != 1 %}&nbsp;|{% endif %} 
+            <p>
+                {% if loop.index == 1 %}{{ _(' Export to ') }}{% endif %}
+                {% if loop.index != 1 %}&nbsp;|{% endif %}
                 <a class="export-link" href="{{ renderer.export_url(key) }}">{{ key | upper }}</a>
             </p>
         {% endfor %}
     {% endif %}
-    
+
 
     {% if grid.pager_on %}
     <ul class="paging">
         {%- if grid.on_page > 1 %}
             <li>
                 <a class="first" href="{{ renderer.paging_url_first() }}">{{ renderer.paging_img_first() }}</a>
-                <a class="first" href="{{ renderer.paging_url_first() }}">first</a>
+                <a class="first" href="{{ renderer.paging_url_first() }}">{{ _('first') }}</a>
             </li>
             <li>
                 <a class="previous" href="{{ renderer.paging_url_prev() }}">{{ renderer.paging_img_prev() }}</a>
-                <a class="previous" href="{{ renderer.paging_url_prev() }}">previous</a>
+                <a class="previous" href="{{ renderer.paging_url_prev() }}">{{ _('previous') }}</a>
             </li>
         {%- else %}
-            <li class="dead">{{ renderer.paging_img_first_dead() }} first</li>
-            <li class="dead">{{ renderer.paging_img_prev_dead() }} previous</li>
+            <li class="dead">{{ renderer.paging_img_first_dead() }} {{ _('first') }}</li>
+            <li class="dead">{{ renderer.paging_img_prev_dead() }} {{ _('previous') }}</li>
         {%- endif -%}
         {% if grid.on_page < grid.page_count %}
              <li>
                 <a class="next" href="{{ renderer.paging_url_next() }}">{{ renderer.paging_img_next() }}</a>
-                <a class="next" href="{{ renderer.paging_url_next() }}">next</a>
+                <a class="next" href="{{ renderer.paging_url_next() }}">{{ _('next') }}</a>
             </li>
             <li>
                 <a class="last" href="{{ renderer.paging_url_last() }}">{{ renderer.paging_img_last() }}</a>
-                <a class="last" href="{{ renderer.paging_url_last() }}">last</a>
+                <a class="last" href="{{ renderer.paging_url_last() }}">{{ _('last') }}</a>
             </li>
         {%- else -%}
-            <li class="dead">{{ renderer.paging_img_next_dead() }} next</li>
-            <li class="dead">{{ renderer.paging_img_last_dead() }} last</li>
+            <li class="dead">{{ renderer.paging_img_next_dead() }}{{ _('next') }}</li>
+            <li class="dead">{{ renderer.paging_img_last_dead() }}{{ _('last') }}</li>
         {%- endif %}
     </ul>
     {% endif %}

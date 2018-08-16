@@ -29,12 +29,53 @@ Questions & Comments
 Please visit: http://groups.google.com/group/blazelibs
 
 Running the Tests
-----------------
+-----------------
 
-Make sure to include the `--nologcapture` flag to nosetests or else you will get
+Make sure to include the ``--nologcapture`` flag to nosetests or else you will get
 failures when testing the logging features.
 
 Current Status
 ---------------
 
 Currently beta quality.
+
+Translations
+------------
+
+Helpful links
+=============
+
+ * https://www.gnu.org/software/gettext/manual/html_node/Mark-Keywords.html
+ * https://www.gnu.org/software/gettext/manual/html_node/Preparing-Strings.html
+
+
+Message management
+==================
+
+The ``setup.cfg`` file is configured to handle the standard message extraction commands.
+
+To manage the messages in the ``webgrid_ta`` test application:
+
+* ``extract_messages``
+
+  .. code::
+
+     setup.py extract_messages --input-dirs=webgrid_ta --mapping-file=webgrid_ta/i18n/babel.cfg --output-file=webgrid_ta/i18n/webgrid_ta.pot
+
+* ``init_catalog``
+
+  .. code::
+
+     setup.py init_catalog --domain=webgrid_ta --input-file=webgrid_ta/i18n/webgrid_ta.pot --output-dir=webgrid_ta/i18n --locale=es
+
+* ``update_catalog``
+
+  .. code::
+
+     setup.py update_catalog --domain=webgrid_ta --input-file=webgrid_ta/i18n/webgrid_ta.pot --output-dir=webgrid_ta/i18n
+
+* ``compile_catalog``
+
+  .. code::
+
+     setup.py compile_catalog --domain=webgrid_ta --directory=webgrid_ta/i18n

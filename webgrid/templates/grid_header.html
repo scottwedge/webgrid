@@ -3,7 +3,7 @@
     {{ renderer.header_sorting()|wg_safe }}
     {{ renderer.header_paging()|wg_safe }}
     <div class="links">
-        <input type="submit" value="Apply" />
-        <a href="{{renderer.reset_url()}}">reset</a>
+        <input type="submit" value={{ _('Apply') }} />
+        <a href="{{renderer.reset_url()}}">{{ _('reset') }}</a>
     </div>
 </form>

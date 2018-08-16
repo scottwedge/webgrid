@@ -79,7 +79,7 @@
             $.each(this.$el.children(), function(i, elm) {
                 html.push(that.optionToHtml(i, elm));
             });
-            html.push('<li class="ms-no-results">No matches found</li>');
+            html.push('<li class="ms-no-results">' + _('No matches found', 'webgrid') + '</li>');
             html.push('</ul>');
             this.$drop.html(html.join(''));
             this.$drop.find('ul').css('max-height', this.options.maxHeight + 'px');
@@ -244,8 +244,8 @@
                 $span.removeClass('placeholder').html(this.options.allSelected);
             } else if (selects.length > this.options.minumimCountSelected && this.options.countSelected) {
                 $span.removeClass('placeholder').html(this.options.countSelected
-                    .replace('#', selects.length)
-                    .replace('%', this.$selectItems.length + this.$disableItems.length));
+                    .replace('{count}', selects.length)
+                    .replace('{total}', this.$selectItems.length + this.$disableItems.length));
             } else if (selects.length) {
                 $span.removeClass('placeholder').html(selects.join(', '));
             } else {
@@ -438,10 +438,10 @@
         isOpen: false,
         placeholder: '',
         selectAll: true,
-        selectAllText: 'Select all',
-        allSelected: 'All selected',
+        selectAllText: _('Select all', 'webgrid'),
+        allSelected: _('All selected', 'webgrid'),
         minumimCountSelected: 3,
-        countSelected: '# of % selected',
+        countSelected: _('{count} of {total} selected', 'webgrid'),
         multiple: false,
         multipleWidth: 80,
         single: false,
