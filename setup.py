@@ -19,6 +19,7 @@ develop_requires = [
     'nose',
     'Flask',
     'Flask-Bootstrap',
+    'Flask-Script',
     'Flask-SQLAlchemy',
     'Flask-WebTest',
     'sqlalchemy_utils',
@@ -62,7 +63,6 @@ setup(
     install_requires=[
         'BlazeUtils',
         'FormEncode',
-        'Flask-Script',
         'SQLAlchemy',
         'jinja2',
         'morphi',
