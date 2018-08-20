@@ -13,8 +13,6 @@ from blazeutils.helpers import tolist
 from blazeutils.jsonh import jsonmod
 from blazeutils.spreadsheets import Writer, WriterX, xlsxwriter
 from blazeutils.strings import reindent, randnumerics
-from morphi.helpers.jinja import configure_jinja_environment
-from speaklater import is_lazy_string
 import jinja2 as jinja
 from webhelpers2.html import HTML as _HTML, literal, tags
 from werkzeug import Href, MultiDict
@@ -26,6 +24,16 @@ from .extensions import (
 )
 from .utils import current_url
 import csv
+
+try:
+    from morphi.helpers.jinja import configure_jinja_environment
+except ImportError:
+    configure_jinja_environment = lambda *args, **kwargs: None  # noqa: E731
+
+try:
+    from speaklater import is_lazy_string
+except ImportError:
+    is_lazy_string = lambda value: False  # noqa: E731
 
 try:
     import xlwt
@@ -61,8 +69,7 @@ class HTML(object):
         self.manager = grid.manager
         self.jinja_env = jinja.Environment(
             loader=jinja.PackageLoader('webgrid', 'templates'),
-            autoescape=True,
-            extensions=['jinja2.ext.i18n']
+            autoescape=True
         )
         self.jinja_env.filters['wg_safe'] = jinja.filters.do_mark_safe
 

@@ -54,7 +54,12 @@ setup(
     ],
     license='BSD',
     packages=['webgrid'],
-    extras_require={'develop': develop_requires},
+    extras_require={
+        'develop': develop_requires,
+        'i18n': [
+            'morphi'
+        ]
+    },
     zip_safe=False,
     include_package_data=True,
     setup_requires=[
@@ -65,7 +70,6 @@ setup(
         'FormEncode',
         'SQLAlchemy',
         'jinja2',
-        'morphi',
         'python-dateutil',
         'webhelpers2',
         'Werkzeug',

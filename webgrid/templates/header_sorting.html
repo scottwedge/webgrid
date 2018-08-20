@@ -1,3 +1,9 @@
+{%- if _ is not defined -%}
+    {% macro _(message) -%}
+        {{ message }}
+    {%- endmacro %}
+{%- endif -%}
+
 {% if grid.sorter_on %}
 <dl class="sorting">
     <dt>{{ _('Sort By') }}</dt>

@@ -1,3 +1,9 @@
+{%- if _ is not defined -%}
+    {% macro _(message) -%}
+        {{ message }}
+    {%- endmacro %}
+{%- endif -%}
+
 <table class="paging">
     <tr>
         <td class="record-count">

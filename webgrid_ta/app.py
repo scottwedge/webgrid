@@ -4,12 +4,22 @@ import warnings
 import flask
 from flask import Flask
 from flask_bootstrap import Bootstrap
-from morphi.helpers.jinja import configure_jinja_environment
-from morphi.registry import default_registry
 
 from webgrid.flask import WebGrid
 
 from webgrid_ta.extensions import translation_manager
+
+try:
+    from morphi.helpers.jinja import configure_jinja_environment
+except ImportError:
+    configure_jinja_environment = lambda *args, **kwargs: None  # noqa: E731
+
+try:
+    from morphi.registry import default_registry
+except ImportError:
+    from blazeutils.datastructures import BlankObject
+    default_registry = BlankObject()
+
 
 # ignore warning about Decimal lossy conversion with SQLite from SA
 warnings.filterwarnings('ignore', '.*support Decimal objects natively.*')

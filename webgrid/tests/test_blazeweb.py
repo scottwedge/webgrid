@@ -12,8 +12,6 @@ if six.PY2:
     from blazeweb.hierarchy import findobj
     from blazeweb.scripting import load_current_app
     from blazeweb.testing import inrequest, TestApp
-    from morphi.helpers.jinja import configure_jinja_environment
-    from morphi.messages import Manager
     from nose.tools import eq_
     from sqlalchemy.orm.session import Session as SASession
     import mock
@@ -76,7 +74,6 @@ if six.PY2:
                     self.html = PeopleGridHTML(self)
 
             g = PeopleGrid()
-            configure_jinja_environment(ag.tplengine.env, Manager())
             g.apply_qs_args()
             assert '#something' in g.html().data['text/css'][0]
 

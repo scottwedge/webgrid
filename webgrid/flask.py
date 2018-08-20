@@ -6,8 +6,12 @@ from os import path
 
 from flask import request, session, flash, Blueprint, url_for, send_file
 
-from morphi.helpers.jinja import configure_jinja_environment
 from webgrid.extensions import translation_manager
+
+try:
+    from morphi.helpers.jinja import configure_jinja_environment
+except ImportError:
+    configure_jinja_environment = lambda *args, **kwargs: None  # noqa: E731
 
 
 class WebGrid(object):

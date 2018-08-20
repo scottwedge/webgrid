@@ -1,3 +1,9 @@
+{%- if _ is not defined -%}
+    {% macro _(message) -%}
+        {{ message }}
+    {%- endmacro %}
+{%- endif -%}
+
 <div class="footer">
     {% if grid.hide_excel_link is none or not grid.hide_excel_link %}
         {% for key, value in grid.allowed_export_targets.items() %}

@@ -1,3 +1,9 @@
+{%- if _ is not defined -%}
+    {% macro _(message) -%}
+        {{ message }}
+    {%- endmacro %}
+{%- endif -%}
+
 {{ renderer.header_form_otag(class='header')|safe }}
     {{ renderer.header_filtering()|wg_safe }}
     {{ renderer.header_sorting()|wg_safe }}
