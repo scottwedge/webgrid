@@ -8,43 +8,43 @@ environment:
   matrix:
     - PYTHON: "C:\\Python27"
       PYTHON_ARCH: "32"
-      TOXENV: py27
+      TOXENV: py27-{base,i18n}
 
     - PYTHON: "C:\\Python34"
       PYTHON_ARCH: "32"
-      TOXENV: py34
+      TOXENV: py34-{base,i18n}
 
     - PYTHON: "C:\\Python35"
       PYTHON_ARCH: "32"
-      TOXENV: py35
+      TOXENV: py35-{base,i18n}
     
     - PYTHON: "C:\\Python36"
       PYTHON_ARCH: "32"
-      TOXENV: py36
+      TOXENV: py36-{base,i18n}
 
     - PYTHON: "C:\\Python37"
       PYTHON_ARCH: "32"
-      TOXENV: py37
+      TOXENV: py37-{base,i18n}
 
     - PYTHON: "C:\\Python27-x64"
       PYTHON_ARCH: "64"
-      TOXENV: py27
+      TOXENV: py27-{base,i18n}
 
     - PYTHON: "C:\\Python34-x64"
       PYTHON_ARCH: "64"
-      TOXENV: py34
+      TOXENV: py34-{base,i18n}
 
     - PYTHON: "C:\\Python35-x64"
       PYTHON_ARCH: "64"
-      TOXENV: py35
-    
+      TOXENV: py35-{base,i18n}
+
     - PYTHON: "C:\\Python36-x64"
       PYTHON_ARCH: "64"
-      TOXENV: py36
+      TOXENV: py36-{base,i18n}
 
     - PYTHON: "C:\\Python37-x64"
       PYTHON_ARCH: "64"
-      TOXENV: py37
+      TOXENV: py37-{base,i18n}
 
 install:
   # Prepend newly installed Python to the PATH of this build (this cannot be
