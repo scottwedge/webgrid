@@ -11,6 +11,7 @@ from nose.tools import eq_, raises
 from six.moves import range
 import xlrd
 import csv
+import xlsxwriter
 
 from webgrid import Column, LinkColumnBase, YesNoColumn, BoolColumn, row_styler, col_filter, \
     col_styler
@@ -699,6 +700,36 @@ class TestXLSXRenderer(object):
                 self.xlsx = Renderer(self)
 
         TestGrid().xlsx()
+
+    def test_xlsx_format_caching(self):
+        grid = PeopleGrid()
+        wb = xlsxwriter.Workbook()
+        format1 = grid.xlsx.style_for_column(wb, grid.column('status'))
+        format2 = grid.xlsx.style_for_column(wb, grid.column('state'))
+        format3 = grid.xlsx.style_for_column(wb, grid.column('numericcol'))
+
+        assert format1 is not None
+        assert format2 is not None
+        assert format3 is not None
+
+        assert format1 is format2
+        assert format3 is not format1
+
+        grid = PeopleGrid()
+        grid.column('status').xlsx_style = {'bold': True, 'border': 1}
+        grid.column('state').xlsx_style = {'bold': True, 'border': 2}
+
+        format1 = grid.xlsx.style_for_column(wb, grid.column('status'))
+        format2 = grid.xlsx.style_for_column(wb, grid.column('state'))
+        assert format1 is not format2
+
+        grid = PeopleGrid()
+        grid.column('status').xlsx_style = {'bold': True, 'border': 1}
+        grid.column('state').xlsx_style = {'bold': True, 'border': 1}
+
+        format1 = grid.xlsx.style_for_column(wb, grid.column('status'))
+        format2 = grid.xlsx.style_for_column(wb, grid.column('state'))
+        assert format1 is format2
 
 
 class TestCSVRenderer(object):
