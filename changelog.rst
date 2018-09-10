@@ -2,10 +2,10 @@ Changelog
 ---------
 
 
-0.1.37 released <in development>
+0.1.37 released 2018-09-10
 ==========================
 
-- ?
+- XLSX formats are cached for performance
 
 0.1.36 released 2018-08-09
 ==========================
