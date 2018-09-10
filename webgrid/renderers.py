@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import io
+from operator import itemgetter
 import warnings
 from collections import defaultdict
 import six
@@ -703,15 +704,34 @@ class XLSX(object):
     def __init__(self, grid):
         self.grid = grid
         self.styles_cache = LazyDict()
+        self._xlsx_format_cache = {}
         self.default_style = {}
         self.col_widths = {}
+
+    def get_xlsx_format(self, wb, style_dict):
+        """
+        This method is meant to solve a major performance issue with how xlsxwriter manages formats.
+        Xlsxwriter maintains a cache of formats, however generating the cache key is surprisingly
+        expensive since it must join together every property of the format.
+
+        The upshot of this is that if we have several columns with identical style properties but
+        separate xlsxwriter Format objects, the cache key will have to be generated multiple times
+        per cell. It is much faster to use the same Format object for all columns sharing the same
+        style properties.
+
+        See xlsxwriter.format::Format._get_xf_index for how the caching works.
+        """
+        key = tuple(sorted(style_dict.items(), key=itemgetter(0)))
+        if key not in self._xlsx_format_cache:
+            self._xlsx_format_cache[key] = wb.add_format(style_dict)
+        return self._xlsx_format_cache[key]
 
     def style_for_column(self, wb, col):
         if col.key not in self.styles_cache:
             style_dict = getattr(col, 'xlsx_style', self.default_style).copy()
             if col.xls_num_format:
                 style_dict['num_format'] = col.xls_num_format
-            self.styles_cache[col.key] = wb.add_format(style_dict)
+            self.styles_cache[col.key] = self.get_xlsx_format(wb, style_dict)
         return self.styles_cache[col.key]
 
     def update_column_width(self, col, data):
