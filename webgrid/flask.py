@@ -5,6 +5,7 @@ import warnings
 from os import path
 
 from flask import request, session, flash, Blueprint, url_for, send_file
+import jinja2 as jinja
 
 from webgrid.extensions import translation_manager
 
@@ -15,8 +16,14 @@ except ImportError:
 
 
 class WebGrid(object):
+    jinja_loader = jinja.PackageLoader('webgrid', 'templates')
+
     def __init__(self, db=None):
         self.init_db(db)
+        self.jinja_environment = jinja.Environment(
+            loader=self.jinja_loader,
+            autoescape=True
+        )
 
     def init_db(self, db):
         self.db = db

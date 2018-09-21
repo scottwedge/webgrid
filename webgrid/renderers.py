@@ -67,10 +67,7 @@ class HTML(object):
     def __init__(self, grid):
         self.grid = grid
         self.manager = grid.manager
-        self.jinja_env = jinja.Environment(
-            loader=jinja.PackageLoader('webgrid', 'templates'),
-            autoescape=True
-        )
+        self.jinja_env = self.manager.jinja_environment
         self.jinja_env.filters['wg_safe'] = jinja.filters.do_mark_safe
 
         configure_jinja_environment(self.jinja_env, translation_manager)
