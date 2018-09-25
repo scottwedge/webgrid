@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WebGrid 0.1.36\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2018-08-09 19:30-0400\n"
+"POT-Creation-Date: 2018-09-24 19:32-0400\n"
 "PO-Revision-Date: 2018-08-03 20:49-0400\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -287,33 +287,33 @@ msgstr "sí"
 msgid "no"
 msgstr "no"
 
-#: webgrid/renderers.py:231
+#: webgrid/renderers.py:251
 msgid "{label} DESC"
 msgstr "{label} DESC"
 
-#: webgrid/renderers.py:262
+#: webgrid/renderers.py:282
 msgid "{page} of {page_count}"
 msgstr "{page} de {page_count}"
 
-#: webgrid/renderers.py:324
+#: webgrid/renderers.py:344
 msgid "No records to display"
 msgstr "No hay registros que mostrar"
 
-#: webgrid/renderers.py:431
+#: webgrid/renderers.py:451
 msgid "{label} ({num} record):"
 msgid_plural "{label} ({num} records):"
 msgstr[0] "{label} ({num} record):"
 msgstr[1] "{label} ({num} records):"
 
-#: webgrid/renderers.py:448
+#: webgrid/renderers.py:468
 msgid "Page Totals"
 msgstr "Total de Páginas"
 
-#: webgrid/renderers.py:452
+#: webgrid/renderers.py:472
 msgid "Grand Totals"
 msgstr "Totales Generales"
 
-#: webgrid/renderers.py:666
+#: webgrid/renderers.py:686
 msgid "Totals ({num} record):"
 msgid_plural "Totals ({num} records):"
 msgstr[0] "Totals ({num} record):"
@@ -335,51 +335,51 @@ msgstr "Todos seleccionados"
 msgid "{count} of {total} selected"
 msgstr "{count} de {total} seleccionados"
 
-#: webgrid/templates/grid_footer.html:5
+#: webgrid/templates/grid_footer.html:9
 msgid " Export to "
 msgstr " Exportar a "
 
-#: webgrid/templates/grid_footer.html:18 webgrid/templates/grid_footer.html:25
+#: webgrid/templates/grid_footer.html:22 webgrid/templates/grid_footer.html:29
 msgid "first"
 msgstr "primero"
 
-#: webgrid/templates/grid_footer.html:22 webgrid/templates/grid_footer.html:26
+#: webgrid/templates/grid_footer.html:26 webgrid/templates/grid_footer.html:30
 msgid "previous"
 msgstr "anterior"
 
-#: webgrid/templates/grid_footer.html:31 webgrid/templates/grid_footer.html:38
+#: webgrid/templates/grid_footer.html:35 webgrid/templates/grid_footer.html:42
 msgid "next"
 msgstr "siguiente"
 
-#: webgrid/templates/grid_footer.html:35 webgrid/templates/grid_footer.html:39
+#: webgrid/templates/grid_footer.html:39 webgrid/templates/grid_footer.html:43
 msgid "last"
 msgstr "último"
 
-#: webgrid/templates/grid_header.html:6
+#: webgrid/templates/grid_header.html:12
 msgid "Apply"
 msgstr "Aplicar"
 
-#: webgrid/templates/grid_header.html:7
+#: webgrid/templates/grid_header.html:13
 msgid "reset"
 msgstr "reiniciar"
 
-#: webgrid/templates/header_filtering.html:8
+#: webgrid/templates/header_filtering.html:14
 msgid "Add Filter:"
 msgstr "Agregar Filtro:"
 
-#: webgrid/templates/header_paging.html:17
+#: webgrid/templates/header_paging.html:23
 msgid "Records"
 msgstr "Archivos"
 
-#: webgrid/templates/header_paging.html:21
+#: webgrid/templates/header_paging.html:27
 msgid "Page"
 msgstr "Página"
 
-#: webgrid/templates/header_paging.html:24
+#: webgrid/templates/header_paging.html:30
 msgid "Per Page"
 msgstr "Por Página"
 
-#: webgrid/templates/header_sorting.html:3
+#: webgrid/templates/header_sorting.html:9
 msgid "Sort By"
 msgstr "Ordenar Por"
 
