@@ -302,3 +302,13 @@ class TestColumn(object):
                 NumericColumn('C1', Person.numericcol, format_as=None)
             TG()
             m_xlwt.easyxf.assert_called_once_with(None, None)
+
+    def test_post_init(self):
+        class TG(Grid):
+            NumericColumn('C1', Person.numericcol, places=2)
+
+            def post_init(self):
+                self.column('numericcol').render_in = 'foo'
+
+        g = TG()
+        assert g.column('numericcol').render_in == 'foo'

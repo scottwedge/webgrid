@@ -570,6 +570,12 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
                     new_col
                 )
 
+        self.post_init()
+
+    def post_init(self):
+        """Provided for subclasses to run post-initialization customizations"""
+        pass
+
     def before_query_hook(self):
         """ Just a hook to give subclasses a chance to change things before executing the query """
         pass
