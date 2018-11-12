@@ -840,10 +840,10 @@ class DateTimeFilter(DateFilter):
 
     def _has_date_only(self, dt_value, value):
         return bool(
-            dt_value.hour == 0 and
-            dt_value.minute == 0 and
-            dt_value.second == 0 and
-            '00:00' not in value
+            dt_value.hour == 0
+            and dt_value.minute == 0
+            and dt_value.second == 0
+            and '00:00' not in value
         )
 
     def apply(self, query):

@@ -124,11 +124,11 @@ class HTML(object):
     def filtering_table_row(self, col):
         extra = getattr(col.filter, 'html_extra', {})
         return _HTML.tr(
-            _HTML.th(self.filtering_col_label(col), class_='filter-label') +
-            _HTML.td(self.filtering_col_op_select(col), class_='operator') +
-            _HTML.td(
-                _HTML.div(self.filtering_col_inputs1(col), class_='inputs1') +
-                _HTML.div(self.filtering_col_inputs2(col), class_='inputs2')
+            _HTML.th(self.filtering_col_label(col), class_='filter-label')
+            + _HTML.td(self.filtering_col_op_select(col), class_='operator')
+            + _HTML.td(
+                _HTML.div(self.filtering_col_inputs1(col), class_='inputs1')
+                + _HTML.div(self.filtering_col_inputs2(col), class_='inputs2')
             ),
             # Added _filter to address CSS collision with Bootstrap
             # Ref: https://github.com/level12/webgrid/issues/28

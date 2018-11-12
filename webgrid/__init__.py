@@ -767,7 +767,7 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
             # any of the grid's query string args can be used to
             #   override the session behavior (except export_to)
             r = re.compile(
-                self.qs_prefix + '(op\(.*\))'
+                self.qs_prefix + r'(op\(.*\))'
             )
             return any(r.match(a) for a in args.keys())
 
