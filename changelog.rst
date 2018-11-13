@@ -5,7 +5,10 @@ Changelog
 0.1.38 released <in development>
 ==========================
 
-- ? 
+- Add i18n support
+  NOTE: there is a slight change that could result in a behavioral change during
+        upgrade! Please see the 'Upgrading' section in the readme for more
+        information!
 
 0.1.37 released 2018-09-10
 ==========================
