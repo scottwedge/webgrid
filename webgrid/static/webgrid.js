@@ -2,6 +2,14 @@
 var datagrid_active_filters = [];
 var _datagrid_is_loaded = false;
 
+/*
+   ensure we have a definition for the `_` function.
+   when i18n is enabled, this function should already exist.
+ */
+if (typeof _ === "undefined") {
+    var _ = function (msg) { return msg; };
+}
+
 $(document).ready(function() {
     // sorting
     datagrid_toggle_sort_selects();

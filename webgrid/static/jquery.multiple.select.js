@@ -5,6 +5,14 @@
  * http://wenzhixin.net.cn/p/multiple-select/
  */
 
+/*
+   ensure we have a definition for the `_` function.
+   when i18n is enabled, this function should already exist.
+ */
+if (typeof _ === "undefined") {
+    var _ = function (msg) { return msg; };
+}
+
 (function($) {
 
     'use strict';
