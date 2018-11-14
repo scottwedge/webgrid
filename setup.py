@@ -1,4 +1,3 @@
-import sys
 import os.path as osp
 try:
     from setuptools import setup, find_packages
@@ -6,6 +5,7 @@ except ImportError:
     from ez_setup import use_setuptools
     use_setuptools()
     from setuptools import setup
+
 
 # pip install -e .[develop]
 develop_requires = [
@@ -19,6 +19,7 @@ develop_requires = [
     'nose',
     'Flask',
     'Flask-Bootstrap',
+    'Flask-Script',
     'Flask-SQLAlchemy',
     'Flask-WebTest',
     'sqlalchemy_utils',
@@ -59,9 +60,17 @@ setup(
     ],
     license='BSD',
     packages=['webgrid'],
-    extras_require={'develop': develop_requires},
+    extras_require={
+        'develop': develop_requires,
+        'i18n': [
+            'morphi'
+        ]
+    },
     zip_safe=False,
     include_package_data=True,
+    setup_requires=[
+        'Babel'
+    ],
     install_requires=[
         'BlazeUtils',
         'FormEncode',

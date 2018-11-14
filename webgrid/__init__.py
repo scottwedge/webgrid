@@ -18,6 +18,7 @@ import sqlalchemy.sql as sasql
 from webhelpers2.html.tags import link_to
 from werkzeug.datastructures import MultiDict
 
+from .extensions import gettext as _
 from .renderers import HTML, XLS, XLSX
 
 # conditional imports to support libs without requiring them
@@ -144,17 +145,17 @@ class Column(object):
             key = getattr(col, 'key', getattr(col, 'name', None))
 
             if key is None:
-                raise ValueError('expected filter to be a SQLAlchemy column-like'
-                                 ' object, but it did not have a "key" or "name"'
-                                 ' attribute')
+                raise ValueError(_('expected filter to be a SQLAlchemy column-like'
+                                   ' object, but it did not have a "key" or "name"'
+                                   ' attribute'))
             self.key = key
 
         # filters can be sent in as a class (not class instance) if needed
         if inspect.isclass(filter):
             if self.expr is None:
-                raise ValueError('the filter was a class type, but no'
-                                 ' column-like object is available from "key" to pass in as'
-                                 ' as the first argument')
+                raise ValueError(_('the filter was a class type, but no'
+                                   ' column-like object is available from "key" to pass in as'
+                                   ' as the first argument'))
             self.filter = filter(self.expr)
 
     def new_instance(self, grid):
@@ -222,7 +223,7 @@ class Column(object):
             if ("object has no attribute '%s'" % self.key) not in str(e):
                 raise
 
-        raise ExtractionError('key "%s" not found in record' % self.key)
+        raise ExtractionError(_('key "{key}" not found in record', key=self.key))
 
     def format_data(self, value):
         """
@@ -299,7 +300,7 @@ class LinkColumnBase(Column):
 class BoolColumn(Column):
 
     def __init__(self, label, key_or_filter=None, key=None, can_sort=True,
-                 reverse=False, true_label='True', false_label='False',
+                 reverse=False, true_label=_('True'), false_label=_('False'),
                  xls_width=None, xls_style=None, xls_num_format=None,
                  render_in=_None, **kwargs):
         Column.__init__(self, label, key_or_filter, key, can_sort, xls_width,
@@ -322,7 +323,8 @@ class YesNoColumn(BoolColumn):
                  reverse=False, xls_width=None, xls_style=None, xls_num_format=None,
                  render_in=_None, **kwargs):
         BoolColumn.__init__(self, label, key_or_filter, key, can_sort, reverse,
-                            'Yes', 'No', xls_width, xls_style, xls_num_format, render_in, **kwargs)
+                            _('Yes'), _('No'), xls_width, xls_style, xls_num_format, render_in,
+                            **kwargs)
 
 
 class DateColumnBase(Column):
@@ -385,21 +387,25 @@ class DateColumnBase(Column):
 
 
 class DateColumn(DateColumnBase):
+    # !!!: localize
     html_format = '%m/%d/%Y'
     xls_num_format = 'm/dd/yyyy'
 
 
 class DateTimeColumn(DateColumnBase):
+    # !!!: localize
     html_format = '%m/%d/%Y %I:%M %p'
     xls_num_format = 'mm/dd/yyyy hh:mm am/pm'
 
 
 class TimeColumn(DateColumnBase):
+    # !!!: localize
     html_format = '%I:%M %p'
     xls_num_format = 'hh:mm am/pm'
 
 
 class NumericColumn(Column):
+    # !!!: localize
     xls_fmt_general = '#,##0{dec_places};{neg_prefix}-#,##0{dec_places}'
     xls_fmt_accounting = '_($* #,##0{dec_places}_);{neg_prefix}_($* (#,##0{dec_places})' + \
                          ';_($* "-"??_);_(@_)'
@@ -564,6 +570,12 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
                     new_col
                 )
 
+        self.post_init()
+
+    def post_init(self):
+        """Provided for subclasses to run post-initialization customizations"""
+        pass
+
     def before_query_hook(self):
         """ Just a hook to give subclasses a chance to change things before executing the query """
         pass
@@ -609,7 +621,7 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
             if key in self.key_column_map and self.key_column_map[key].can_sort:
                 self.order_by.append((key, flag_desc))
             elif not self.foreign_session_loaded:
-                self.user_warnings.append('can\'t sort on invalid key "{0}"'.format(key))
+                self.user_warnings.append(_('''can't sort on invalid key "{key}"''', key=key))
 
     def set_paging(self, per_page, on_page):
         self.clear_record_cache()
@@ -755,7 +767,7 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
             # any of the grid's query string args can be used to
             #   override the session behavior (except export_to)
             r = re.compile(
-                self.qs_prefix + '(op\(.*\))'
+                self.qs_prefix + r'(op\(.*\))'
             )
             return any(r.match(a) for a in args.keys())
 
@@ -885,7 +897,7 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
         try:
             return validator.to_python(value)
         except Invalid:
-            invalid_msg = '"{0}" grid argument invalid, ignoring'.format(qs_arg_key)
+            invalid_msg = _('"{arg}" grid argument invalid, ignoring', arg=qs_arg_key)
             self.user_warnings.append(invalid_msg)
             return None
 

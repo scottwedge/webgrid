@@ -172,6 +172,23 @@ class TestHtmlRenderer(object):
         eq_html(pg.html.table(), 'people_table.html')
 
     @inrequest('/')
+    def test_default_jinja_env(self):
+        class TGrid(Grid):
+            manager = None
+            hide_controls_box = True
+            session_on = False
+            allowed_export_targets = None
+
+            Column('ID', 'id', can_sort=False)
+            Column('Value', 'value', can_sort=False)
+
+        tg = TGrid()
+        tg.set_records([
+            {'id': 1, 'value': 'foo'},
+        ])
+        tg.html()
+
+    @inrequest('/')
     def test_no_filters(self):
         class TGrid(Grid):
             Column('Test', Person.id)

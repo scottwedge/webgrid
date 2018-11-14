@@ -10,17 +10,23 @@ from blazeweb.routing import abs_static_url
 from blazeweb.templating.jinja import content_filter
 from blazeweb.utils import abort
 from blazeweb.wrappers import StreamResponse
+import jinja2 as jinja
 from jinja2.exceptions import TemplateNotFound
 from sqlalchemybwc import db as sabwc_db
 from webgrid import BaseGrid
 
 
 class WebGrid(object):
+    jinja_loader = jinja.PackageLoader('webgrid', 'templates')
 
     def __init__(self, db=None, component='webgrid'):
         self.init_db(db or sabwc_db)
         self.component = component
         ag.tplengine.env.filters['wg_safe'] = content_filter
+        self.jinja_environment = jinja.Environment(
+            loader=self.jinja_loader,
+            autoescape=True
+        )
 
     def init_db(self, db):
         self.db = db
@@ -69,9 +75,7 @@ class WebGrid(object):
             if ':' in endpoint:
                 raise
             return getcontent('{0}:{1}'.format(self.component, endpoint), **kwargs)
-
-
-wg_blaze_manager = WebGrid()
+wg_blaze_manager = WebGrid()  # noqa: E305
 
 
 class Grid(BaseGrid):

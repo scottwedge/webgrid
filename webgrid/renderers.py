@@ -17,13 +17,39 @@ import jinja2 as jinja
 from webhelpers2.html import HTML as _HTML, literal, tags
 from werkzeug import Href, MultiDict
 
+from .extensions import (
+    gettext as _,
+    ngettext,
+    translation_manager
+)
 from .utils import current_url
 import csv
+
+try:
+    from morphi.helpers.jinja import configure_jinja_environment
+except ImportError:
+    configure_jinja_environment = lambda *args, **kwargs: None  # noqa: E731
+
+try:
+    from speaklater import is_lazy_string
+except ImportError:
+    is_lazy_string = lambda value: False  # noqa: E731
 
 try:
     import xlwt
 except ImportError:
     xlwt = None
+
+
+def fix_xls_value(value):
+    """
+    Perform any data type fixes that must be made
+    prior to sending a value to be written by the spreadsheet library
+    """
+    if is_lazy_string(value):
+        return six.text_type(value)
+
+    return value
 
 
 class RenderLimitExceeded(Exception):
@@ -41,11 +67,18 @@ class HTML(object):
     def __init__(self, grid):
         self.grid = grid
         self.manager = grid.manager
-        self.jinja_env = jinja.Environment(
-            loader=jinja.PackageLoader('webgrid', 'templates'),
-            autoescape=True,
-        )
+        if self.manager:
+            self.jinja_env = self.manager.jinja_environment
+        else:
+            # if the grid is unmanaged for any reason (e.g. just not in a request/response
+            # cycle and used only for render), fall back to a default jinja environment
+            self.jinja_env = jinja.Environment(
+                loader=jinja.PackageLoader('webgrid', 'templates'),
+                autoescape=True
+            )
         self.jinja_env.filters['wg_safe'] = jinja.filters.do_mark_safe
+
+        configure_jinja_environment(self.jinja_env, translation_manager)
 
     def __call__(self):
         return self.render()
@@ -99,11 +132,11 @@ class HTML(object):
     def filtering_table_row(self, col):
         extra = getattr(col.filter, 'html_extra', {})
         return _HTML.tr(
-            _HTML.th(self.filtering_col_label(col), class_='filter-label') +
-            _HTML.td(self.filtering_col_op_select(col), class_='operator') +
-            _HTML.td(
-                _HTML.div(self.filtering_col_inputs1(col), class_='inputs1') +
-                _HTML.div(self.filtering_col_inputs2(col), class_='inputs2')
+            _HTML.th(self.filtering_col_label(col), class_='filter-label')
+            + _HTML.td(self.filtering_col_op_select(col), class_='operator')
+            + _HTML.td(
+                _HTML.div(self.filtering_col_inputs1(col), class_='inputs1')
+                + _HTML.div(self.filtering_col_inputs2(col), class_='inputs2')
             ),
             # Added _filter to address CSS collision with Bootstrap
             # Ref: https://github.com/level12/webgrid/issues/28
@@ -221,7 +254,8 @@ class HTML(object):
         for col in self.grid.columns:
             if col.can_sort:
                 options.append(tags.Option(col.label, value=col.key))
-                options.append(tags.Option(col.label + ' DESC', value='-' + col.key))
+                options.append(tags.Option(_('{label} DESC', label=col.label),
+                                           value='-' + col.key))
         return options
 
     def sorting_select(self, number):
@@ -251,7 +285,7 @@ class HTML(object):
     def paging_select_options(self):
         options = []
         for page in range(1, self.grid.page_count + 1):
-            label = '{0} of {1}'.format(page, self.grid.page_count)
+            label = _('{page} of {page_count}', page=page, page_count=self.grid.page_count)
             options.append(tags.Option(label, value=page))
         return options
 
@@ -313,7 +347,7 @@ class HTML(object):
         return self.load_content('grid_table.html')
 
     def no_records(self):
-        return _HTML.p('No records to display', class_='no-records')
+        return _HTML.p(_('No records to display'), class_='no-records')
 
     def table_otag(self, **kwargs):
         kwargs.setdefault('class_', 'records')
@@ -420,11 +454,10 @@ class HTML(object):
                     cells.append(_HTML.td(literal('&nbsp;')))
                 continue
             if firstcol:
-                bufferval = '{0} Totals ({1} record{2}):'.format(
-                    label,
-                    numrecords,
-                    's' if numrecords != 1 else '',
-                )
+                bufferval = ngettext('{label} ({num} record):',
+                                     '{label} ({num} records):',
+                                     numrecords,
+                                     label=label)
                 buffer_hah = HTMLAttributes(
                     colspan=colspan,
                     class_='totals-label'
@@ -438,11 +471,11 @@ class HTML(object):
         return self.table_tr_output(cells, row_hah)
 
     def table_pagetotals(self, rownum, record):
-        return self.table_totals(rownum, record, 'Page', rownum)
+        return self.table_totals(rownum, record, _('Page Totals'), rownum)
 
     def table_grandtotals(self, rownum, record):
         count = self.grid.record_count
-        return self.table_totals(rownum, record, 'Grand', count)
+        return self.table_totals(rownum, record, _('Grand Totals'), count)
 
     def table_td(self, col, record):
         col_hah = HTMLAttributes(col.body.hah)
@@ -571,6 +604,7 @@ class XLS(object):
 
     def build_sheet(self, wb=None, sheet_name=None):
         if xlwt is None:
+            # !!!: translate?
             raise ImportError('you must have xlwt installed to use Excel renderer')
 
         if not self.can_render():
@@ -621,7 +655,7 @@ class XLS(object):
     def body_headings(self, xlh):
         for col in self.grid.iter_columns('xls'):
             self.register_col_width(col, col.label)
-            xlh.awrite(col.label, self.style.bold)
+            xlh.awrite(fix_xls_value(col.label), self.style.bold)
         xlh.newrow()
 
     def body_records(self, xlh):
@@ -655,16 +689,15 @@ class XLS(object):
                 continue
             if firstcol:
                 numrecords = self.grid.record_count
-                bufferval = 'Totals ({0} record{1}):'.format(
-                    numrecords,
-                    's' if numrecords != 1 else '',
-                )
+                bufferval = ngettext('Totals ({num} record):',
+                                     'Totals ({num} records):',
+                                     numrecords)
                 xlh.ws.write_merge(
                     xlh.rownum,
                     xlh.rownum,
                     xlh.colnum,
                     xlh.colnum + colspan - 1,
-                    bufferval,
+                    fix_xls_value(bufferval),
                     totals_xf
                 )
                 xlh.colnum = xlh.colnum + colspan
@@ -677,7 +710,7 @@ class XLS(object):
         value = col.render('xls', record)
         self.register_col_width(col, value)
         stymat = col.xlwt_stymat_calc(value)
-        xlh.awrite(value, stymat)
+        xlh.awrite(fix_xls_value(value), stymat)
 
     def total_cell(self, xlh, col, record):
         value = col.render('xls', record)
@@ -685,7 +718,7 @@ class XLS(object):
         stymat = col.xlwt_stymat_init()
         stymat.font.bold = True
         stymat.borders.top = xlwt.Formatting.Borders.THIN
-        xlh.awrite(value, stymat)
+        xlh.awrite(fix_xls_value(value), stymat)
 
     def file_name(self):
         return '{0}_{1}.xls'.format(self.grid.ident, randnumerics(6))
@@ -791,7 +824,7 @@ class XLSX(object):
     def body_headings(self, xlh, wb):
         heading_style = wb.add_format({'bold': True})
         for col in self.grid.iter_columns('xlsx'):
-            xlh.awrite(col.label, heading_style)
+            xlh.awrite(fix_xls_value(col.label), heading_style)
             self.update_column_width(col, col.label)
         xlh.nextrow()
 
@@ -811,7 +844,7 @@ class XLSX(object):
         for col in self.grid.iter_columns('xlsx'):
             value = col.render('xlsx', record)
             style = self.style_for_column(wb, col)
-            xlh.awrite(value, style)
+            xlh.awrite(fix_xls_value(value), style)
             self.update_column_width(col, value)
         xlh.nextrow()
 
@@ -852,7 +885,7 @@ class XLSX(object):
             style.update(getattr(col, 'xlsx_style', self.default_style))
             style = wb.add_format(style)
             value = col.render('xlsx', record)
-            xlh.awrite(value, style)
+            xlh.awrite(fix_xls_value(value), style)
             self.update_column_width(col, value)
 
         xlh.nextrow()

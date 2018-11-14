@@ -7,6 +7,7 @@ import formencode
 from nose.tools import eq_, assert_raises
 from .helpers import query_to_str
 
+from webgrid.filters import Operator
 from webgrid.filters import OptionsFilterBase, TextFilter, IntFilter, NumberFilter, DateFilter, \
     DateTimeFilter, FilterBase, TimeFilter, YesNoFilter
 from webgrid_ta.model.entities import ArrowRecord, Person, db
@@ -29,6 +30,48 @@ class CheckFilterBase(ModelBase):
     def assert_filter_query(self, filter, test_for):
         query = filter.apply(db.session.query(Person.id))
         self.assert_in_query(query, test_for)
+
+
+class TestOperator:
+    def test_string_equality(self):
+        eq = Operator('eq', 'is', 'input')
+        assert eq == 'eq'
+        assert 'eq' == eq
+
+        assert eq != '!eq'
+        assert '!eq' != eq
+
+    def test_string_in(self):
+        a = Operator('a', 'a', 'a')
+        b = Operator('b', 'b', 'b')
+        c = Operator('c', 'c', 'c')
+        d = Operator('d', 'd', 'd')
+
+        assert a in (a, b, c)
+        assert 'a' in (a, b, c)
+
+        assert d not in (a, b, c)
+        assert 'd' not in (a, b, c)
+
+    def test_self_equality(self):
+        eq = Operator('eq', 'is', 'input')
+        assert eq == eq
+
+    def test_operator_equality(self):
+        a = Operator('eq', 'is', 'input')
+        b = Operator('eq', 'is', 'input')
+        c = Operator('fb', 'is', 'input')
+
+        assert a == b
+        assert a != c
+
+    def test_hashable(self):
+        a = Operator('ab', 'is', 'input')
+        b = Operator('bc', 'is', 'input')
+        c = Operator('cd', 'is', 'input')
+
+        lookup = {a: 1, b: 2, c: 3}
+        assert lookup[a] == 1
 
 
 class TestTextFilter(CheckFilterBase):

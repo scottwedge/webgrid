@@ -4,6 +4,7 @@ from os import path
 
 import six
 
+
 if six.PY2:
     from blazeutils import tolist
     from blazeweb.events import signal

@@ -1,5 +1,3 @@
-
-
 def current_url(manager, root_only=False, host_only=False, strip_querystring=False,
                 strip_host=False, https=None):
     """

@@ -8,6 +8,7 @@ from flask_script import Manager, Command, Option
 
 from webgrid_ta.app import create_app
 import webgrid_ta.model as model
+from webgrid_ta.extensions import lazy_gettext as _
 from webgrid_ta.model.helpers import clear_db
 
 log = logging.getLogger(__name__)
@@ -18,21 +19,21 @@ class CreateDB(Command):
 
     option_list = (
         Option('--clear', default=False, dest='clear', action="store_true",
-               help='DROP all DB objects first'),
+               help=_('DROP all DB objects first')),
     )
 
     def run(self, clear):
         if clear:
             clear_db()
-            print('- db cleared')
+            print(_('- db cleared'))
 
         model.load_db()
-        print('- db loaded')
+        print(_('- db loaded'))
 
 
 manager = Manager(create_app)
 manager.add_option('-c', dest='config', default='Dev',
-                   help='flask configuration to use', required=False)
+                   help=_('flask configuration to use'), required=False)
 manager.add_command('create-db', CreateDB())
 
 

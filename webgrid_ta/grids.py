@@ -7,6 +7,7 @@ from .model.entities import ArrowRecord, Person, Status
 
 from .app import webgrid
 from webgrid.renderers import CSV
+from webgrid_ta.extensions import lazy_gettext as _
 
 
 class Grid(BaseGrid):
@@ -20,7 +21,7 @@ class FirstNameColumn(LinkColumnBase):
 
 class FullNameColumn(LinkColumnBase):
     def extract_data(self, record):
-        return '{0.firstname} {0.lastname}'.format(record)
+        return _('{record.firstname} {record.lastname}', record=record)
 
     def create_url(self, record):
         return '/person-edit/{0}'.format(record.id)
@@ -33,10 +34,10 @@ class EmailsColumn(Column):
 
 class StatusFilter(OptionsFilterBase):
     operators = (
-        Operator('o', 'open', None),
+        Operator('o', _('open'), None),
         ops.is_,
         ops.not_is,
-        Operator('c', 'closed', None),
+        Operator('c', _('closed'), None),
         ops.empty,
         ops.not_empty
     )
@@ -46,16 +47,16 @@ class StatusFilter(OptionsFilterBase):
 class PeopleGrid(Grid):
     session_on = True
 
-    FirstNameColumn('First Name', Person.firstname, TextFilter)
-    FullNameColumn('Full Name')
-    YesNoColumn('Active', Person.inactive, reverse=True)
-    EmailsColumn('Emails')
-    Column('Status', Status.label.label('status'), StatusFilter(Status.id))
-    DateTimeColumn('Created', Person.createdts, DateTimeFilter)
-    DateColumn('Due Date', 'due_date')
-    Column('Sort Order', Person.sortorder, render_in='xls')
-    Column('State', Person.state, render_in='xlsx')
-    NumericColumn('Number', Person.numericcol, has_subtotal=True)
+    FirstNameColumn(_('First Name'), Person.firstname, TextFilter)
+    FullNameColumn(_('Full Name'))
+    YesNoColumn(_('Active'), Person.inactive, reverse=True)
+    EmailsColumn(_('Emails'))
+    Column(_('Status'), Status.label.label('status'), StatusFilter(Status.id))
+    DateTimeColumn(_('Created'), Person.createdts, DateTimeFilter)
+    DateColumn(_('Due Date'), 'due_date')
+    Column(_('Sort Order'), Person.sortorder, render_in='xls')
+    Column(_('State'), Person.state, render_in='xlsx')
+    NumericColumn(_('Number'), Person.numericcol, has_subtotal=True)
 
     def query_prep(self, query, has_sort, has_filters):
         query = query.add_columns(
@@ -72,14 +73,14 @@ class PeopleGrid(Grid):
 class DefaultOpGrid(Grid):
     session_on = True
 
-    FirstNameColumn('First Name', Person.firstname,
-                    TextFilter(Person.firstname, default_op='eq'))
+    FirstNameColumn(_('First Name'), Person.firstname,
+                    TextFilter(Person.firstname, default_op=ops.eq))
 
 
 class ArrowGrid(Grid):
     session_on = True
 
-    DateTimeColumn('Created', ArrowRecord.created_utc, DateTimeFilter)
+    DateTimeColumn(_('Created'), ArrowRecord.created_utc, DateTimeFilter)
 
     def query_prep(self, query, has_sort, has_filters):
         # default sort
@@ -92,7 +93,7 @@ class ArrowGrid(Grid):
 class ArrowCSVGrid(Grid):
     session_on = True
     allowed_export_targets = {'csv': CSV}
-    DateTimeColumn('Created', ArrowRecord.created_utc, DateTimeFilter)
+    DateTimeColumn(_('Created'), ArrowRecord.created_utc, DateTimeFilter)
 
     def query_prep(self, query, has_sort, has_filters):
         # default sort

@@ -1,5 +1,9 @@
 from __future__ import absolute_import
 from flask import Blueprint, render_template
+
+from webgrid_ta.extensions import gettext as _
+
+
 main = Blueprint('main', __name__)
 
 
@@ -14,8 +18,8 @@ def index():
             return data if int(data) % 2 else data * -1
 
     class PeopleGrid(PGBase):
-        CurrencyCol('Currency', Person.numericcol, format_as='percent', places=5)
-        CurrencyCol('C2', Person.numericcol.label('n2'), format_as='accounting')
+        CurrencyCol(_('Currency'), Person.numericcol, format_as='percent', places=5)
+        CurrencyCol(_('C2'), Person.numericcol.label('n2'), format_as='accounting')
 
     pg = PeopleGrid(class_='datagrid')
     pg.apply_qs_args()
