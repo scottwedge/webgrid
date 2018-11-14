@@ -1,6 +1,17 @@
 Changelog
 =========
 
+0.1.38 released 2018-11-14
+--------------------------
+
+- Add optional i18n support using morphi (3627e8f_)
+  NOTE: there is a slight change that could result in a behavioral change during
+        upgrade! Please see the 'Upgrading' section in the readme for more
+        information!
+
+.. _3627e8f: https://github.com/level12/webgrid/commit/3627e8f
+
+
 0.1.37 released 2018-09-10
 --------------------------
 
