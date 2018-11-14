@@ -32,15 +32,19 @@ develop_requires = [
 cdir = osp.abspath(osp.dirname(__file__))
 README = open(osp.join(cdir, 'readme.rst')).read()
 CHANGELOG = open(osp.join(cdir, 'changelog.rst')).read()
-VERSION = open(osp.join(cdir, 'webgrid', 'version.txt')).read().strip()
+
+version_fpath = osp.join(cdir, 'webgrid', 'version.py')
+version_globals = {}
+with open(version_fpath) as fo:
+    exec(fo.read(), version_globals)
 
 setup(
     name="WebGrid",
-    version=VERSION,
+    version=version_globals['VERSION'],
     description="A library for rendering HTML tables and Excel files from SQLAlchemy models.",
     long_description='\n\n'.join((README, CHANGELOG)),
     author="Randy Syring",
-    author_email="randy@thesyrings.us",
+    author_email="randy.syring@level12.io",
     url='https://github.com/level12/webgrid',
     classifiers=[
         'Development Status :: 4 - Beta',
@@ -50,6 +54,8 @@ setup(
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
     ],
     license='BSD',
     packages=['webgrid'],
