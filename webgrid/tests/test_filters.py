@@ -327,6 +327,20 @@ class TestDateFilter(CheckFilterBase):
             "WHERE persons.due_date BETWEEN '2010-12-31' AND '{}'".format(today)
         )
 
+    def test_between_none_date(self):
+        filter = DateFilter(Person.due_date)
+        filter.set('between', '12/31/2010')
+        today = dt.date.today().strftime('%Y-%m-%d')
+        self.assert_filter_query(
+            filter,
+            "WHERE persons.due_date BETWEEN '2010-12-31' AND '{}'".format(today)
+        )
+
+        with assert_raises(formencode.Invalid):
+            filter.set('between', None)
+        eq_(filter.error, True)
+        eq_(filter.description, 'invalid')
+
     def test_between_blank(self):
         filter = DateFilter(Person.due_date)
         with assert_raises(formencode.Invalid):
@@ -342,6 +356,20 @@ class TestDateFilter(CheckFilterBase):
             filter,
             "WHERE persons.due_date NOT BETWEEN '2010-12-31' AND '{}'".format(today)
         )
+
+    def test_not_between_none_date(self):
+        filter = DateFilter(Person.due_date)
+        filter.set('!between', '12/31/2010')
+        today = dt.date.today().strftime('%Y-%m-%d')
+        self.assert_filter_query(
+            filter,
+            "WHERE persons.due_date NOT BETWEEN '2010-12-31' AND '{}'".format(today)
+        )
+
+        with assert_raises(formencode.Invalid):
+            filter.set('!between', None)
+        eq_(filter.error, True)
+        eq_(filter.description, 'invalid')
 
     def test_not_between(self):
         filter = DateFilter(Person.due_date)

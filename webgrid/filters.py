@@ -711,6 +711,12 @@ class DateFilter(FilterBase, _DateMixin):
         return FilterBase.apply(self, query)
 
     def process(self, value, is_value2):
+        if value is None and self.op in (ops.between, ops.not_between):
+            if is_value2:
+                value = ''
+            else:
+                raise formencode.Invalid(gettext('invalid date'), value, self)
+
         if value is None or self.op in self.no_value_operators:
             return None
 
