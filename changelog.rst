@@ -1,6 +1,14 @@
 Changelog
 =========
 
+0.1.39 released 2019-01-03
+--------------------------
+
+- Properly handle None in date filter "between" ops (4da6069_)
+
+.. _4da6069: https://github.com/level12/webgrid/commit/4da6069
+
+
 0.1.38 released 2018-11-14
 --------------------------
 
