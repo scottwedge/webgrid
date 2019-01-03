@@ -10,3 +10,4 @@ pytest-reports
 coverage.xml
 *.nose.xml
 *.py~
+.eggs
