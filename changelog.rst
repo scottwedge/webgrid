@@ -1,6 +1,14 @@
 Changelog
 =========
 
+0.1.40 released 2019-02-18
+--------------------------
+
+- py3: Fix Deprecation Warning for Inspect Call (#53) (9c87cc4_)
+
+.. _9c87cc4: https://github.com/level12/webgrid/commit/9c87cc4
+
+
 0.1.39 released 2019-01-03
 --------------------------
 
