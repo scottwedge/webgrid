@@ -13,8 +13,16 @@ import xlrd
 import csv
 import xlsxwriter
 
-from webgrid import Column, LinkColumnBase, YesNoColumn, BoolColumn, row_styler, col_filter, \
-    col_styler
+from webgrid import (
+    Column,
+    LinkColumnBase,
+    YesNoColumn,
+    BoolColumn,
+    row_styler,
+    col_filter,
+    col_styler,
+    NumericColumn,
+)
 from webgrid.filters import TextFilter
 from webgrid.renderers import RenderLimitExceeded, HTML, XLS, XLSX, CSV
 from webgrid_ta.model.entities import ArrowRecord, Person, Status, Email, db
@@ -682,6 +690,24 @@ class TestXLSXRenderer(object):
         eq_(sheet.nrows, 5)
         eq_(sheet.cell_value(4, 0), 'Totals (3 records):')
         eq_(sheet.cell_value(4, 8), 6.39)
+        assert sheet.merged_cells == [(4, 5, 0, 8)]
+
+    def test_totals_no_merge(self):
+        class TestGrid(Grid):
+            subtotals = 'all'
+            Column('First Name', Person.firstname)
+            NumericColumn('Number', Person.numericcol, has_subtotal=True)
+
+        g = TestGrid()
+        wb = g.xlsx()
+        wb.filename.seek(0)
+
+        book = xlrd.open_workbook(file_contents=wb.filename.getvalue())
+        sheet = book.sheet_by_index(0)
+
+        eq_(sheet.nrows, 6)
+        eq_(sheet.cell_value(5, 0), 'Totals (4 records):')
+        assert sheet.merged_cells == []
 
     def test_can_render(self):
         class FakeCountsGrid(PeopleGrid):

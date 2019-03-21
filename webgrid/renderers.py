@@ -869,15 +869,19 @@ class XLSX(object):
                     numrecords,
                     's' if numrecords != 1 else '',
                 )
-                xlh.ws.merge_range(
-                    xlh.rownum,
-                    xlh.colnum,
-                    xlh.rownum,
-                    xlh.colnum + colspan - 1,
-                    bufferval,
-                    base_style
-                )
-                xlh.colnum = xlh.colnum + colspan
+                if colspan > 1:
+                    xlh.ws.merge_range(
+                        xlh.rownum,
+                        xlh.colnum,
+                        xlh.rownum,
+                        xlh.colnum + colspan - 1,
+                        bufferval,
+                        base_style
+                    )
+                    xlh.colnum = xlh.colnum + colspan
+                else:
+                    xlh.awrite(bufferval, base_style)
+
                 firstcol = False
                 colspan = 0
 
