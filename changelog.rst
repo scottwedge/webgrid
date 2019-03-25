@@ -1,6 +1,14 @@
 Changelog
 =========
 
+0.1.41 released 2019-03-25
+--------------------------
+
+- Fix warning from xlsxwriter when second column has a subtotal (05e0663_)
+
+.. _05e0663: https://github.com/level12/webgrid/commit/05e0663
+
+
 0.1.40 released 2019-02-18
 --------------------------
 
