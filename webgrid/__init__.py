@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 import datetime as dt
 import inspect
+import json
 import re
 import sys
 import six
@@ -929,12 +930,15 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
         # if dgreset is in args, store the session key if present
         #   and then pass back the incoming args
         reset = self.prefix_qs_arg_key('dgreset') in args
+
+        # session is stored as a JSON-serialized list of tuples, which we can turn into MultiDict
+        session_key = '_{0}'.format(self.__class__.__name__)
         if args.get(self.prefix_qs_arg_key('session_key'), None):
             if dgsessions.get(self.session_key, None):
-                stored_args = dgsessions[self.session_key]
-        else:
-            def_key = '_{0}'.format(self.__class__.__name__)
-            stored_args = dgsessions.get(def_key, None)
+                session_key = self.session_key
+        stored_args_json = dgsessions.get(session_key, None)
+        stored_args = MultiDict(json.loads(stored_args_json))
+
         if stored_args and session_override:
             for arg, value in args.items():
                 stored_args[arg] = value
@@ -954,9 +958,11 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
         args.pop(self.prefix_qs_arg_key('export_to'), None)
         args.pop(self.prefix_qs_arg_key('dgreset'), None)
         args['datagrid'] = self.__class__.__name__
+        # serialize the args so we can enforce the correct MultiDict type on the other side
+        args_json = json.dumps(list(args.items(multi=True)))
         # save in store under grid default and session key
-        dgsessions[self.session_key] = args
-        dgsessions['_{0}'.format(self.__class__.__name__)] = args
+        dgsessions[self.session_key] = args_json
+        dgsessions['_{0}'.format(self.__class__.__name__)] = args_json
 
     def __repr__(self):
         return '<Grid "{0}">'.format(self.__class__.__name__)
