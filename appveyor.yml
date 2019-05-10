@@ -1,3 +1,7 @@
+# If a branch has a PR, don't build it separately.  Avoids queueing two appveyor runs for the same
+# commit.
+skip_branch_with_pr: true
+
 environment:
   global:
     # SDK v7.0 MSVC Express 2008's SetEnv.cmd script will fail if the
@@ -8,34 +12,23 @@ environment:
   matrix:
     - PYTHON: "C:\\Python35"
       PYTHON_ARCH: "32"
-      TOXENV: py35-{base,i18n}
-    
+      TOXENV: py35-base
+
     - PYTHON: "C:\\Python36"
       PYTHON_ARCH: "32"
-      TOXENV: py36-{base,i18n}
+      TOXENV: py36-base
 
     - PYTHON: "C:\\Python37"
       PYTHON_ARCH: "32"
       TOXENV: py37-{base,i18n}
 
-    - PYTHON: "C:\\Python35-x64"
-      PYTHON_ARCH: "64"
-      TOXENV: py35-{base,i18n}
-
-    - PYTHON: "C:\\Python36-x64"
-      PYTHON_ARCH: "64"
-      TOXENV: py36-{base,i18n}
-
-    - PYTHON: "C:\\Python37-x64"
-      PYTHON_ARCH: "64"
-      TOXENV: py37-{base,i18n}
 
 install:
   # Prepend newly installed Python to the PATH of this build (this cannot be
   # done from inside the powershell script as it would require to restart
   # the parent CMD process).
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
-  
+
   # Check that we have the expected version and architecture for Python
   - python --version
   - python -c "import struct; print(struct.calcsize('P') * 8)"
@@ -45,7 +38,7 @@ install:
   - pip install tox wheel codecov
 
 # Not a C# project, build stuff at the test step instead.
-build: false  
+build: false
 
 test_script:
   - tox
@@ -61,4 +54,3 @@ on_success:
 artifacts:
   # Archive the generated wheel package in the ci.appveyor.com build report.
   - path: dist\*
-
