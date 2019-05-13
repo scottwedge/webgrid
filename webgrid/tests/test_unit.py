@@ -467,6 +467,26 @@ class TestQueryStringArgs(object):
         pg.apply_qs_args()
         eq_(pg.column('firstname').filter.op, 'eq')
 
+    @inrequest('/foo')
+    def test_session_load_from_multidict(self):
+        # test backwards compatibility for multidict load
+        flask.session['dgsessions'] = {
+            '_PeopleGrid': MultiDict([('a', 'b'), ('a', 'c')])
+        }
+        pg = PeopleGrid()
+        args = pg.get_session_store(MultiDict())
+        eq_(args, MultiDict([('a', 'b'), ('a', 'c')]))
+
+    @inrequest('/foo')
+    def test_session_load_from_dict(self):
+        # test backwards compatibility for dict load
+        flask.session['dgsessions'] = {
+            '_PeopleGrid': {'a': 'b', 'c': 'd'}
+        }
+        pg = PeopleGrid()
+        args = pg.get_session_store(MultiDict())
+        eq_(args, MultiDict([('a', 'b'), ('c', 'd')]))
+
     @inrequest('/foo?op(firstname)=eq&v1(firstname)=bob&perpage=1&onpage=100')
     def test_qs_keyed_session_with_export(self):
         pg = PeopleGrid()
