@@ -1,6 +1,14 @@
 Changelog
 =========
 
+0.1.42 released 2019-05-13
+--------------------------
+
+- Ensure session store maintains proper data type through load/save (#35) (e7c5bdf_)
+
+.. _e7c5bdf: https://github.com/level12/webgrid/commit/e7c5bdf
+
+
 0.1.41 released 2019-03-25
 --------------------------
 
