@@ -1,10 +1,19 @@
 Changelog
 =========
 
+0.1.43 released 2019-05-20
+--------------------------
+
+- fix BC case for session load when the key loads no data (7e11993_)
+
+.. _7e11993: https://github.com/level12/webgrid/commit/7e11993
+
+
 0.1.42 released 2019-05-13
 --------------------------
 
 - Ensure session store maintains proper data type through load/save (#35) (e7c5bdf_)
+- Known issues: backwards-compatibility error when session store has no data
 
 .. _e7c5bdf: https://github.com/level12/webgrid/commit/e7c5bdf
 
