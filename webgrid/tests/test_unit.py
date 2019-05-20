@@ -468,6 +468,14 @@ class TestQueryStringArgs(object):
         eq_(pg.column('firstname').filter.op, 'eq')
 
     @inrequest('/foo')
+    def test_session_load_from_none(self):
+        # test backwards compatibility for multidict load
+        flask.session['dgsessions'] = {}
+        pg = PeopleGrid()
+        args = pg.get_session_store(MultiDict())
+        eq_(args, MultiDict([]))
+
+    @inrequest('/foo')
     def test_session_load_from_multidict(self):
         # test backwards compatibility for multidict load
         flask.session['dgsessions'] = {

@@ -936,7 +936,7 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
         if args.get(self.prefix_qs_arg_key('session_key'), None):
             if dgsessions.get(self.session_key, None):
                 session_key = self.session_key
-        stored_args_json = dgsessions.get(session_key, None)
+        stored_args_json = dgsessions.get(session_key, '[]')
         if isinstance(stored_args_json, MultiDict):
             stored_args_json = json.dumps(list(stored_args_json.items(multi=True)))
         elif isinstance(stored_args_json, dict):
