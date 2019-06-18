@@ -9,7 +9,7 @@ import warnings
 
 from blazeutils.containers import HTMLAttributes
 from blazeutils.datastructures import BlankObject, OrderedDict
-from blazeutils.helpers import ensure_tuple
+from blazeutils.helpers import tolist
 from blazeutils.numbers import decimalfmt
 from blazeutils.strings import case_cw2us, randchars
 from blazeutils.spreadsheets import xlsxwriter
@@ -128,7 +128,7 @@ class Column(object):
         self.grid = None
         self.expr = None
         if render_in is not _None:
-            self.render_in = ensure_tuple(render_in)
+            self.render_in = tuple(tolist(render_in))
         if xls_width:
             self.xls_width = xls_width
         if xls_num_format:

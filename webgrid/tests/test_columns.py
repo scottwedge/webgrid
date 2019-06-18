@@ -207,6 +207,7 @@ class TestColumn(object):
             YesNoColumn('C4', Person.inactive.label('yesno'), render_in='xlsx')
             DateColumn('Date', Person.due_date, render_in='xls')
             DateColumn('DateTime', Person.createdts, render_in='xls')
+            BoolColumn('C5', Person.inactive, render_in=['xls', 'html'])
         g = TG()
 
         eq_(g.columns[0].render_in, ('html', 'xls', 'xlsx', 'csv'))
@@ -216,6 +217,7 @@ class TestColumn(object):
         eq_(g.columns[4].render_in, ('xlsx',))
         eq_(g.columns[5].render_in, ('xls',))
         eq_(g.columns[6].render_in, ('xls',))
+        eq_(g.columns[7].render_in, ('xls', 'html'))
 
     def test_number_formatting(self):
         class TG(Grid):
