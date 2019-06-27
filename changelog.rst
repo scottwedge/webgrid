@@ -1,6 +1,14 @@
 Changelog
 =========
 
+0.1.44 released 2019-06-27
+--------------------------
+
+- Add column and filter classes to support enum types (#60) (9838669_)
+
+.. _9838669: https://github.com/level12/webgrid/commit/9838669
+
+
 0.1.43 released 2019-05-20
 --------------------------
 
