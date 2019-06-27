@@ -9,8 +9,8 @@ from .helpers import query_to_str
 
 from webgrid.filters import Operator
 from webgrid.filters import OptionsFilterBase, TextFilter, IntFilter, NumberFilter, DateFilter, \
-    DateTimeFilter, FilterBase, TimeFilter, YesNoFilter
-from webgrid_ta.model.entities import ArrowRecord, Person, db
+    DateTimeFilter, FilterBase, TimeFilter, YesNoFilter, OptionsEnumFilter
+from webgrid_ta.model.entities import ArrowRecord, Person, db, AccountType
 
 from .helpers import ModelBase
 from six.moves import map
@@ -1040,6 +1040,37 @@ class TestOptionsFilter(CheckFilterBase):
                                  default_value1=def_val).new_instance()
         filter.set(None, None)
         self.assert_filter_query(filter, "WHERE persons.sortorder IN (1, 2)")
+
+
+class TestEnumFilter(CheckFilterBase):
+    @raises(ValueError)
+    def test_create_without_enum_type(self):
+        OptionsEnumFilter(Person.account_type)
+
+    @raises(ValueError)
+    def test_default_modifier_throws_error_when_not_exists(self):
+        f = OptionsEnumFilter(Person.account_type, enum_type=AccountType)
+        f.default_modifier('doesntexist')
+
+    def test_returns_value_when_value_modifier_is_none(self):
+        f = OptionsEnumFilter(Person.account_type, enum_type=AccountType)
+        f.value_modifier = None
+        f.process('value')
+
+    def test_is(self):
+        filter = OptionsEnumFilter(Person.account_type, enum_type=AccountType).new_instance()
+        filter.set('is', ['admin'])
+        self.assert_filter_query(filter, "WHERE persons.account_type = 'admin'")
+
+    def test_is_multiple(self):
+        filter = OptionsEnumFilter(Person.account_type, enum_type=AccountType).new_instance()
+        filter.set('is', ['admin', 'manager'])
+        self.assert_filter_query(filter, "WHERE persons.account_type IN ('admin', 'manager')")
+
+    def test_literal_value(self):
+        filter = OptionsEnumFilter(Person.account_type, enum_type=AccountType).new_instance()
+        filter.set('is', [AccountType.admin])
+        self.assert_filter_query(filter, "WHERE persons.account_type = 'admin'")
 
 
 class TestIntrospect(CheckFilterBase):
