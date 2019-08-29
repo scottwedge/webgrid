@@ -25,6 +25,7 @@ $(document).ready(function() {
         $(this).siblings('input').val($(this).val());
     });
     $('.datagrid .export-link').click(verify_export);
+    $('.datagrid form.header').submit(datagrid_cleanup_before_form_submission);
     _datagrid_is_loaded = true;
 });
 
@@ -40,10 +41,9 @@ $(document).ready(function() {
 
 */
 function datagrid_toggle_mselect(){
-    jq_img = $(this);
-    jq_select = jq_img.siblings('select');
-    select_name = jq_select.attr('name');
-    multiple_attr = jq_select.attr('multiple');
+    var jq_img = $(this);
+    var jq_select = jq_img.siblings('select');
+    var multiple_attr = jq_select.attr('multiple');
     if (typeof multiple_attr !== 'undefined' && multiple_attr !== false) {
         jq_select.removeAttr('multiple');
         jq_select.siblings('.ms-parent').hide();
@@ -95,8 +95,8 @@ function datagrid_activate_mselect_ui(jq_select) {
 
 */
 function datagrid_add_filter() {
-    jq_afs = $('.datagrid .filters .add-filter select');
-    filter_key = jq_afs.val();
+    var jq_afs = $('.datagrid .filters .add-filter select');
+    var filter_key = jq_afs.val();
     if( filter_key != '') {
         datagrid_activate_filter(filter_key);
         jq_afs.val('');
@@ -114,12 +114,12 @@ function datagrid_add_filter() {
 */
 function datagrid_prep_filters(){
     $('.datagrid .filters tr').each(function(){
-        jq_tr = $(this);
+        var jq_tr = $(this);
         // Added _filter to address CSS collision with Bootstrap
         // Ref: https://github.com/level12/webgrid/issues/28
-        filter_key = jq_tr.attr('class').replace(new RegExp('_filter$'),'');
+        var filter_key = jq_tr.attr('class').replace(new RegExp('_filter$'),'');
         if( filter_key != 'add-filter') {
-            op_select = jq_tr.find('.operator select');
+            var op_select = jq_tr.find('.operator select');
             if( op_select.val() != '' ) {
                 // filter should be active, so activate it
                 datagrid_activate_filter(filter_key);
@@ -142,13 +142,13 @@ function datagrid_prep_filters(){
 function datagrid_activate_filter(filter_key) {
     // Added _filter to address CSS collision with Bootstrap
     // Ref: https://github.com/level12/webgrid/issues/28
-    jq_tr = $('.datagrid .filters tr.' + filter_key+ "_filter");
+    var jq_tr = $('.datagrid .filters tr.' + filter_key+ "_filter");
     // show the filter's row of controls
     jq_tr.show();
 
     // make sure the option in the "Add Filter" select box for this
     // filter is disabled
-    jq_option = $('.datagrid .filters .add-filter option[value="'+filter_key+'"]');
+    var jq_option = $('.datagrid .filters .add-filter option[value="'+filter_key+'"]');
     jq_option.attr('disabled', 'disabled');
 }
 
@@ -161,11 +161,8 @@ function datagrid_activate_filter(filter_key) {
 
 */
 function datagrid_on_operator_change() {
-    jq_op_select = $(this);
-    jq_tr = jq_op_select.closest('tr');
-    // Added _filter to address CSS collision with Bootstrap
-    // Ref: https://github.com/level12/webgrid/issues/28
-    filter_key = jq_tr.attr('class').replace(new RegExp('_filter$'), '');
+    var jq_op_select = $(this);
+    var jq_tr = jq_op_select.closest('tr');
     datagrid_toggle_filter_inputs(jq_tr);
 }
 
@@ -177,10 +174,13 @@ function datagrid_on_operator_change() {
 
 */
 function datagrid_toggle_filter_inputs(jq_filter_tr) {
-    op_key = jq_filter_tr.find('.operator select').val();
-    fields1 =  jq_filter_tr.find('.inputs1').children();
-    fields2 = jq_filter_tr.find('.inputs2').children();
-    v1name = 'v1('+filter_key+')';
+    // Added _filter to address CSS collision with Bootstrap
+    // Ref: https://github.com/level12/webgrid/issues/28
+    var filter_key = jq_filter_tr.attr('class').replace(new RegExp('_filter$'), '');
+    var op_key = jq_filter_tr.find('.operator select').val();
+    var fields1 =  jq_filter_tr.find('.inputs1').children();
+    var fields2 = jq_filter_tr.find('.inputs2').children();
+    var v1name = 'v1('+filter_key+')';
     
     if( op_key == null ) {
         fields1.show();
@@ -194,8 +194,8 @@ function datagrid_toggle_filter_inputs(jq_filter_tr) {
         fields2.hide();
         fields2.val('');
     } else {
-        op_data = datagrid_data[filter_key][op_key];
-        field_type = op_data.field_type;
+        var op_data = datagrid_data[filter_key][op_key];
+        var field_type = op_data.field_type;
         if( field_type == null ) {
             fields1.hide();
             fields1.val('');
@@ -258,14 +258,14 @@ function datagrid_filter_inactive(filter_key){
 
 */
 function datagrid_toggle_sort_selects() {
-    jq_dds = $('.datagrid .header .sorting dd');
+    var jq_dds = $('.datagrid .header .sorting dd');
     if (jq_dds.length == 0) return;
-    dd1 = jq_dds.eq(0)
-    dd2 = jq_dds.eq(1)
-    dd3 = jq_dds.eq(2)
-    sb1 = dd1.find('select');
-    sb2 = dd2.find('select');
-    sb3 = dd3.find('select');
+    var dd1 = jq_dds.eq(0)
+    var dd2 = jq_dds.eq(1)
+    var dd3 = jq_dds.eq(2)
+    var sb1 = dd1.find('select');
+    var sb2 = dd2.find('select');
+    var sb3 = dd3.find('select');
 
     if( sb1.val() == '' ) {
         dd2.hide();
@@ -314,5 +314,22 @@ function verify_export(event) {
         event.preventDefault();
         return false;
     }
+    return true;
+}
+
+/*
+ datagrid_cleanup_before_form_submission()
+
+ Called before form submission to remove filter form rows that are unused. This reduces the
+ size of the URL by not including query parameters for filters that are empty.
+ */
+function datagrid_cleanup_before_form_submission() {
+    $('.datagrid .filters tr').each(function(idx, row) {
+        var $row = $(row);
+        var $operator = $row.find('.operator select');
+        if ($operator.length && $operator.val() === '') {
+            $row.remove();
+        }
+    });
     return true;
 }
