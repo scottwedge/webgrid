@@ -1,6 +1,16 @@
 Changelog
 =========
 
+0.1.45 released 2019-09-04
+--------------------------
+
+- Merge pull request #59 from level12/20-allow-list-render-in (e2a5e46_)
+- Merge pull request #64 from level12/40-cleanup-url-filters (a269e1c_)
+
+.. _e2a5e46: https://github.com/level12/webgrid/commit/e2a5e46
+.. _a269e1c: https://github.com/level12/webgrid/commit/a269e1c
+
+
 0.1.44 released 2019-06-27
 --------------------------
 
