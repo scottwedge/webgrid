@@ -6,7 +6,7 @@ from os import path
 
 import flask
 from mock import mock
-from nose.tools import eq_
+from nose.tools import assert_regex, eq_
 import sqlalchemy.sql as sasql
 from werkzeug.datastructures import MultiDict
 
@@ -70,10 +70,22 @@ class TestGrid(object):
         query = g.build_query()
         assert_not_in_query(query, 'WHERE')
         assert_not_in_query(query, 'ORDER BY')
-        rs = g.records
-        assert len(rs) > 0, rs
+        with mock.patch('logging.Logger.debug') as m_debug:
+            rs = g.records
+            assert len(rs) > 0, rs
+            expected = [
+                r'^<Grid "CTG">$',
+                r'^No filters$',
+                r'^No sorts$',
+                r'^Page 1; 50 per page$',
+                r'^Data query ran in \d+\.?\d* seconds$',
+            ]
+            eq_(len(expected), len(m_debug.call_args_list))
+            for idx, call in enumerate(m_debug.call_args_list):
+                assert_regex(call[0][0], expected[idx])
 
-    def test_subtotal_sum_by_default(self):
+    @mock.patch('logging.Logger.debug')
+    def test_subtotal_sum_by_default(self, m_debug):
         class CTG(Grid):
             Column('Sum Total', Person.numericcol.label('something'), has_subtotal=True)
         Person.testing_create(numericcol=5)
@@ -81,6 +93,14 @@ class TestGrid(object):
         g = CTG()
         totals = g.grand_totals
         assert totals.something == 15
+        expected = [
+            r'^<Grid "CTG">$',
+            r'^No filters$',
+            r'^Totals query ran in \d+\.?\d* seconds$',
+        ]
+        eq_(len(expected), len(m_debug.call_args_list))
+        for idx, call in enumerate(m_debug.call_args_list):
+            assert_regex(call[0][0], expected[idx])
 
     def test_subtotal_sum(self):
         class CTG(Grid):
@@ -143,10 +163,32 @@ class TestGrid(object):
     def test_filter_class(self):
         class CTG(Grid):
             Column('First Name', Person.firstname, TextFilter)
+            Column('Last Name', Person.lastname, TextFilter)
 
         g = CTG()
         g.set_filter('firstname', 'eq', 'foo')
         assert_in_query(g, "WHERE upper(persons.firstname) = upper('foo')")
+
+        with mock.patch('logging.Logger.debug') as m_debug:
+            g.records
+            g.set_filter('lastname', 'eq', 'bar')
+            g.records
+            expected = [
+                r'^<Grid "CTG">$',
+                r'^firstname: class=TextFilter, op=eq, value1=foo, value2=None$',
+                r'^No sorts$',
+                r'^Page 1; 50 per page$',
+                r'^Data query ran in \d+\.?\d* seconds$',
+                r'^<Grid "CTG">$',
+                r'^firstname: class=TextFilter, op=eq, value1=foo, value2=None;'
+                r'lastname: class=TextFilter, op=eq, value1=bar, value2=None$',
+                r'^No sorts$',
+                r'^Page 1; 50 per page$',
+                r'^Data query ran in \d+\.?\d* seconds$',
+            ]
+            eq_(len(expected), len(m_debug.call_args_list))
+            for idx, call in enumerate(m_debug.call_args_list):
+                assert_regex(call[0][0], expected[idx])
 
     def test_filter_instance(self):
         class CTG(Grid):
@@ -163,6 +205,18 @@ class TestGrid(object):
         g = CTG()
         g.set_sort('-firstname')
         assert_in_query(g, 'ORDER BY persons.firstname')
+        with mock.patch('logging.Logger.debug') as m_debug:
+            g.records
+            expected = [
+                r'^<Grid "CTG">$',
+                r'^No filters$',
+                r'^firstname$',
+                r'^Page 1; 50 per page$',
+                r'^Data query ran in \d+\.?\d* seconds$',
+            ]
+            eq_(len(expected), len(m_debug.call_args_list))
+            for idx, call in enumerate(m_debug.call_args_list):
+                assert_regex(call[0][0], expected[idx])
 
     def test_redundant_order_by(self):
         class CTG(Grid):
@@ -172,6 +226,18 @@ class TestGrid(object):
         g = CTG()
         g.set_sort('firstname', 'lastname', '-firstname')
         assert_in_query(g, 'ORDER BY persons.firstname, persons.last_name\n')
+        with mock.patch('logging.Logger.debug') as m_debug:
+            g.records
+            expected = [
+                r'^<Grid "CTG">$',
+                r'^No filters$',
+                r'^firstname,lastname$',
+                r'^Page 1; 50 per page$',
+                r'^Data query ran in \d+\.?\d* seconds$',
+            ]
+            eq_(len(expected), len(m_debug.call_args_list))
+            for idx, call in enumerate(m_debug.call_args_list):
+                assert_regex(call[0][0], expected[idx])
 
     def test_paging(self):
         g = self.TG()
@@ -201,9 +267,18 @@ class TestGrid(object):
         g = self.TG(per_page=None)
         eq_(g.page_count, 1)
 
-    def test_record_count(self):
+    @mock.patch('logging.Logger.debug')
+    def test_record_count(self, m_debug):
         g = self.TG()
         eq_(g.record_count, 5)
+        expected = [
+            r'^<Grid "TG">$',
+            r'^No filters$',
+            r'^Count query ran in \d+\.?\d* seconds$',
+        ]
+        eq_(len(expected), len(m_debug.call_args_list))
+        for idx, call in enumerate(m_debug.call_args_list):
+            assert_regex(call[0][0], expected[idx])
 
     def test_column_iterators_for_rendering(self):
         class TG(Grid):

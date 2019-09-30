@@ -2,9 +2,11 @@ from __future__ import absolute_import
 import datetime as dt
 import inspect
 import json
+import logging
 import re
 import sys
 import six
+import time
 import warnings
 
 from blazeutils.containers import HTMLAttributes
@@ -32,6 +34,9 @@ try:
     import xlwt
 except ImportError:
     xlwt = None
+
+log = logging.getLogger(__name__)
+
 
 # subtotals functions
 sum_ = sasql.functions.sum
@@ -668,14 +673,20 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
     def record_count(self):
         if self._record_count is None:
             query = self.build_query(for_count=True)
+            t0 = time.perf_counter()
             self._record_count = query.count()
+            t1 = time.perf_counter()
+            log.debug('Count query ran in {} seconds'.format(t1 - t0))
         return self._record_count
 
     @property
     def records(self):
         if self._records is None:
             query = self.build_query()
+            t0 = time.perf_counter()
             self._records = query.all()
+            t1 = time.perf_counter()
+            log.debug('Data query ran in {} seconds'.format(t1 - t0))
         return self._records
 
     def _totals_col_results(self, page_totals_only):
@@ -704,7 +715,12 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
                 labeled_aggregate_col = sa_aggregate_func.label(colname)
             cols.append(labeled_aggregate_col)
 
-        return self.manager.sa_query(*cols).select_entity_from(SUB).first()
+        t0 = time.perf_counter()
+        result = self.manager.sa_query(*cols).select_entity_from(SUB).first()
+        t1 = time.perf_counter()
+        log.debug('Totals query ran in {} seconds'.format(t1 - t0))
+
+        return result
 
     @property
     def page_totals(self):
@@ -725,12 +741,16 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
         return max(0, self.record_count - 1) // self.per_page + 1
 
     def build_query(self, for_count=False):
+        log.debug(str(self))
+
         has_filters = self.has_filters
         query = self.query_base(self.has_sort, has_filters)
         query = self.query_prep(query, self.has_sort or for_count, has_filters)
 
         if has_filters:
             query = self.query_filters(query)
+        else:
+            log.debug('No filters')
 
         if for_count:
             return query
@@ -753,19 +773,27 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
         return query
 
     def query_filters(self, query):
+        filter_display = []
         for col in six.itervalues(self.filtered_cols):
             if col.filter.is_active:
+                filter_display.append('{}: {}'.format(col.key, str(col.filter)))
                 query = col.filter.apply(query)
+        if filter_display:
+            log.debug(';'.join(filter_display))
+        else:
+            log.debug('No filters')
         return query
 
     def query_paging(self, query):
         if self.on_page and self.per_page:
             offset = (self.on_page - 1) * self.per_page
             query = query.offset(offset).limit(self.per_page)
+            log.debug('Page {}; {} per page'.format(self.on_page, self.per_page))
         return query
 
     def query_sort(self, query):
         redundant = []
+        sort_display = []
         for key, flag_desc in self.order_by:
             if key in self.key_column_map:
                 col = self.key_column_map[key]
@@ -773,8 +801,14 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
                 if col.key in redundant:
                     continue
                 else:
+                    sort_display.append(col.key)
                     redundant.append(col.key)
                 query = col.apply_sort(query, flag_desc)
+        if sort_display:
+            log.debug(','.join(sort_display))
+        else:
+            log.debug('No sorts')
+
         return query
 
     def apply_qs_args(self, add_user_warnings=True):
