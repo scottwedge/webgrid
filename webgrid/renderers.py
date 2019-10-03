@@ -15,7 +15,8 @@ from blazeutils.spreadsheets import Writer, WriterX, xlsxwriter
 from blazeutils.strings import reindent, randnumerics
 import jinja2 as jinja
 from webhelpers2.html import HTML as _HTML, literal, tags
-from werkzeug import Href, MultiDict
+from werkzeug.datastructures import MultiDict
+from werkzeug.urls import Href
 
 from .extensions import (
     gettext as _,
