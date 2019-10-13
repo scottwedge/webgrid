@@ -1,33 +1,46 @@
 from __future__ import absolute_import
 
+import csv
 import datetime as dt
 import json
 import warnings
 from io import BytesIO
-import six
 
 import arrow
+import six
+import xlrd
+import xlsxwriter
 from nose.tools import eq_, raises
 from six.moves import range
-import xlrd
-import csv
-import xlsxwriter
 
 from webgrid import (
+    BoolColumn,
     Column,
     LinkColumnBase,
+    NumericColumn,
     YesNoColumn,
-    BoolColumn,
-    row_styler,
     col_filter,
     col_styler,
-    NumericColumn,
+    row_styler,
 )
 from webgrid.filters import TextFilter
-from webgrid.renderers import RenderLimitExceeded, HTML, XLS, XLSX, CSV
-from webgrid_ta.model.entities import ArrowRecord, Person, Status, Email, db, AccountType
+from webgrid.renderers import CSV, HTML, XLS, XLSX, RenderLimitExceeded
+from webgrid_ta.grids import (
+    ArrowCSVGrid,
+    ArrowGrid,
+    Grid,
+    PeopleGrid as PG,
+    StopwatchGrid,
+)
+from webgrid_ta.model.entities import (
+    AccountType,
+    ArrowRecord,
+    Email,
+    Person,
+    Status,
+    db,
+)
 
-from webgrid_ta.grids import ArrowGrid, Grid, PeopleGrid as PG, ArrowCSVGrid
 from .helpers import eq_html, inrequest, render_in_grid
 
 
@@ -180,6 +193,12 @@ class TestHtmlRenderer(object):
     def test_people_html(self):
         pg = render_in_grid(PeopleGrid, 'html')()
         eq_html(pg.html.table(), 'people_table.html')
+
+    @inrequest('/')
+    def test_stopwatch_html(self):
+        # Test Stopwatch grid with column groups.
+        grid = StopwatchGrid()
+        eq_html(grid.html.table(), 'stopwatch_table.html')
 
     @inrequest('/')
     def test_default_jinja_env(self):

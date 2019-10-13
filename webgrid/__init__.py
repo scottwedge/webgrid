@@ -153,7 +153,7 @@ class Column(object):
         grid_cls_cols = grid_locals.setdefault('__cls_cols__', [])
         grid_cls_cols.append(self)
 
-    def __init__(self, label, key=None, filter=None, can_sort=True,
+    def __init__(self, label, key=None, filter=None, can_sort=True, group=None,
                  xls_width=None, xls_style=None, xls_num_format=None,
                  render_in=_None, has_subtotal=False, visible=True, **kwargs):
         self.label = label
@@ -176,6 +176,16 @@ class Column(object):
             self.xls_num_format = xls_num_format
         if xls_style:
             self.xls_style = xls_style
+
+        try:
+            is_group_cls = issubclass(type(group), ColumnGroup) or issubclass(group, ColumnGroup)
+        except TypeError:
+            is_group_cls = False
+
+        if group is not None and not is_group_cls:
+            raise ValueError(_('expected group to be a subclass of ColumnGroup'))
+
+        self.group = group
 
         # if the key isn't a base string, assume its a column-like object that
         # works with a SA Query instance
@@ -202,7 +212,7 @@ class Column(object):
 
     def new_instance(self, grid):
         cls = self.__class__
-        column = cls(self.label, self.key, None, self.can_sort, _dont_assign=True)
+        column = cls(self.label, self.key, None, self.can_sort, self.group, _dont_assign=True)
         column.grid = grid
         column.expr = self.expr
 
@@ -329,7 +339,7 @@ class Column(object):
 class LinkColumnBase(Column):
     link_attrs = {}
 
-    def __init__(self, label, key=None, filter=None, can_sort=True,
+    def __init__(self, label, key=None, filter=None, can_sort=True, group=None,
                  link_label=None, xls_width=None, xls_style=None, xls_num_format=None,
                  render_in=_None, has_subtotal=False, visible=True, **kwargs):
         super().__init__(label, key, filter, can_sort, xls_width,
@@ -351,7 +361,7 @@ class LinkColumnBase(Column):
 
 class BoolColumn(Column):
 
-    def __init__(self, label, key_or_filter=None, key=None, can_sort=True,
+    def __init__(self, label, key_or_filter=None, key=None, can_sort=True, group=None,
                  reverse=False, true_label=_('True'), false_label=_('False'),
                  xls_width=None, xls_style=None, xls_num_format=None,
                  render_in=_None, has_subtotal=False, visible=True, **kwargs):
@@ -372,7 +382,7 @@ class BoolColumn(Column):
 
 class YesNoColumn(BoolColumn):
 
-    def __init__(self, label, key_or_filter=None, key=None, can_sort=True,
+    def __init__(self, label, key_or_filter=None, key=None, can_sort=True, group=None,
                  reverse=False, xls_width=None, xls_style=None, xls_num_format=None,
                  render_in=_None, has_subtotal=False, visible=True, **kwargs):
         super().__init__(label, key_or_filter, key, can_sort, reverse,
@@ -382,7 +392,7 @@ class YesNoColumn(BoolColumn):
 
 class DateColumnBase(Column):
 
-    def __init__(self, label, key_or_filter=None, key=None, can_sort=True,
+    def __init__(self, label, key_or_filter=None, key=None, can_sort=True, group=None,
                  html_format=None, xls_width=None, xls_style=None, xls_num_format=None,
                  render_in=_None, has_subtotal=False, visible=True, **kwargs):
         super().__init__(label, key_or_filter, key, can_sort, xls_width,
@@ -465,7 +475,7 @@ class NumericColumn(Column):
                          ';_($* "-"??_);_(@_)'
     xls_fmt_percent = '0{dec_places}%;{neg_prefix}-0{dec_places}%'
 
-    def __init__(self, label, key_or_filter=None, key=None, can_sort=True,
+    def __init__(self, label, key_or_filter=None, key=None, can_sort=True, group=None,
                  reverse=False, xls_width=None, xls_style=None, xls_num_format=None,
                  render_in=_None, format_as='general', places=2, curr='',
                  sep=',', dp='.', pos='', neg='-', trailneg='',
@@ -548,6 +558,15 @@ class EnumColumn(Column):
         if value is None:
             return None
         return value.value
+
+
+class ColumnGroup(object):
+    label = None
+    class_ = None
+
+    def __init__(self, label, class_=None):
+        self.label = label
+        self.class_ = class_
 
 
 class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):

@@ -1,9 +1,9 @@
 from __future__ import absolute_import
-from webgrid import BaseGrid as BaseGrid, Column, LinkColumnBase, \
+from webgrid import BaseGrid as BaseGrid, Column, ColumnGroup, LinkColumnBase, \
     YesNoColumn, DateTimeColumn, DateColumn, NumericColumn, EnumColumn
 from webgrid.filters import TextFilter, OptionsFilterBase, Operator, \
     DateTimeFilter, ops, OptionsEnumFilter
-from .model.entities import ArrowRecord, Person, Status, AccountType
+from .model.entities import ArrowRecord, Person, Status, AccountType, Stopwatch
 
 from .app import webgrid
 from webgrid.renderers import CSV
@@ -101,5 +101,30 @@ class ArrowCSVGrid(Grid):
         # default sort
         if not has_sort:
             query = query.order_by(ArrowRecord.id)
+
+        return query
+
+
+class StopwatchGrid(Grid):
+    session_on = True
+
+    class LapGroup1(ColumnGroup):
+        label = 'Lap 1'
+        class_ = 'lap-1'
+
+    lap_group_2 = ColumnGroup('Lap 2', class_='lap-2')
+
+    Column('ID', Stopwatch.id)
+    Column('Label', Stopwatch.label, TextFilter)
+    DateTimeColumn('Start Time', Stopwatch.start_time_lap1, group=LapGroup1)
+    DateTimeColumn('Stop Time', Stopwatch.stop_time_lap1, group=LapGroup1)
+    Column('Category', Stopwatch.category, TextFilter)
+    DateTimeColumn('Start Time', Stopwatch.start_time_lap2, group=lap_group_2)
+    DateTimeColumn('Stop Time', Stopwatch.stop_time_lap2, group=lap_group_2)
+
+    def query_prep(self, query, has_sort, has_filters):
+        # default sort
+        if not has_sort:
+            query = query.order_by(Stopwatch.id)
 
         return query

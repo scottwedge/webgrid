@@ -26,3 +26,10 @@ def index():
     if pg.export_to:
         pg.export_as_response()
     return render_template('index.html', people_grid=pg)
+
+
+@main.route('/groups')
+def grid_with_groups():
+    from webgrid_ta.grids import StopwatchGrid
+    grid = StopwatchGrid()
+    return render_template('groups.html', grid=grid)

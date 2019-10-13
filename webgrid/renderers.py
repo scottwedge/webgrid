@@ -123,6 +123,13 @@ class HTML(Renderer):
             raise RenderLimitExceeded('Unable to render HTML table')
         return self.load_content('grid.html')
 
+    def has_groups(self):
+        for col in self.grid.iter_columns('html'):
+            if col.group:
+                return True
+
+        return False
+
     def grid_otag(self):
         return _HTML.div(_closed=False, **self.grid.hah)
 
@@ -451,6 +458,46 @@ class HTML(Renderer):
         th_str = '\n'.join(headings)
         th_str = reindent(th_str, 12)
         return literal(th_str)
+
+    def table_group_headings(self):
+        group_headings = []
+        buffer_colspan = 0
+        group_colspan = 0
+        current_group = None
+        for col in self.grid.iter_columns('html'):
+            if col.group:
+                if buffer_colspan:
+                    group_headings.append(self.buffer_th(buffer_colspan))
+                    buffer_colspan = 0
+
+                if current_group and current_group != col.group:
+                    group_headings.append(self.group_th(current_group, group_colspan))
+                    group_colspan = 1
+                    current_group = None
+                else:
+                    current_group = col.group
+                    group_colspan += 1
+            else:
+                buffer_colspan += 1
+                if current_group:
+                    group_headings.append(self.group_th(current_group, group_colspan))
+                    group_colspan = 0
+                    current_group = None
+
+        if current_group:
+            group_headings.append(self.group_th(current_group, group_colspan))
+
+        th_str = '\n'.join(group_headings)
+        th_str = reindent(th_str, 12)
+        return literal(th_str)
+
+    def buffer_th(self, colspan, **kwargs):
+        kwargs.setdefault('class_', 'buffer')
+        return _HTML.th('', **HTMLAttributes(colspan=colspan, **kwargs))
+
+    def group_th(self, group, colspan, **kwargs):
+        kwargs.setdefault('class_', group.class_)
+        return _HTML.th(group.label, **HTMLAttributes(colspan=colspan, **kwargs))
 
     def table_th(self, col):
         label = col.label
