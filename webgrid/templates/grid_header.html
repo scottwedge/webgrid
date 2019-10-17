@@ -5,9 +5,15 @@
 {%- endif -%}
 
 {{ renderer.header_form_otag(class='header')|safe }}
-    {{ renderer.header_filtering()|wg_safe }}
-    {{ renderer.header_sorting()|wg_safe }}
-    {{ renderer.header_paging()|wg_safe }}
+    <div>
+        {{ renderer.header_filtering()|wg_safe }}
+    </div>
+
+    <div>
+        {{ renderer.header_sorting()|wg_safe }}
+        {{ renderer.header_paging()|wg_safe }}
+    </div>
+
     <div class="links">
         <input type="submit" value={{ _('Apply') }} />
         <a href="{{renderer.reset_url()}}">{{ _('reset') }}</a>
