@@ -205,6 +205,11 @@ class FilterBase(object):
         new_filter.dialect = kwargs.get('dialect')
         return new_filter
 
+    def __repr__(self):
+        return 'class={}, op={}, value1={}, value2={}'.format(
+            self.__class__.__name__, self.op, self.value1, self.value2
+        )
+
 
 class _NoValue(object):
     pass
