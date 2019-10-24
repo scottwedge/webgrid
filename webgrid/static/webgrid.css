@@ -68,12 +68,6 @@
     padding: 1px;
 }
 
-.datagrid table.filters img.toggle-button {
-    vertical-align: bottom;
-    margin-left: 5px;
-    cursor: pointer;
-}
-
 .datagrid tr.add-filter th {
     font-weight: normal;
     font-style: italic;

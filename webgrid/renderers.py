@@ -183,18 +183,10 @@ class HTML(object):
         if 'select' in filter.input_types:
             ident = '{0}_select1'.format(col.key)
             current_selected = tolist(filter.value1) or []
-            multiple = None
-            if len(current_selected) > 1:
-                multiple = 'multiple'
+            multiple = 'multiple' if filter.receives_list else ''
             inputs += tags.select(field_name, current_selected,
                                   self.filtering_filter_options(filter), multiple=multiple)
-            inputs += self.filtering_toggle_image()
         return inputs
-
-    def filtering_toggle_image(self):
-        img_url = self.manager.static_url('bullet_toggle_plus.png')
-        img_tag = tags.image(img_url, 'multi-select toggle', 16, 16, class_='toggle-button')
-        return img_tag
 
     def filtering_filter_options(self, filter):
         # webhelpers2 doesn't allow options to be lists or tuples anymore. If this is the case,
