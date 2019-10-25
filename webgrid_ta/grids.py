@@ -1,8 +1,9 @@
 from __future__ import absolute_import
 from webgrid import BaseGrid as BaseGrid, Column, LinkColumnBase, \
-    YesNoColumn, DateTimeColumn, DateColumn, NumericColumn, EnumColumn
+    YesNoColumn, DateTimeColumn, DateColumn, NumericColumn, EnumColumn, \
+    TimeColumn
 from webgrid.filters import TextFilter, OptionsFilterBase, Operator, \
-    DateTimeFilter, ops, OptionsEnumFilter
+    DateFilter, DateTimeFilter, ops, OptionsEnumFilter, TimeFilter
 from .model.entities import ArrowRecord, Person, Status, AccountType
 
 from .app import webgrid
@@ -103,3 +104,11 @@ class ArrowCSVGrid(Grid):
             query = query.order_by(ArrowRecord.id)
 
         return query
+
+
+class TemporalGrid(Grid):
+    session_on = True
+
+    DateTimeColumn(_('Created'), Person.createdts, DateTimeFilter)
+    DateColumn(_('Due Date'), Person.due_date, DateFilter)
+    TimeColumn(_('Start Time'), Person.start_time, TimeFilter)

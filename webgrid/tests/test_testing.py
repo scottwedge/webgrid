@@ -1,9 +1,12 @@
+import datetime as dt
 from io import BytesIO
+from nose.plugins.skip import SkipTest
 
 import xlwt
 from nose.tools import assert_raises
 
 from webgrid import testing
+from webgrid_ta.grids import TemporalGrid
 
 
 class TestAssertListEqual:
@@ -136,3 +139,35 @@ class TestAssertRenderedXlsMatches:
         self.assert_matches([], [
             ['', 1, 1.23, 'hello']
         ])
+
+
+# postgres-only test
+@SkipTest
+class TestPGCompilerMixin(testing.PGCompilerMixin, testing.GridBase):
+    grid_cls = TemporalGrid
+
+    @property
+    def filters(self):
+        return (
+            ('createdts', 'eq', dt.datetime(2018, 1, 1, 5, 30),
+             "WHERE persons.createdts = '2018-01-01 05:30:00.000000'"),
+            ('due_date', 'eq', dt.date(2018, 1, 1), "WHERE persons.due_date = '2018-01-01'"),
+            ('start_time', 'eq', dt.time(1, 30).strftime('%I:%M %p'),
+             "WHERE persons.start_time = CAST('01:30' AS TIME WITHOUT TIME ZONE)"),
+        )
+
+
+# sql server-only test
+@SkipTest
+class TestMSSQLCompilerMixin(testing.MSSQLCompilerMixin, testing.GridBase):
+    grid_cls = TemporalGrid
+
+    @property
+    def filters(self):
+        return (
+            ('createdts', 'eq', dt.datetime(2018, 1, 1, 5, 30),
+             "WHERE persons.createdts = '2018-01-01 05:30:00.000000'"),
+            ('due_date', 'eq', '2018-01-01', "WHERE persons.due_date = '2018-01-01'"),
+            ('start_time', 'eq', dt.time(1, 30).strftime('%I:%M %p'),
+             "WHERE persons.start_time = CAST('01:30' AS TIME)"),
+        )
