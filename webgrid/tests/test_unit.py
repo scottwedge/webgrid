@@ -289,6 +289,8 @@ class TestGrid(object):
             YesNoColumn('C4', Person.inactive.label('yesno'), render_in='html')
             Column('C5', Person.firstname.label('fn3'), render_in='xlsx')
             Column('C6', Person.firstname.label('fn4'), render_in=('csv'))
+            Column('C7', Person.firstname.label('fn5'),
+                   render_in=('xls', 'xlsx', 'html', 'csv'), visible=False)
 
         tg = TG()
 
