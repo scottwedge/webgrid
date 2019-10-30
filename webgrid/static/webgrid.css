@@ -284,10 +284,23 @@ div.ms-parent input[type="checkbox"] {
 
 .ms-choice > div {
     height: 19px;
+    background: url('multiple-select.png') left top no-repeat !important;
 }
 
 .ms-drop {
     -webkit-border-radius: 0;
     -moz-border-radius: 0;
     border-radius: 0;
+}
+
+.ms-drop input[type="checkbox"] {
+    top: 0;
+}
+
+.ms-choice > span {
+    padding-top: 1px;
+}
+
+.ms-drop label {
+    font-weight: normal;
 }
