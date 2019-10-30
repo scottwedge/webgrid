@@ -28,29 +28,7 @@ class ModelBase(object):
         db_sess_scope.pop()
 
 
-def query_to_str(statement, bind=None):
-    """
-        returns a string of a sqlalchemy.orm.Query with parameters bound
-
-        WARNING: this is dangerous and ONLY for testing, executing the results
-        of this function can result in an SQL Injection attack.
-    """
-    if isinstance(statement, sqlalchemy.orm.Query):
-        if bind is None:
-            bind = statement.session.get_bind(
-                statement._mapper_zero()
-            )
-        statement = statement.statement
-    elif bind is None:
-        bind = statement.bind
-
-    if bind is None:
-        raise Exception('bind param (engine or connection object) required when using with an'
-                        ' unbound statement')
-
-    dialect = bind.dialect
-    compiler = statement._compiler(dialect)
-
+def compiler_instance_factory(compiler, dialect, statement):
     class LiteralCompiler(compiler.__class__):
         def render_literal_value(self, value, type_):
             import datetime
@@ -84,8 +62,34 @@ def query_to_str(statement, bind=None):
                 literal_binds=literal_binds, **kwargs
             )
 
-    compiler = LiteralCompiler(dialect, statement)
-    return 'TESTING ONLY BIND: ' + compiler.process(statement)
+    return LiteralCompiler(dialect, statement)
+
+
+def query_to_str(statement, bind=None):
+    """
+        returns a string of a sqlalchemy.orm.Query with parameters bound
+
+        WARNING: this is dangerous and ONLY for testing, executing the results
+        of this function can result in an SQL Injection attack.
+    """
+    if isinstance(statement, sqlalchemy.orm.Query):
+        if bind is None:
+            bind = statement.session.get_bind(
+                statement._mapper_zero()
+            )
+        statement = statement.statement
+    elif bind is None:
+        bind = statement.bind
+
+    if bind is None:
+        raise Exception('bind param (engine or connection object) required when using with an'
+                        ' unbound statement')
+
+    dialect = bind.dialect
+    compiler = statement._compiler(dialect)
+
+    literal_compiler = compiler_instance_factory(compiler, dialect, statement)
+    return 'TESTING ONLY BIND: ' + literal_compiler.process(statement)
 
 
 def eq_html(html, filename):

@@ -44,6 +44,17 @@ sum_ = sasql.functions.sum
 avg_ = sasql.func.avg
 
 
+def subtotal_function_map(v):
+    # subtotals default to the simplest expression (sum). avg is also an option, or you
+    #   can assign a string or expression (string using column labels would probably
+    #   work best at this stage)
+    if v is True or v == 'sum':
+        return sum_
+    elif v == 'avg':
+        return avg_
+    return v
+
+
 class _None(object):
     """
         A sentinal object to indicate no value
@@ -606,16 +617,10 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
         self.columns = []
         self.key_column_map = {}
 
-        def subtotal_function_map(v):
-            # subtotals default to the simplest expression (sum). avg is also an option, or you
-            #   can assign a string or expression (string using column labels would probably
-            #   work best at this stage)
-            if v is True or v == 'sum':
-                return sum_
-            elif v == 'avg':
-                return avg_
-            return v
+        self._init_columns()
+        self.post_init()
 
+    def _init_columns(self):
         for col in self.__cls_cols__:
             new_col = col.new_instance(self)
             self.columns.append(new_col)
@@ -627,8 +632,6 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
                     subtotal_function_map(new_col.has_subtotal),
                     new_col
                 )
-
-        self.post_init()
 
     def post_init(self):
         """Provided for subclasses to run post-initialization customizations"""
@@ -881,33 +884,33 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
 
         return query
 
+    def args_have_op(self, args):
+        # any of the grid's query string args can be used to
+        #   override the session behavior (except export_to)
+        r = re.compile(
+            self.qs_prefix + r'(op\(.*\))'
+        )
+        return any(r.match(a) for a in args.keys())
+
+    def args_have_session_override(self, args):
+        r = re.compile(
+            self.qs_prefix + 'session_override'
+        )
+        return any(r.match(a) for a in args.keys())
+
+    def args_have_page(self, args):
+        r = re.compile(
+            self.qs_prefix + '(onpage|perpage)'
+        )
+        return any(r.match(a) for a in args.keys())
+
+    def args_have_sort(self, args):
+        r = re.compile(
+            self.qs_prefix + '(sort[1-3])'
+        )
+        return any(r.match(a) for a in args.keys())
+
     def apply_qs_args(self, add_user_warnings=True):
-        def args_have_op(args):
-            # any of the grid's query string args can be used to
-            #   override the session behavior (except export_to)
-            r = re.compile(
-                self.qs_prefix + r'(op\(.*\))'
-            )
-            return any(r.match(a) for a in args.keys())
-
-        def args_have_session_override(args):
-            r = re.compile(
-                self.qs_prefix + 'session_override'
-            )
-            return any(r.match(a) for a in args.keys())
-
-        def args_have_page(args):
-            r = re.compile(
-                self.qs_prefix + '(onpage|perpage)'
-            )
-            return any(r.match(a) for a in args.keys())
-
-        def args_have_sort(args):
-            r = re.compile(
-                self.qs_prefix + '(sort[1-3])'
-            )
-            return any(r.match(a) for a in args.keys())
-
         args = MultiDict(self.manager.request_args())
         if 'search' in args and self.can_search():
             self.search_value = args['search'].strip()
@@ -922,15 +925,15 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
                 self.prefix_qs_arg_key('session_key'),
                 self.session_key
             )
-            session_override = args_have_session_override(args)
-            if not args_have_op(args) or session_override:
+            session_override = self.args_have_session_override(args)
+            if not self.args_have_op(args) or session_override:
                 session_args = self.get_session_store(args, session_override)
                 # override paging if it exists in the query
-                if args_have_page(args):
+                if self.args_have_page(args):
                     session_args['onpage'] = args.get('onpage')
                     session_args['perpage'] = args.get('perpage')
                 # override sorting if it exists in the query
-                if args_have_sort(args):
+                if self.args_have_sort(args):
                     session_args['sort1'] = args.get('sort1')
                     session_args['sort2'] = args.get('sort2')
                     session_args['sort3'] = args.get('sort3')
@@ -948,6 +951,19 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
 
         # filtering (make sure this is above paging otherwise self.page_count
         # used in the paging section below won't work)
+        self._apply_filtering(args)
+
+        # paging
+        self._apply_paging(args)
+
+        # sorting
+        self._apply_sorting(args)
+
+        if add_user_warnings:
+            for msg in self.user_warnings:
+                self.manager.flash_message('warning', msg)
+
+    def _apply_filtering(self, args):
         for col in six.itervalues(self.filtered_cols):
             filter = col.filter
             filter_op_qsk = self.prefix_qs_arg_key('op({0})'.format(col.key))
@@ -977,7 +993,7 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
                     invalid_msg = filter.format_invalid(e, col)
                     self.user_warnings.append(invalid_msg)
 
-        # paging
+    def _apply_paging(self, args):
         pp_qsk = self.prefix_qs_arg_key('perpage')
         if pp_qsk in args:
             per_page = self.apply_validator(fev.Int, args[pp_qsk], pp_qsk)
@@ -994,7 +1010,7 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
                 on_page = self.page_count
             self.on_page = on_page
 
-        # sorting
+    def _apply_sorting(self, args):
         sort_qs_keys = [
             self.prefix_qs_arg_key('sort1'),
             self.prefix_qs_arg_key('sort2'),
@@ -1007,10 +1023,6 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
         # handle other file formats
         export_qsk = self.prefix_qs_arg_key('export_to')
         self.set_export_to(args.get(export_qsk, None))
-
-        if add_user_warnings:
-            for msg in self.user_warnings:
-                self.manager.flash_message('warning', msg)
 
     def prefix_qs_arg_key(self, key):
         return '{0}{1}'.format(self.qs_prefix, key)

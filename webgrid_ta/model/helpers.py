@@ -480,57 +480,67 @@ class LookupMixin(DefaultMixin):
         return '<%s %s:%s>' % (self.__class__.__name__, self.id, self.label)
 
 
-def clear_db():
-    if db.engine.dialect.name == 'postgresql':
-        sql = []
-        sql.append('DROP SCHEMA public cascade;')
-        sql.append('CREATE SCHEMA public AUTHORIZATION %s;' % db.engine.url.username)
-        sql.append('GRANT ALL ON SCHEMA public TO %s;' % db.engine.url.username)
-        sql.append('GRANT ALL ON SCHEMA public TO public;')
-        sql.append("COMMENT ON SCHEMA public IS 'standard public schema';")
-        for exstr in sql:
-            try:
-                db.engine.execute(exstr)
-            except Exception as e:
-                print(('WARNING: %s' % e))
+def clear_db_postgresql():
+    sql = []
+    sql.append('DROP SCHEMA public cascade;')
+    sql.append('CREATE SCHEMA public AUTHORIZATION %s;' % db.engine.url.username)
+    sql.append('GRANT ALL ON SCHEMA public TO %s;' % db.engine.url.username)
+    sql.append('GRANT ALL ON SCHEMA public TO public;')
+    sql.append("COMMENT ON SCHEMA public IS 'standard public schema';")
+    for exstr in sql:
+        try:
+            db.engine.execute(exstr)
+        except Exception as e:
+            print(('WARNING: %s' % e))
 
-    elif db.engine.dialect.name == 'sqlite':
-        # drop the views
-        sql = "select name from sqlite_master where type='view'"
+
+def clear_db_sqlite():
+    # drop the views
+    sql = "select name from sqlite_master where type='view'"
+    rows = db.engine.execute(sql)
+    # need to get all views before start to try and delete them, otherwise
+    # we will get "database locked" errors from sqlite
+    records = rows.fetchall()
+    for row in records:
+        db.engine.execute('drop view %s' % row['name'])
+
+    # drop the tables
+    db.metadata.reflect(bind=db.engine)
+    for table in reversed(db.metadata.sorted_tables):
+        try:
+            table.drop(db.engine)
+        except Exception as e:
+            if 'no such table' not in str(e):
+                raise
+
+
+def clear_db_mssql():
+    mapping = {
+        'P': 'drop procedure [%(name)s]',
+        'C': 'alter table [%(parent_name)s] drop constraint [%(name)s]',
+        ('FN', 'IF', 'TF'): 'drop function [%(name)s]',
+        'V': 'drop view [%(name)s]',
+        'F': 'alter table [%(parent_name)s] drop constraint [%(name)s]',
+        'U': 'drop table [%(name)s]',
+    }
+    delete_sql = []
+    for type, drop_sql in six.iteritems(mapping):
+        sql = 'select name, object_name( parent_object_id ) as parent_name '\
+            'from sys.objects where type in (\'%s\')' % '", "'.join(type)
         rows = db.engine.execute(sql)
-        # need to get all views before start to try and delete them, otherwise
-        # we will get "database locked" errors from sqlite
-        records = rows.fetchall()
-        for row in records:
-            db.engine.execute('drop view %s' % row['name'])
+        for row in rows:
+            delete_sql.append(drop_sql % dict(row))
+    for sql in delete_sql:
+        db.engine.execute(sql)
 
-        # drop the tables
-        db.metadata.reflect(bind=db.engine)
-        for table in reversed(db.metadata.sorted_tables):
-            try:
-                table.drop(db.engine)
-            except Exception as e:
-                if 'no such table' not in str(e):
-                    raise
 
-    elif db.engine.dialect.name == 'mssql':
-        mapping = {
-            'P': 'drop procedure [%(name)s]',
-            'C': 'alter table [%(parent_name)s] drop constraint [%(name)s]',
-            ('FN', 'IF', 'TF'): 'drop function [%(name)s]',
-            'V': 'drop view [%(name)s]',
-            'F': 'alter table [%(parent_name)s] drop constraint [%(name)s]',
-            'U': 'drop table [%(name)s]',
-        }
-        delete_sql = []
-        for type, drop_sql in six.iteritems(mapping):
-            sql = 'select name, object_name( parent_object_id ) as parent_name '\
-                'from sys.objects where type in (\'%s\')' % '", "'.join(type)
-            rows = db.engine.execute(sql)
-            for row in rows:
-                delete_sql.append(drop_sql % dict(row))
-        for sql in delete_sql:
-            db.engine.execute(sql)
-    else:
-        return False
-    return True
+def clear_db():
+    method_map = {
+        'postgresql': clear_db_postgresql,
+        'sqlite': clear_db_sqlite,
+        'mssql': clear_db_mssql,
+    }
+    if db.engine.dialect.name in method_map:
+        method_map[db.engine.dialect.name]()
+        return True
+    return False

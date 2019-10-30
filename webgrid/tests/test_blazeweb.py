@@ -4,8 +4,8 @@ from os import path
 
 import six
 
-
-if six.PY2:
+# !!!: Should blazeweb be tested for Python 3?
+if six.PY2:  # noqa
     from blazeutils import tolist
     from blazeweb.events import signal
     from blazeweb.globals import ag, settings, user
