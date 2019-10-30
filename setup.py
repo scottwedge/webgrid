@@ -70,7 +70,7 @@ setup(
         'Babel'
     ],
     install_requires=[
-        'BlazeUtils',
+        'BlazeUtils>=0.6.0',
         'FormEncode',
         'SQLAlchemy',
         'jinja2',

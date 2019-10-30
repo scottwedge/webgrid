@@ -19,7 +19,6 @@ $(document).ready(function() {
     datagrid_prep_filters();
     $('.datagrid .filters .operator select').change(datagrid_on_operator_change);
     $('.datagrid .filters .add-filter select').change(datagrid_add_filter);
-    $('.datagrid .filters .toggle-button').click(datagrid_toggle_mselect);
 
     $('.inputs1 select').change(function() {
         $(this).siblings('input').val($(this).val());
@@ -28,30 +27,6 @@ $(document).ready(function() {
     $('.datagrid form.header').submit(datagrid_cleanup_before_form_submission);
     _datagrid_is_loaded = true;
 });
-
-/*
- datagrid_toggle_mselect()
-
- Called when the select box in an inputs1 column needs to be turned into a
- multi-select UI element or a multi-select UI element needs to be turned into
- a normal select box.
-
- MUST be called from a context where "this" refers to the toggle image next to
- the select element.
-
-*/
-function datagrid_toggle_mselect(){
-    var jq_img = $(this);
-    var jq_select = jq_img.siblings('select');
-    var multiple_attr = jq_select.attr('multiple');
-    if (typeof multiple_attr !== 'undefined' && multiple_attr !== false) {
-        jq_select.removeAttr('multiple');
-        jq_select.siblings('.ms-parent').hide();
-        jq_select.show();
-    } else {
-        datagrid_activate_mselect_ui(jq_select);
-    }
-}
 
 /*
  datagrid_activate_mselect_ui()
@@ -181,13 +156,10 @@ function datagrid_toggle_filter_inputs(jq_filter_tr) {
     var fields1 =  jq_filter_tr.find('.inputs1').children();
     var fields2 = jq_filter_tr.find('.inputs2').children();
     var v1name = 'v1('+filter_key+')';
-    
+
     if( op_key == null ) {
         fields1.show();
     } else if( op_key == '' ) {
-        // destroy any multi-selects that have been created
-        fields1.removeAttr('multiple');
-        fields1.siblings('.ms-parent').hide();
         fields1.hide();
         fields1.val('');
 
@@ -201,23 +173,15 @@ function datagrid_toggle_filter_inputs(jq_filter_tr) {
             fields1.val('');
         } else {
             fields1.show();
-            // turn on multi-select for a select field that has multiple
-            // set.  The selector is for the toggle-button img, so that
-            // datagrid_toggle_mselect() works correctly.
             fields1.siblings('.ms-parent').hide();
             jq_filter_tr.find('.inputs1 select[multiple]').each(function(){
                 datagrid_activate_mselect_ui($(this));
             });
             if ( field_type.substring(0,6) == 'select' ) {
                 jq_filter_tr.find('.inputs1 input').hide();
-                jq_filter_tr.find('.inputs1 select:not([multiple])').show();
-                jq_filter_tr.find('.inputs1 input').val(
-                    jq_filter_tr.find('.inputs1 select').val()
-                );
                 if ( field_type == 'select+input' ) {
-                    jq_filter_tr.find('.inputs1 .toggle-button').hide();
-                    jq_filter_tr.find('.inputs1 input').removeAttr('name');
-                    jq_filter_tr.find('.inputs1 select').attr('name',v1name);
+                    jq_filter_tr.find('.inputs1 input[name="' + v1name + '"]').removeAttr('name');
+                    jq_filter_tr.find('.inputs1 select').attr('name', v1name);
                 }
             } else {
                 if (_datagrid_is_loaded) {
@@ -225,7 +189,7 @@ function datagrid_toggle_filter_inputs(jq_filter_tr) {
                 }
                 jq_filter_tr.find('.inputs1 input').show();
                 jq_filter_tr.find('.inputs1 select').hide();
-                jq_filter_tr.find('.inputs1 .toggle-button').hide();
+                jq_filter_tr.find('.inputs1 .ms-parent').hide();
                 jq_filter_tr.find('.inputs1 input').attr('name',v1name);
                 jq_filter_tr.find('.inputs1 select').removeAttr('name');
             }
@@ -237,17 +201,6 @@ function datagrid_toggle_filter_inputs(jq_filter_tr) {
             fields2.val('');
         }
     }
-}
-
-/*
- datagrid_filter_inactive() DON'T THINK I NEED THIS ANYMORE
-
- Utility function that returns a bool value indicating if the filter key passed
- in represents a filter that is currently inactive (and therefore hidden).
-
-*/
-function datagrid_filter_inactive(filter_key){
-    return $.inArray(filter_key, datagrid_active_filters) == -1;
 }
 
 /*
