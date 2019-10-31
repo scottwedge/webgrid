@@ -4,31 +4,23 @@
     {%- endmacro %}
 {%- endif -%}
 
-<table class="paging">
-    <tr>
-        <td class="record-count">
+<div class="paging">
+    <dl>
+        <dt>{{ _('Records') }}</dt>
+        <dd class="record-count">
             {{ grid.record_count }}
-        </td>
+        </dd>
+
         {% if grid.pager_on %}
-        <td class="page">
-            {{ renderer.paging_select() }}
-        </td>
-        <td class="perpage">
-            {{ renderer.paging_input() }}
-        </td>
+            <dt>{{ _('Page') }}</dt>
+            <dd class="page">
+                {{ renderer.paging_select() }}
+            </dd>
+
+            <dt>{{ _('Per Page') }}</dt>
+            <dd class="perpage">
+                {{ renderer.paging_input() }}
+            </dd>
         {% endif %}
-    </tr>
-    <tr>
-        <th class="record-count">
-            {{ _('Records') }}
-        </th>
-        {% if grid.pager_on %}
-        <th class="page">
-            {{ _('Page') }}
-        </th>
-        <th class="perpage">
-            {{ _('Per Page') }}
-        </th>
-        {% endif %}
-    </tr>
-</table>
+    </dl>
+</div>
