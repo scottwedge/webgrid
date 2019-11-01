@@ -4,11 +4,13 @@ from os import path as opath
 from blazeutils.testing import assert_equal_txt
 import flask
 from flask_webtest import SessionScope
+import sqlalchemy as sa
 import sqlalchemy.orm
 from werkzeug.datastructures import MultiDict
 import wrapt
 
 from webgrid_ta.model import db
+from webgrid import Column
 
 cdir = opath.dirname(__file__)
 
@@ -118,3 +120,16 @@ def inrequest(*req_args, **req_kwargs):
             flask.request.args = MultiDict(flask.request.args)
             return wrapped(*args, **kwargs)
     return wrapper
+
+
+def render_in_grid(grid_cls, render_in):
+    """ Class factory which extends an existing grid class
+        to add a column that is rendered everywhere except "render_in"
+    """
+    other_render_types = set(Column._render_in)
+    other_render_types.remove(render_in)
+
+    class RenderInGrid(grid_cls):
+        Column('Exclude', sa.literal('Exclude'), render_in=tuple(other_render_types))
+
+    return RenderInGrid
