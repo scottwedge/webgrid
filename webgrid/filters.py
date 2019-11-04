@@ -195,6 +195,19 @@ class FilterBase(object):
             str(exc)
         )
 
+    def get_search_expr(self):
+        """
+            Filters can be used for the general "single search" function on the grid. For this to
+            work in SQL, the grid needs to pull search expressions from all filters and OR them
+            together.
+
+            Return value is expected to be a callable taking one argument (the search value).
+            E.g. `lambda value: self.sa_col.like('%{}%'.format(value))`
+
+            Return value of `None` is filtered out, essentially disabling search for the filter.
+        """
+        return None
+
     def new_instance(self, **kwargs):
         """
         Note: Ensure any overrides of this method accept and pass through kwargs to preserve
@@ -423,6 +436,9 @@ class TextFilter(FilterBase):
             ops.contains: lambda col, value: col.like(u'%{}%'.format(value)),
             ops.not_contains: lambda col, value: ~col.like(u'%{}%'.format(value))
         }
+
+    def get_search_expr(self):
+        return lambda value: self.comparisons[ops.contains](self.sa_col, value)
 
     def apply(self, query):
         if self.op == self.default_op and not self.value1:

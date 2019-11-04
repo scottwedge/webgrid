@@ -142,6 +142,12 @@ class TestTextFilter(CheckFilterBase):
         tf.set(None, None)
         assert not tf.is_active
 
+    def test_search_expr(self):
+        expr_factory = TextFilter(Person.firstname).get_search_expr()
+        assert callable(expr_factory)
+        expr = expr_factory('foo')
+        assert str(expr) == 'persons.firstname LIKE :firstname_1'
+
 
 class TestTextFilterWithCaseSensitiveDialect(CheckFilterBase):
     def get_filter(self):
@@ -172,6 +178,12 @@ class TestTextFilterWithCaseSensitiveDialect(CheckFilterBase):
         tf.set('!contains', 'foo')
         query = tf.apply(db.session.query(Person.id))
         self.assert_in_query(query, "WHERE lower(persons.firstname) NOT LIKE lower('%foo%')")
+
+    def test_search_expr(self):
+        expr_factory = self.get_filter().get_search_expr()
+        assert callable(expr_factory)
+        expr = expr_factory('foo')
+        assert str(expr) == 'lower(persons.firstname) LIKE lower(:firstname_1)', str(expr)
 
 
 class TestNumberFilters(CheckFilterBase):

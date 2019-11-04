@@ -11,7 +11,7 @@ import sqlalchemy.sql as sasql
 from werkzeug.datastructures import MultiDict
 
 from webgrid import Column, BoolColumn, YesNoColumn
-from webgrid.filters import TextFilter, IntFilter
+from webgrid.filters import FilterBase, TextFilter, IntFilter
 from webgrid_ta.model.entities import Person, Status, db
 from webgrid_ta.grids import Grid, PeopleGrid
 from .helpers import assert_in_query, assert_not_in_query, query_to_str, inrequest
@@ -380,6 +380,31 @@ class TestGrid(object):
             assert False, 'Expected ValueError'
         except ValueError as exc:
             eq_(str(exc), 'No export format set')
+
+    def test_search_expressions_filtering_nones(self):
+        class NonSearchingFilter(FilterBase):
+            def get_search_expr(self):
+                return None
+
+        class CTG(Grid):
+            Column('First Name', Person.firstname, NonSearchingFilter)
+
+        assert len(CTG().search_expression_generators) == 0
+
+    def test_search_expressions_uncallable(self):
+        class BadFilter(FilterBase):
+            def get_search_expr(self):
+                return 'foo'
+
+        class CTG(Grid):
+            Column('First Name', Person.firstname, BadFilter)
+
+        try:
+            CTG().search_expression_generators
+            assert False, 'expected exception'
+        except Exception as exc:
+            if 'bad filter search expression: foo is not callable' not in str(exc):
+                raise
 
     def test_search_query(self):
         class CTG(Grid):

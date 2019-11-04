@@ -23,7 +23,6 @@ from webhelpers2.html.tags import link_to
 from werkzeug.datastructures import MultiDict
 
 from .extensions import gettext as _
-from .filters import TextFilter
 from .renderers import HTML, XLS, XLSX
 
 # conditional imports to support libs without requiring them
@@ -555,6 +554,8 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
     subtotals = 'none'
     manager = None
     allowed_export_targets = None
+    # Enables single-search feature, where one search value is applied to every supporting
+    # filter at once
     enable_search = False
 
     # Will ask for confirmation before exporting more than this many records.
@@ -656,12 +657,25 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
                 yield col
 
     def can_search(self):
-        return self.enable_search and len(self.searchable_cols) > 0
+        # enable_search will turn the feature on/off, but don't enable it if none of the filters
+        # support it
+        return self.enable_search and len(self.search_expression_generators) > 0
 
     @property
-    def searchable_cols(self):
-        # only use columns with a text filter so we can be sure the contains operator makes sense
-        return [col for col in self.columns if isinstance(col.filter, TextFilter)]
+    def search_expression_generators(self):
+        # See FilterBase.get_search_expr
+        # Should return a tuple of callables, each taking a single argument (the search value).
+        # We filter out None here so as to disregard filters that don't support the search feature.
+        def check_expression_generator(expr_gen):
+            if expr_gen is not None and not callable(expr_gen):
+                raise Exception(
+                    'bad filter search expression: {} is not callable'.format(str(expr_gen))
+                )
+            return expr_gen is not None
+        return tuple(filter(
+            check_expression_generator,
+            [col.filter.get_search_expr() for col in self.filtered_cols.values()]
+        ))
 
     def set_renderers(self):
         self.html = HTML(self)
@@ -833,8 +847,10 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
         return query
 
     def apply_search(self, query, value):
+        # We depend on the filters to know what to do with the search value, and then OR the
+        # expressions together for our query
         return query.filter(sa.or_(*(
-            col.filter.sa_col.ilike('%{}%'.format(value)) for col in self.searchable_cols)
+            expr(value) for expr in self.search_expression_generators)
         ))
 
     def query_paging(self, query):
