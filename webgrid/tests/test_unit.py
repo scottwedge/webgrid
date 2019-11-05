@@ -391,6 +391,19 @@ class TestGrid(object):
 
         assert len(CTG().search_expression_generators) == 0
 
+    def test_search_expressions_generate_nones(self):
+        class NonSearchingFilter(FilterBase):
+            def get_search_expr(self):
+                return lambda value: None
+
+        class CTG(Grid):
+            Column('First Name', Person.firstname, NonSearchingFilter)
+
+        assert len(CTG().search_expression_generators) == 1
+        g = CTG()
+        g.search_value = 'foo'
+        assert_not_in_query(g, 'WHERE')
+
     def test_search_expressions_uncallable(self):
         class BadFilter(FilterBase):
             def get_search_expr(self):

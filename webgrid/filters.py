@@ -343,6 +343,20 @@ class OptionsFilterBase(FilterBase):
                 return _NoValue
         return value
 
+    def get_search_expr(self):
+        # The important thing to remember here is that a user will be searching for the displayed
+        # value, not the key that generated it. We need to do some prep work to search options
+        # to get the keys needed for lookup into the data source.
+        def search(value):
+            matching_keys = [
+                key for (key, _) in filter(
+                    lambda item: value.lower() in str(item[1]).lower(),
+                    self.options_seq
+                )
+            ]
+            return self.sa_col.in_(matching_keys)
+        return search
+
     def apply(self, query):
         if self.op == ops.is_:
             if len(self.value1) == 1:
@@ -470,6 +484,13 @@ class NumberFilterBase(FilterBase):
                        ops.greater_than_equal) and not is_value2:
             return self.validator(not_empty=True).to_python(value)
         return self.validator.to_python(value)
+
+    def get_search_expr(self):
+        # This is a naive implementation that simply converts the number column to string and
+        # uses a LIKE. We could go nuts with things like stripping thousands separators,
+        # parenthesis, monetary symbols, etc. from the search value, but then we get to deal with
+        # locale.
+        return lambda value: sa.sql.cast(self.sa_col, sa.Unicode).like('%{}%'.format(value))
 
 
 class IntFilter(NumberFilterBase):
@@ -622,8 +643,27 @@ class _DateMixin(object):
                  descriptor=prefix,
                  date=first_day.strftime('%m/%d/%Y'))
 
+    def get_search_expr(self, date_comparator=None):
+        # This is a naive implementation that simply converts the date/time column to string and
+        # uses a LIKE. Only addition is to support a common month/day/year format, but only if
+        # the value is easily parsible
+        date_comparator = date_comparator or (lambda value: self.sa_col == value)
 
-class DateFilter(FilterBase, _DateMixin):
+        def expr(value):
+            base_expr = sa.sql.cast(self.sa_col, sa.Unicode).like('%{}%'.format(value))
+            try:
+                date_value = parse(value)
+                return or_(
+                    base_expr,
+                    date_comparator(date_value)
+                )
+            except ValueError:
+                pass
+            return base_expr
+        return expr
+
+
+class DateFilter(_DateMixin, FilterBase):
     operators = (
         ops.eq, ops.not_eq, ops.less_than_equal,
         ops.greater_than_equal, ops.between, ops.not_between,
@@ -1033,6 +1073,19 @@ class DateTimeFilter(DateFilter):
 
         return DateFilter.apply(self, query)
 
+    def get_search_expr(self):
+        # This is a naive implementation that simply converts the date/time column to string and
+        # uses a LIKE. Only addition is to support a common month/day/year format, but only if
+        # the value is easily parsible
+        def date_comparator(value):
+            if self._has_date_only(value, ''):
+                left_side = ensure_datetime(value.date())
+                right_side = ensure_datetime(value.date(), time_part=dt.time(23, 59, 59, 999999))
+                return self.sa_col.between(left_side, right_side)
+            return self.sa_col == value
+
+        return super().get_search_expr(date_comparator=date_comparator)
+
 
 class TimeFilter(FilterBase):
     operators = (ops.eq, ops.not_eq, ops.less_than_equal, ops.greater_than_equal, ops.between,
@@ -1082,6 +1135,11 @@ class TimeFilter(FilterBase):
         except ValueError:
             raise formencode.Invalid(_('invalid time'), value, self)
 
+    def get_search_expr(self, date_comparator=None):
+        # This is a naive implementation that simply converts the time column to string and
+        # uses a LIKE.
+        return lambda value: sa.sql.cast(self.sa_col, sa.Unicode).like('%{}%'.format(value))
+
 
 class YesNoFilter(FilterBase):
     class ops(object):
@@ -1094,6 +1152,15 @@ class YesNoFilter(FilterBase):
         ops.yes,
         ops.no
     )
+
+    def get_search_expr(self):
+        def expr(value):
+            if value.lower() in self.ops.yes.display:
+                return self.sa_col == sa.true()
+            elif value.lower() in self.ops.no.display:
+                return self.sa_col == sa.false()
+            return None
+        return expr
 
     def apply(self, query):
         if self.op == self.ops.all:

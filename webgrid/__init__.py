@@ -849,9 +849,10 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
     def apply_search(self, query, value):
         # We depend on the filters to know what to do with the search value, and then OR the
         # expressions together for our query
-        return query.filter(sa.or_(*(
-            expr(value) for expr in self.search_expression_generators)
-        ))
+        return query.filter(sa.or_(*filter(
+            lambda item: item is not None,
+            (expr(value) for expr in self.search_expression_generators)
+        )))
 
     def query_paging(self, query):
         if self.on_page and self.per_page:
