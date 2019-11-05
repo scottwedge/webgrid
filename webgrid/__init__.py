@@ -105,7 +105,30 @@ class Column(object):
     xls_width = None
     xls_num_format = None
     xls_style = None
-    render_in = 'html', 'xls', 'xlsx', 'csv'
+    _render_in = 'html', 'xls', 'xlsx', 'csv'
+    _visible = True
+
+    @property
+    def render_in(self):
+        resolved = self._render_in
+        if callable(resolved):
+            resolved = resolved(self)
+        return tuple(tolist(resolved))
+
+    @render_in.setter
+    def render_in(self, val):
+        self._render_in = val
+
+    @property
+    def visible(self):
+        resolved = self._visible
+        if callable(resolved):
+            resolved = resolved(self)
+        return resolved
+
+    @visible.setter
+    def visible(self, val):
+        self._visible = val
 
     def __new__(cls, *args, **kwargs):
         col_inst = super(Column, cls).__new__(cls)
@@ -120,7 +143,7 @@ class Column(object):
 
     def __init__(self, label, key=None, filter=None, can_sort=True,
                  xls_width=None, xls_style=None, xls_num_format=None,
-                 render_in=_None, has_subtotal=False, **kwargs):
+                 render_in=_None, has_subtotal=False, visible=True, **kwargs):
         self.label = label
         self.key = key
         self.filter = filter
@@ -133,7 +156,8 @@ class Column(object):
         self.grid = None
         self.expr = None
         if render_in is not _None:
-            self.render_in = tuple(tolist(render_in))
+            self.render_in = render_in
+        self.visible = visible
         if xls_width:
             self.xls_width = xls_width
         if xls_num_format:
@@ -189,9 +213,15 @@ class Column(object):
                 if six.PY2 else inspect.getfullargspec(self.__init__).args)
 
         for argname in args:
-            if argname != 'self' and hasattr(self, argname) and \
-                    argname not in ('label', 'key', 'filter', 'can_sort'):
+            if argname != 'self' and argname not in (
+                'label', 'key', 'filter', 'can_sort', 'render_in', 'visible'
+            ) and hasattr(self, argname):
                 setattr(column, argname, getattr(self, argname))
+
+        # Copy underlying value of render_in and visible, in case they are
+        # lambdas that should be called per grid instance.
+        column.render_in = self._render_in
+        column.visible = self._visible
 
         return column
 
@@ -289,9 +319,10 @@ class LinkColumnBase(Column):
 
     def __init__(self, label, key=None, filter=None, can_sort=True,
                  link_label=None, xls_width=None, xls_style=None, xls_num_format=None,
-                 render_in=_None, **kwargs):
-        Column.__init__(self, label, key, filter, can_sort, xls_width,
-                        xls_style, xls_num_format, render_in, **kwargs)
+                 render_in=_None, has_subtotal=False, visible=True, **kwargs):
+        super().__init__(label, key, filter, can_sort, xls_width,
+                         xls_style, xls_num_format, render_in,
+                         has_subtotal, visible, **kwargs)
         self.link_label = link_label
 
     def render_html(self, record, hah):
@@ -311,9 +342,10 @@ class BoolColumn(Column):
     def __init__(self, label, key_or_filter=None, key=None, can_sort=True,
                  reverse=False, true_label=_('True'), false_label=_('False'),
                  xls_width=None, xls_style=None, xls_num_format=None,
-                 render_in=_None, **kwargs):
-        Column.__init__(self, label, key_or_filter, key, can_sort, xls_width,
-                        xls_style, xls_num_format, render_in, **kwargs)
+                 render_in=_None, has_subtotal=False, visible=True, **kwargs):
+        super().__init__(label, key_or_filter, key, can_sort, xls_width,
+                         xls_style, xls_num_format, render_in,
+                         has_subtotal, visible, **kwargs)
         self.reverse = reverse
         self.true_label = true_label
         self.false_label = false_label
@@ -330,19 +362,20 @@ class YesNoColumn(BoolColumn):
 
     def __init__(self, label, key_or_filter=None, key=None, can_sort=True,
                  reverse=False, xls_width=None, xls_style=None, xls_num_format=None,
-                 render_in=_None, **kwargs):
-        BoolColumn.__init__(self, label, key_or_filter, key, can_sort, reverse,
-                            _('Yes'), _('No'), xls_width, xls_style, xls_num_format, render_in,
-                            **kwargs)
+                 render_in=_None, has_subtotal=False, visible=True, **kwargs):
+        super().__init__(label, key_or_filter, key, can_sort, reverse,
+                         _('Yes'), _('No'), xls_width, xls_style, xls_num_format,
+                         render_in, has_subtotal, visible, **kwargs)
 
 
 class DateColumnBase(Column):
 
     def __init__(self, label, key_or_filter=None, key=None, can_sort=True,
                  html_format=None, xls_width=None, xls_style=None, xls_num_format=None,
-                 render_in=_None, **kwargs):
-        Column.__init__(self, label, key_or_filter, key, can_sort, xls_width,
-                        xls_style, xls_num_format, render_in, **kwargs)
+                 render_in=_None, has_subtotal=False, visible=True, **kwargs):
+        super().__init__(label, key_or_filter, key, can_sort, xls_width,
+                         xls_style, xls_num_format, render_in, has_subtotal,
+                         visible, **kwargs)
         if html_format:
             self.html_format = html_format
 
@@ -424,10 +457,10 @@ class NumericColumn(Column):
                  reverse=False, xls_width=None, xls_style=None, xls_num_format=None,
                  render_in=_None, format_as='general', places=2, curr='',
                  sep=',', dp='.', pos='', neg='-', trailneg='',
-                 xls_neg_red=True, has_subtotal=False, **kwargs):
-        Column.__init__(self, label, key_or_filter, key, can_sort, xls_width,
-                        xls_style, xls_num_format, render_in,
-                        has_subtotal, **kwargs)
+                 xls_neg_red=True, has_subtotal=False, visible=True, **kwargs):
+        super().__init__(label, key_or_filter, key, can_sort, xls_width,
+                         xls_style, xls_num_format, render_in,
+                         has_subtotal, visible, **kwargs)
         self.places = places
         self.curr = curr
         self.sep = sep
@@ -615,7 +648,7 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
 
     def iter_columns(self, render_type):
         for col in self.columns:
-            if render_type in col.render_in:
+            if col.visible and render_type in col.render_in:
                 yield col
 
     def set_renderers(self):

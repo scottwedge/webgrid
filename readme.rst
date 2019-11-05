@@ -23,6 +23,27 @@ It also will export the grid to Excel.
 For now, if you are interested in using it, you will need to see the source code and tests therein
 for example usage.
 
+Features
+--------
+
+Render Specifiers
+=================
+
+The column is visible in renderers specified in `render_in`.
+`render_in` may be:
+- an iterable of strings
+- a string
+- a lambda which accepts the column instance and returns a string or iterable of strings
+`render_in` is overridden if `visible` is `False`.
+
+Visiblity
+=========
+
+The column is visible when `visible` is `True`.
+`visible` may be:
+- a boolean
+- a lambda which accepts the column instance and returns a boolean
+
 Questions & Comments
 ---------------------
 

@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+from abc import ABC, abstractmethod
 import io
 from operator import itemgetter
 import warnings
@@ -57,7 +58,34 @@ class RenderLimitExceeded(Exception):
     pass
 
 
-class HTML(object):
+class Renderer(ABC):
+    _columns = None
+
+    @property
+    @abstractmethod
+    def name(self):
+        pass
+
+    @property
+    def columns(self):
+        if not self._columns:
+            self._columns = list(self.grid.iter_columns(self.name))
+        return self._columns
+
+    def __init__(self, grid):
+        self.grid = grid
+        if hasattr(self, 'init') and callable(self.init):
+            self.init()
+
+    def __call__(self):
+        return self.render()
+
+    @abstractmethod
+    def render(self):
+        pass
+
+
+class HTML(Renderer):
     # by default, the renderer will use the display value from the operator,
     # but that can be overriden by subclassing and setting this dictionary
     # like:
@@ -65,9 +93,12 @@ class HTML(object):
     #   filtering_operator_labels['eq'] = 'equals'
     filtering_operator_labels = {}
 
-    def __init__(self, grid):
-        self.grid = grid
-        self.manager = grid.manager
+    @property
+    def name(self):
+        return 'html'
+
+    def init(self):
+        self.manager = self.grid.manager
         if self.manager:
             self.jinja_env = self.manager.jinja_environment
         else:
@@ -348,7 +379,7 @@ class HTML(object):
 
     def table_column_headings(self):
         headings = []
-        for col in self.grid.iter_columns('html'):
+        for col in self.columns:
             headings.append(self.table_th(col))
         th_str = '\n'.join(headings)
         th_str = reindent(th_str, 12)
@@ -426,7 +457,7 @@ class HTML(object):
 
         # get the <td>s for this row
         cells = []
-        for col in self.grid.iter_columns('html'):
+        for col in self.columns:
             cells.append(self.table_td(col, record))
 
         return self.table_tr_output(cells, row_hah)
@@ -439,7 +470,7 @@ class HTML(object):
         cells = []
         colspan = 0
         firstcol = True
-        for col in self.grid.iter_columns('html'):
+        for col in self.columns:
             if col.key not in list(self.grid.subtotal_cols.keys()):
                 if firstcol:
                     colspan += 1
@@ -570,23 +601,27 @@ class HTML(object):
         return self.export_url('xls')
 
 
-class XLS(object):
+class XLS(Renderer):
     mime_type = 'application/vnd.ms-excel'
 
+    @property
+    def name(self):
+        return 'xls'
+
     def __init__(self, grid, max_col_width=150):
-        self.grid = grid
+        super().__init__(grid)
         self.define_styles()
         self.col_contents_widths = defaultdict(int)
         self.max_col_width = max_col_width
 
-    def __call__(self):
+    def render(self):
         return self.build_sheet()
 
     def can_render(self):
         total_rows = self.grid.record_count + 1
         if self.grid.subtotals != 'none':
             total_rows += 1
-        return total_rows <= 65536 and sum(1 for _ in self.grid.iter_columns('xls')) <= 256
+        return total_rows <= 65536 and sum(1 for _ in self.columns) <= 256
 
     def define_styles(self):
         self.style = BlankObject()
@@ -636,7 +671,7 @@ class XLS(object):
         )
 
     def adjust_col_widths(self, ws):
-        for idx, col in enumerate(self.grid.iter_columns('xls')):
+        for idx, col in enumerate(self.columns):
             max_registered_width = self.col_contents_widths[col.key]
             final_width = min(max_registered_width, self.max_col_width)
 
@@ -646,7 +681,7 @@ class XLS(object):
             ws.col(idx).width = int((final_width + 3) * 256)
 
     def body_headings(self, xlh):
-        for col in self.grid.iter_columns('xls'):
+        for col in self.columns:
             self.register_col_width(col, col.label)
             xlh.awrite(fix_xls_value(col.label), self.style.bold)
         xlh.newrow()
@@ -665,7 +700,7 @@ class XLS(object):
             self.totals_row(xlh, rownum + 1, self.grid.grand_totals)
 
     def record_row(self, xlh, rownum, record):
-        for col in self.grid.iter_columns('xls'):
+        for col in self.columns:
             self.record_cell(xlh, col, record)
         xlh.newrow()
 
@@ -673,7 +708,7 @@ class XLS(object):
         colspan = 0
         firstcol = True
         totals_xf = xlwt.easyxf('font: bold on; border: top thin')
-        for col in self.grid.iter_columns('xls'):
+        for col in self.columns:
             if col.key not in list(self.grid.subtotal_cols.keys()):
                 if firstcol:
                     colspan += 1
@@ -724,11 +759,14 @@ class XLS(object):
         return self.grid.manager.file_as_response(buffer, self.file_name(), self.mime_type)
 
 
-class XLSX(object):
+class XLSX(Renderer):
     mime_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
-    def __init__(self, grid):
-        self.grid = grid
+    @property
+    def name(self):
+        return 'xlsx'
+
+    def init(self):
         self.styles_cache = LazyDict()
         self._xlsx_format_cache = {}
         self.default_style = {}
@@ -765,7 +803,7 @@ class XLSX(object):
         self.col_widths[col.key] = width
 
     def adjust_column_widths(self, writer):
-        for idx, col in enumerate(self.grid.iter_columns('xlsx')):
+        for idx, col in enumerate(self.columns):
             if col.key in self.col_widths:
                 writer.ws.set_column(idx, idx, self.col_widths[col.key])
 
@@ -790,7 +828,7 @@ class XLSX(object):
 
         return wb
 
-    def __call__(self):
+    def render(self):
         buf = io.BytesIO()
         with xlsxwriter.Workbook(buf, options={'in_memory': True}) as wb:
             return self.build_sheet(wb)
@@ -799,7 +837,7 @@ class XLSX(object):
         total_rows = self.grid.record_count + 1
         if self.grid.subtotals != 'none':
             total_rows += 1
-        return total_rows <= 1048576 and sum(1 for _ in self.grid.iter_columns('xlsx')) <= 16384
+        return total_rows <= 1048576 and sum(1 for _ in self.columns) <= 16384
 
     def sanitize_sheet_name(self, sheet_name):
         return sheet_name if len(sheet_name) <= 30 else (sheet_name[:27] + '...')
@@ -816,7 +854,7 @@ class XLSX(object):
 
     def body_headings(self, xlh, wb):
         heading_style = wb.add_format({'bold': True})
-        for col in self.grid.iter_columns('xlsx'):
+        for col in self.columns:
             xlh.awrite(fix_xls_value(col.label), heading_style)
             self.update_column_width(col, col.label)
         xlh.nextrow()
@@ -834,7 +872,7 @@ class XLSX(object):
             self.totals_row(xlh, rownum + 1, self.grid.grand_totals, wb)
 
     def record_row(self, xlh, rownum, record, wb):
-        for col in self.grid.iter_columns('xlsx'):
+        for col in self.columns:
             value = col.render('xlsx', record)
             style = self.style_for_column(wb, col)
             xlh.awrite(fix_xls_value(value), style)
@@ -849,7 +887,7 @@ class XLSX(object):
             'top': 6  # Double think border
         }
         base_style = wb.add_format(base_style_attrs)
-        for col in self.grid.iter_columns('xlsx'):
+        for col in self.columns:
             if col.key not in list(self.grid.subtotal_cols.keys()):
                 if firstcol:
                     colspan += 1
@@ -898,14 +936,12 @@ class XLSX(object):
         return self.grid.manager.file_as_response(wb.filename, self.file_name(), self.mime_type)
 
 
-class CSV(object):
+class CSV(Renderer):
     mime_type = 'text/csv'
 
-    def __init__(self, grid):
-        self.grid = grid
-
-    def __call__(self):
-        return self.render()
+    @property
+    def name(self):
+        return 'csv'
 
     def render(self):
         self.output = six.StringIO()
@@ -924,7 +960,7 @@ class CSV(object):
 
     def body_headings(self):
         headings = []
-        for col in self.grid.iter_columns('csv'):
+        for col in self.columns:
             headings.append(col.label)
         self.writer.writerow(headings)
 
@@ -934,7 +970,7 @@ class CSV(object):
 
         for rownum, record in enumerate(self.grid.records):
             row = []
-            for col in self.grid.iter_columns('csv'):
+            for col in self.columns:
                 row.append(col.render('csv', record))
             self.writer.writerow(row)
 

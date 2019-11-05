@@ -28,7 +28,7 @@ from webgrid.renderers import RenderLimitExceeded, HTML, XLS, XLSX, CSV
 from webgrid_ta.model.entities import ArrowRecord, Person, Status, Email, db, AccountType
 
 from webgrid_ta.grids import ArrowGrid, Grid, PeopleGrid as PG, ArrowCSVGrid
-from .helpers import inrequest, eq_html
+from .helpers import eq_html, inrequest, render_in_grid
 
 
 class PeopleGrid(PG):
@@ -178,7 +178,7 @@ class TestHtmlRenderer(object):
 
     @inrequest('/')
     def test_people_html(self):
-        pg = PeopleGrid()
+        pg = render_in_grid(PeopleGrid, 'html')()
         eq_html(pg.html.table(), 'people_table.html')
 
     @inrequest('/')
@@ -571,15 +571,16 @@ class TestStringExprTotals(PeopleGrid):
 class TestXLSRenderer(object):
 
     def test_some_basics(self):
-        g = PeopleGrid(per_page=1)
+        g = render_in_grid(PeopleGrid, 'xls')(per_page=1)
         buffer = BytesIO()
         wb = g.xls()
         wb.save(buffer)
         buffer.seek(0)
 
         book = xlrd.open_workbook(file_contents=buffer.getvalue())
-        sh = book.sheet_by_name('people_grid')
+        sh = book.sheet_by_name('render_in_grid')
         # headers
+        eq_(sh.ncols, 10)
         eq_(sh.cell_value(0, 0), 'First Name')
         eq_(sh.cell_value(0, 7), 'Sort Order')
 
@@ -648,13 +649,14 @@ class TestXLSRenderer(object):
 class TestXLSXRenderer(object):
 
     def test_some_basics(self):
-        g = PeopleGrid(per_page=1)
+        g = render_in_grid(PeopleGrid, 'xlsx')(per_page=1)
         wb = g.xlsx()
         wb.filename.seek(0)
 
         book = xlrd.open_workbook(file_contents=wb.filename.getvalue())
-        sh = book.sheet_by_name('people_grid')
+        sh = book.sheet_by_name('render_in_grid')
         # headers
+        eq_(sh.ncols, 10)
         eq_(sh.cell_value(0, 0), 'First Name')
         eq_(sh.cell_value(0, 7), 'State')
 
@@ -780,7 +782,7 @@ class TestXLSXRenderer(object):
 class TestCSVRenderer(object):
 
     def test_some_basics(self):
-        g = PeopleCSVGrid(per_page=1)
+        g = render_in_grid(PeopleCSVGrid, 'csv')(per_page=1)
         csv_data = g.csv.build_csv()
         csv_data.seek(0)
         byte_str = six.StringIO(csv_data.read().decode('utf-8'))
@@ -788,6 +790,7 @@ class TestCSVRenderer(object):
         data = []
         for row in reader:
             data.append(row)
+        eq_(len(data[0]), 9)
         assert data[0][0] == 'First Name'
         assert data[0][2] == 'Active'
         assert data[1][0] == 'fn004'

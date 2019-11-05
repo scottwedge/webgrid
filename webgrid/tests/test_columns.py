@@ -8,7 +8,7 @@ from nose.tools import eq_
 
 from webgrid import Column, LinkColumnBase, \
     BoolColumn, YesNoColumn, DateTimeColumn, DateColumn, NumericColumn
-from webgrid.filters import TextFilter, DateFilter
+from webgrid.filters import DateFilter, IntFilter, TextFilter
 
 from webgrid_ta.grids import Grid
 from webgrid_ta.model.entities import Person
@@ -31,14 +31,17 @@ class TestColumn(object):
 
     def test_attr_copy(self):
         class TG(Grid):
-            Column('ID', Person.id, TextFilter, can_sort=False)
+            Column('ID', Person.id, TextFilter, can_sort=False, visible=False)
             FirstNameColumn('First Name', Person.firstname, TextFilter, can_sort=False,
-                            link_label='hi')
-            YesNoColumn('Active', Person.inactive, TextFilter, can_sort=False, reverse=True)
+                            link_label='hi', visible=False)
+            YesNoColumn('Active', Person.inactive, TextFilter, can_sort=False, reverse=True,
+                        visible=False)
             # DateColumn & DateTime Column are just subclasses of DateColumnBase
             # so we don't need to explicitly test both
             DateTimeColumn('Created', Person.createdts, DateFilter, can_sort=False,
-                           html_format='foo', xls_format='bar')
+                           html_format='foo', visible=False)
+            NumericColumn('Address', Person.address, IntFilter, can_sort=False,
+                          visible=False)
 
         g = TG()
 
@@ -47,6 +50,7 @@ class TestColumn(object):
         assert col.expr is Person.id
         assert isinstance(col.filter, TextFilter)
         eq_(col.can_sort, False)
+        eq_(col.visible, False)
 
         col = g.columns[1]
         eq_(col.key, 'firstname')
@@ -54,6 +58,7 @@ class TestColumn(object):
         assert isinstance(col.filter, TextFilter)
         eq_(col.can_sort, False)
         eq_(col.link_label, 'hi')
+        eq_(col.visible, False)
 
         col = g.columns[2]
         eq_(col.key, 'inactive')
@@ -63,6 +68,7 @@ class TestColumn(object):
         eq_(col.reverse, True)
         eq_(col.true_label, 'Yes')
         eq_(col.false_label, 'No')
+        eq_(col.visible, False)
 
         col = g.columns[3]
         eq_(col.key, 'createdts')
@@ -70,6 +76,14 @@ class TestColumn(object):
         assert isinstance(col.filter, DateFilter)
         eq_(col.can_sort, False)
         eq_(col.html_format, 'foo')
+        eq_(col.visible, False)
+
+        col = g.columns[4]
+        eq_(col.key, 'address')
+        assert col.expr is Person.address
+        assert isinstance(col.filter, IntFilter)
+        eq_(col.can_sort, False)
+        eq_(col.visible, False)
 
     def test_nonkeyed_not_sort(self):
         class TG(Grid):
@@ -200,6 +214,8 @@ class TestColumn(object):
             pass
 
         class TG(Grid):
+            c6_render_in = 'csv'
+
             Column('C1', Person.firstname)
             Column('C1.5', Person.firstname.label('fn2'), render_in=None)
             LinkColumn('C2', Person.lastname, render_in='xls')
@@ -208,6 +224,14 @@ class TestColumn(object):
             DateColumn('Date', Person.due_date, render_in='xls')
             DateColumn('DateTime', Person.createdts, render_in='xls')
             BoolColumn('C5', Person.inactive, render_in=['xls', 'html'])
+            Column('C6', Person.firstname.label('fn3'),
+                   render_in=lambda self: self.grid.c6_render_in)
+            Column('C7', Person.firstname.label('fn4'),
+                   render_in=lambda self: self.grid.c7_render_in())
+
+            def c7_render_in(self):
+                return [self.c6_render_in, 'xlsx']
+
         g = TG()
 
         eq_(g.columns[0].render_in, ('html', 'xls', 'xlsx', 'csv'))
@@ -218,6 +242,33 @@ class TestColumn(object):
         eq_(g.columns[5].render_in, ('xls',))
         eq_(g.columns[6].render_in, ('xls',))
         eq_(g.columns[7].render_in, ('xls', 'html'))
+        eq_(g.columns[8].render_in, ('csv',))
+        eq_(g.columns[9].render_in, ('csv', 'xlsx'))
+
+        g.c6_render_in = 'xls'
+        eq_(g.columns[8].render_in, ('xls',))
+        eq_(g.columns[9].render_in, ('xls', 'xlsx'))
+
+    def test_visible_setting(self):
+        class TestGrid(Grid):
+            c3_visible = False
+            Column('C1', Person.firstname)
+            Column('C2', Person.firstname.label('fn2'), visible=False)
+            Column('C3', Person.firstname.label('fn3'), visible=lambda self: self.grid.c3_visible)
+            Column('C4', Person.firstname.label('fn4'), visible=lambda self: self.grid.c4_visible())
+
+            def c4_visible(self):
+                return self.c3_visible
+
+        grid = TestGrid()
+        eq_(grid.columns[0].visible, True)
+        eq_(grid.columns[1].visible, False)
+        eq_(grid.columns[2].visible, False)
+        eq_(grid.columns[3].visible, False)
+
+        grid.c3_visible = True
+        eq_(grid.columns[2].visible, True)
+        eq_(grid.columns[3].visible, True)
 
     def test_number_formatting(self):
         class TG(Grid):
@@ -313,4 +364,4 @@ class TestColumn(object):
                 self.column('numericcol').render_in = 'foo'
 
         g = TG()
-        assert g.column('numericcol').render_in == 'foo'
+        assert g.column('numericcol').render_in == ('foo',)
