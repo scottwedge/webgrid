@@ -1,6 +1,28 @@
 Changelog
 =========
 
+0.2.0 released 2019-11-06
+-------------------------
+
+- Add generic search box (turned on via `enable_search`) to search on filtered columns (3624b78_)
+- Add `visible` boolean parameter on Column, allow that and `render_in` to support lambdas for evaluation at run time (0e3e125_)
+- Fixed pagination styling (b16ddbf_)
+- Turn multiselect UI on for applicable filters (b7744e7_)
+- Resolved some deprecation warnings (104a865_)
+- Added debug logging of queries to aid in profiling (d6eae60_)
+- Updated pypi license declaraton to use SPDX identifier in the license field (cf59e68_)
+- Added BSD 3-Clause license (fb4184d_)
+
+.. _3624b78: https://github.com/level12/webgrid/commit/3624b78
+.. _0e3e125: https://github.com/level12/webgrid/commit/0e3e125
+.. _b16ddbf: https://github.com/level12/webgrid/commit/b16ddbf
+.. _b7744e7: https://github.com/level12/webgrid/commit/b7744e7
+.. _104a865: https://github.com/level12/webgrid/commit/104a865
+.. _d6eae60: https://github.com/level12/webgrid/commit/d6eae60
+.. _cf59e68: https://github.com/level12/webgrid/commit/cf59e68
+.. _fb4184d: https://github.com/level12/webgrid/commit/fb4184d
+
+
 0.1.45 released 2019-09-04
 --------------------------
 
