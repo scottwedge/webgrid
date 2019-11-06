@@ -1,59 +1,59 @@
 # Translations template for WebGrid.
-# Copyright (C) 2018 ORGANIZATION
+# Copyright (C) 2019 ORGANIZATION
 # This file is distributed under the same license as the WebGrid project.
-# FIRST AUTHOR <EMAIL@ADDRESS>, 2018.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2019.
 #
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: WebGrid 0.1.37\n"
+"Project-Id-Version: WebGrid 0.1.45\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2018-09-24 19:32-0400\n"
+"POT-Creation-Date: 2019-11-06 15:23-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.6.0\n"
+"Generated-By: Babel 2.7.0\n"
 
-#: webgrid/__init__.py:148
+#: webgrid/__init__.py:179
 msgid ""
 "expected filter to be a SQLAlchemy column-like object, but it did not "
 "have a \"key\" or \"name\" attribute"
 msgstr ""
 
-#: webgrid/__init__.py:156
+#: webgrid/__init__.py:187
 msgid ""
 "the filter was a class type, but no column-like object is available from "
 "\"key\" to pass in as as the first argument"
 msgstr ""
 
-#: webgrid/__init__.py:226
+#: webgrid/__init__.py:266
 msgid "key \"{key}\" not found in record"
 msgstr ""
 
-#: webgrid/__init__.py:303
+#: webgrid/__init__.py:344
 msgid "True"
 msgstr ""
 
-#: webgrid/__init__.py:303
+#: webgrid/__init__.py:344
 msgid "False"
 msgstr ""
 
-#: webgrid/__init__.py:326
+#: webgrid/__init__.py:368
 msgid "Yes"
 msgstr ""
 
-#: webgrid/__init__.py:326
+#: webgrid/__init__.py:368
 msgid "No"
 msgstr ""
 
-#: webgrid/__init__.py:618
+#: webgrid/__init__.py:703
 msgid "can't sort on invalid key \"{key}\""
 msgstr ""
 
-#: webgrid/__init__.py:894
+#: webgrid/__init__.py:1022
 msgid "\"{arg}\" grid argument invalid, ignoring"
 msgstr ""
 
@@ -149,216 +149,220 @@ msgstr ""
 msgid "unrecognized operator: {op}"
 msgstr ""
 
-#: webgrid/filters.py:245 webgrid/filters.py:436 webgrid/static/webgrid.js:56
+#: webgrid/filters.py:263 webgrid/filters.py:528 webgrid/static/webgrid.js:39
 msgid "-- All --"
 msgstr ""
 
-#: webgrid/filters.py:259
+#: webgrid/filters.py:277
 msgid ""
 "value_modifier argument set to \"auto\", but the options set is empty and"
 " the type can therefore not be determined for {name}"
 msgstr ""
 
-#: webgrid/filters.py:274
+#: webgrid/filters.py:292
 msgid "can't use value_modifier='auto' when option keys are {key_type}"
 msgstr ""
 
-#: webgrid/filters.py:282
+#: webgrid/filters.py:300
 msgid ""
 "value_modifier must be the string \"auto\", have a \"to_python\" "
 "attribute, or be a callable"
 msgstr ""
 
-#: webgrid/filters.py:427
+#: webgrid/filters.py:519
 msgid "01-Jan"
 msgstr ""
 
-#: webgrid/filters.py:427
+#: webgrid/filters.py:519
 msgid "02-Feb"
 msgstr ""
 
-#: webgrid/filters.py:427
+#: webgrid/filters.py:519
 msgid "03-Mar"
 msgstr ""
 
-#: webgrid/filters.py:427
+#: webgrid/filters.py:519
 msgid "04-Apr"
 msgstr ""
 
-#: webgrid/filters.py:428
+#: webgrid/filters.py:520
 msgid "05-May"
 msgstr ""
 
-#: webgrid/filters.py:428
+#: webgrid/filters.py:520
 msgid "06-Jun"
 msgstr ""
 
-#: webgrid/filters.py:428
+#: webgrid/filters.py:520
 msgid "07-Jul"
 msgstr ""
 
-#: webgrid/filters.py:428
+#: webgrid/filters.py:520
 msgid "08-Aug"
 msgstr ""
 
-#: webgrid/filters.py:429
+#: webgrid/filters.py:521
 msgid "09-Sep"
 msgstr ""
 
-#: webgrid/filters.py:429
+#: webgrid/filters.py:521
 msgid "10-Oct"
 msgstr ""
 
-#: webgrid/filters.py:429
+#: webgrid/filters.py:521
 msgid "11-Nov"
 msgstr ""
 
-#: webgrid/filters.py:429
+#: webgrid/filters.py:521
 msgid "12-Dec"
 msgstr ""
 
-#: webgrid/filters.py:468
+#: webgrid/filters.py:560
 msgid "invalid"
 msgstr ""
 
-#: webgrid/filters.py:493 webgrid/filters.py:1011
+#: webgrid/filters.py:585 webgrid/filters.py:1146
 msgid "all"
 msgstr ""
 
-#: webgrid/filters.py:500
+#: webgrid/filters.py:592
 msgid "All"
 msgstr ""
 
-#: webgrid/filters.py:513 webgrid/filters.py:544
+#: webgrid/filters.py:605 webgrid/filters.py:636
 msgid "excluding "
 msgstr ""
 
-#: webgrid/filters.py:526
+#: webgrid/filters.py:618
 msgid "{descriptor}{first_date} - {second_date}"
 msgstr ""
 
-#: webgrid/filters.py:532
+#: webgrid/filters.py:624
 msgid "before "
 msgstr ""
 
-#: webgrid/filters.py:536
+#: webgrid/filters.py:628
 msgid "after "
 msgstr ""
 
-#: webgrid/filters.py:538
+#: webgrid/filters.py:630
 msgid "date not specified"
 msgstr ""
 
-#: webgrid/filters.py:540
+#: webgrid/filters.py:632
 msgid "any date"
 msgstr ""
 
-#: webgrid/filters.py:546
+#: webgrid/filters.py:638
 msgid "up to "
 msgstr ""
 
-#: webgrid/filters.py:548
+#: webgrid/filters.py:640
 msgid "beginning "
 msgstr ""
 
-#: webgrid/filters.py:552
+#: webgrid/filters.py:644
 msgid "{descriptor}{date}"
 msgstr ""
 
-#: webgrid/filters.py:734 webgrid/filters.py:741 webgrid/filters.py:815
-#: webgrid/filters.py:822
-msgid "date filter given is out of range"
-msgstr ""
-
-#: webgrid/filters.py:758 webgrid/filters.py:832
+#: webgrid/filters.py:829 webgrid/filters.py:875 webgrid/filters.py:949
 msgid "invalid date"
 msgstr ""
 
-#: webgrid/filters.py:1006
+#: webgrid/filters.py:851 webgrid/filters.py:858 webgrid/filters.py:932
+#: webgrid/filters.py:939
+msgid "date filter given is out of range"
+msgstr ""
+
+#: webgrid/filters.py:1136
 msgid "invalid time"
 msgstr ""
 
-#: webgrid/filters.py:1012
+#: webgrid/filters.py:1147
 msgid "yes"
 msgstr ""
 
-#: webgrid/filters.py:1013
+#: webgrid/filters.py:1148
 msgid "no"
 msgstr ""
 
-#: webgrid/renderers.py:251
+#: webgrid/renderers.py:290
 msgid "{label} DESC"
 msgstr ""
 
-#: webgrid/renderers.py:282
+#: webgrid/renderers.py:321
 msgid "{page} of {page_count}"
 msgstr ""
 
-#: webgrid/renderers.py:344
+#: webgrid/renderers.py:383
 msgid "No records to display"
 msgstr ""
 
-#: webgrid/renderers.py:451
+#: webgrid/renderers.py:490
 msgid "{label} ({num} record):"
 msgid_plural "{label} ({num} records):"
 msgstr[0] ""
 msgstr[1] ""
 
-#: webgrid/renderers.py:468
+#: webgrid/renderers.py:507
 msgid "Page Totals"
 msgstr ""
 
-#: webgrid/renderers.py:472
+#: webgrid/renderers.py:511
 msgid "Grand Totals"
 msgstr ""
 
-#: webgrid/renderers.py:686
+#: webgrid/renderers.py:614
+msgid "Search"
+msgstr ""
+
+#: webgrid/renderers.py:744
 msgid "Totals ({num} record):"
 msgid_plural "Totals ({num} records):"
 msgstr[0] ""
 msgstr[1] ""
 
-#: webgrid/static/jquery.multiple.select.js:82
+#: webgrid/static/jquery.multiple.select.js:90
 msgid "No matches found"
 msgstr ""
 
-#: webgrid/static/jquery.multiple.select.js:441
+#: webgrid/static/jquery.multiple.select.js:449
 msgid "Select all"
 msgstr ""
 
-#: webgrid/static/jquery.multiple.select.js:442
+#: webgrid/static/jquery.multiple.select.js:450
 msgid "All selected"
 msgstr ""
 
-#: webgrid/static/jquery.multiple.select.js:444
+#: webgrid/static/jquery.multiple.select.js:452
 msgid "{count} of {total} selected"
 msgstr ""
 
-#: webgrid/templates/grid_footer.html:9
+#: webgrid/templates/grid_footer.html:12
 msgid " Export to "
 msgstr ""
 
-#: webgrid/templates/grid_footer.html:22 webgrid/templates/grid_footer.html:29
+#: webgrid/templates/grid_footer.html:26 webgrid/templates/grid_footer.html:33
 msgid "first"
 msgstr ""
 
-#: webgrid/templates/grid_footer.html:26 webgrid/templates/grid_footer.html:30
+#: webgrid/templates/grid_footer.html:30 webgrid/templates/grid_footer.html:34
 msgid "previous"
 msgstr ""
 
-#: webgrid/templates/grid_footer.html:35 webgrid/templates/grid_footer.html:42
+#: webgrid/templates/grid_footer.html:39 webgrid/templates/grid_footer.html:46
 msgid "next"
 msgstr ""
 
-#: webgrid/templates/grid_footer.html:39 webgrid/templates/grid_footer.html:43
+#: webgrid/templates/grid_footer.html:43 webgrid/templates/grid_footer.html:47
 msgid "last"
 msgstr ""
 
-#: webgrid/templates/grid_header.html:12
+#: webgrid/templates/grid_header.html:18
 msgid "Apply"
 msgstr ""
 
-#: webgrid/templates/grid_header.html:13
+#: webgrid/templates/grid_header.html:19
 msgid "reset"
 msgstr ""
 
@@ -366,15 +370,15 @@ msgstr ""
 msgid "Add Filter:"
 msgstr ""
 
-#: webgrid/templates/header_paging.html:23
+#: webgrid/templates/header_paging.html:9
 msgid "Records"
 msgstr ""
 
-#: webgrid/templates/header_paging.html:27
+#: webgrid/templates/header_paging.html:15
 msgid "Page"
 msgstr ""
 
-#: webgrid/templates/header_paging.html:30
+#: webgrid/templates/header_paging.html:20
 msgid "Per Page"
 msgstr ""
 

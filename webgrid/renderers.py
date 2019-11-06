@@ -611,7 +611,7 @@ class HTML(Renderer):
 
     def get_search_row(self):
         return _HTML.tr(
-            _HTML.th('Search'),
+            _HTML.th(_('Search')),
             _HTML.td(
                 _HTML.select(_HTML.option('', value='contains', selected=True)),
                 style='display: none;',
