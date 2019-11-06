@@ -26,6 +26,40 @@ for example usage.
 Features
 --------
 
+Filter/Search
+=============
+
+Webgrid columns may be assigned filters that will be available in the UI for the user to narrow
+down grid records. Filters are self-contained query modifiers: they take the column/expression to
+be filtered, and the query to filter, and apply their own logic based on the selected operator.
+
+Example:
+
+    class MyGrid(Grid):
+        Column('Name', Person.name, TextFilter)
+
+Default operator and default filter value (or values, up to two) may be set in the constructor.
+Default filters are enforced to show up on the UI at all times without the user selecting them, but
+the user may reconfigure the options for that filter:
+
+    class MyGrid(Grid):
+        Column('Name', Person.name, TextFilter(Person.name, default_op='contains', default_value1='Smith'))
+
+Webgrid also uses filters to support a generic search. Use the `enable_search` boolean flag on the
+grid to turn on a search box, which will poll all available filters for search expressions to OR
+on a query:
+
+class MyGrid(Grid):
+    enable_search = True
+
+    Column('Name', Person.name, TextFilter)
+
+Custom filters need to subclass `FilterBase`. The `operators` attribute will define what options are
+available in the UI. The `apply` method takes the grid query and returns a modified query having the
+filter. To have the filter support generic search, it needs to override `get_search_expr` to return
+a callable that takes the search value and returns a SQLAlchemy expression. Examples may be found
+in `webgrid.filters`.
+
 Render Specifiers
 =================
 

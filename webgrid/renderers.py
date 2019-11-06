@@ -159,7 +159,13 @@ class HTML(Renderer):
         rows = []
         for col in six.itervalues(self.grid.filtered_cols):
             rows.append(self.filtering_table_row(col))
-        return literal('\n'.join(rows))
+        rows = literal('\n'.join(rows))
+
+        search_row = ''
+        if self.grid.can_search():
+            search_row = self.get_search_row()
+
+        return literal('\n'.join([search_row, rows]))
 
     def filtering_table_row(self, col):
         extra = getattr(col.filter, 'html_extra', {})
@@ -257,6 +263,9 @@ class HTML(Renderer):
                     'field_type': op.field_type,
                     'hint': op.hint
                 }
+
+        if self.grid.can_search():
+            for_js['search'] = {'contains': {'field_type': None}}
         return jsonmod.dumps(for_js)
 
     def confirm_export(self):
@@ -599,6 +608,21 @@ class HTML(Renderer):
     def xls_url(self):
         warnings.warn('xls_url is deprecated. Use export_url instead.', DeprecationWarning)
         return self.export_url('xls')
+
+    def get_search_row(self):
+        return _HTML.tr(
+            _HTML.th('Search'),
+            _HTML.td(
+                _HTML.select(_HTML.option('', value='contains', selected=True)),
+                style='display: none;',
+                class_='operator'
+            ),
+            _HTML.td(
+                _HTML.input(name='search', type='text', value=self.grid.search_value,
+                            id='search_input')
+            ),
+            class_='search'
+        )
 
 
 class XLS(Renderer):

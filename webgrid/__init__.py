@@ -17,6 +17,7 @@ from blazeutils.strings import case_cw2us, randchars
 from blazeutils.spreadsheets import xlsxwriter
 from formencode import Invalid
 import formencode.validators as fev
+import sqlalchemy as sa
 import sqlalchemy.sql as sasql
 from webhelpers2.html.tags import link_to
 from werkzeug.datastructures import MultiDict
@@ -553,6 +554,9 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
     subtotals = 'none'
     manager = None
     allowed_export_targets = None
+    # Enables single-search feature, where one search value is applied to every supporting
+    # filter at once
+    enable_search = False
 
     # Will ask for confirmation before exporting more than this many records.
     # Set to None to disable this check
@@ -569,6 +573,7 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
         self.order_by = []
         self.qs_prefix = qs_prefix
         self.user_warnings = []
+        self.search_value = None
         self._record_count = None
         self._records = None
         self._page_totals = None
@@ -651,6 +656,27 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
             if col.visible and render_type in col.render_in:
                 yield col
 
+    def can_search(self):
+        # enable_search will turn the feature on/off, but don't enable it if none of the filters
+        # support it
+        return self.enable_search and len(self.search_expression_generators) > 0
+
+    @property
+    def search_expression_generators(self):
+        # See FilterBase.get_search_expr
+        # Should return a tuple of callables, each taking a single argument (the search value).
+        # We filter out None here so as to disregard filters that don't support the search feature.
+        def check_expression_generator(expr_gen):
+            if expr_gen is not None and not callable(expr_gen):
+                raise Exception(
+                    'bad filter search expression: {} is not callable'.format(str(expr_gen))
+                )
+            return expr_gen is not None
+        return tuple(filter(
+            check_expression_generator,
+            [col.filter.get_search_expr() for col in self.filtered_cols.values()]
+        ))
+
     def set_renderers(self):
         self.html = HTML(self)
         for key, value in self.allowed_export_targets.items():
@@ -696,7 +722,7 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
         for col in six.itervalues(self.filtered_cols):
             if col.filter.is_active:
                 return True
-        return False
+        return self.search_value is not None
 
     @property
     def has_sort(self):
@@ -807,6 +833,9 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
 
     def query_filters(self, query):
         filter_display = []
+        if self.search_value is not None:
+            query = self.apply_search(query, self.search_value)
+
         for col in six.itervalues(self.filtered_cols):
             if col.filter.is_active:
                 filter_display.append('{}: {}'.format(col.key, str(col.filter)))
@@ -816,6 +845,14 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
         else:
             log.debug('No filters')
         return query
+
+    def apply_search(self, query, value):
+        # We depend on the filters to know what to do with the search value, and then OR the
+        # expressions together for our query
+        return query.filter(sa.or_(*filter(
+            lambda item: item is not None,
+            (expr(value) for expr in self.search_expression_generators)
+        )))
 
     def query_paging(self, query):
         if self.on_page and self.per_page:
@@ -872,6 +909,9 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
             return any(r.match(a) for a in args.keys())
 
         args = MultiDict(self.manager.request_args())
+        if 'search' in args and self.can_search():
+            self.search_value = args['search'].strip()
+
         # args are pulled first from the request. If the session feature
         #   is enabled and the request doesn't include grid-related args,
         #   check for either the session key or a default set in the

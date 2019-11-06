@@ -142,6 +142,13 @@ class TestTextFilter(CheckFilterBase):
         tf.set(None, None)
         assert not tf.is_active
 
+    def test_search_expr(self):
+        expr_factory = TextFilter(Person.firstname).get_search_expr()
+        assert callable(expr_factory)
+        expr = expr_factory('foo')
+        assert str(expr) == 'persons.firstname LIKE :firstname_1'
+        assert expr.right.value == '%foo%'
+
 
 class TestTextFilterWithCaseSensitiveDialect(CheckFilterBase):
     def get_filter(self):
@@ -172,6 +179,12 @@ class TestTextFilterWithCaseSensitiveDialect(CheckFilterBase):
         tf.set('!contains', 'foo')
         query = tf.apply(db.session.query(Person.id))
         self.assert_in_query(query, "WHERE lower(persons.firstname) NOT LIKE lower('%foo%')")
+
+    def test_search_expr(self):
+        expr_factory = self.get_filter().get_search_expr()
+        assert callable(expr_factory)
+        expr = expr_factory('foo')
+        assert str(expr) == 'lower(persons.firstname) LIKE lower(:firstname_1)', str(expr)
 
 
 class TestNumberFilters(CheckFilterBase):
@@ -250,6 +263,13 @@ class TestNumberFilters(CheckFilterBase):
         tf = NumberFilter(Person.numericcol, default_op='eq', default_value1='1.5')
         tf.set(None, None)
         self.assert_filter_query(tf, "WHERE persons.numericcol = 1.5")
+
+    def test_search_expr(self):
+        expr_factory = NumberFilter(Person.numericcol).get_search_expr()
+        assert callable(expr_factory)
+        expr = expr_factory('12345')
+        assert str(expr) == 'CAST(persons.numericcol AS VARCHAR) LIKE :param_1', str(expr)
+        assert expr.right.value == '%12345%'
 
 
 class TestDateFilter(CheckFilterBase):
@@ -555,6 +575,23 @@ class TestDateFilter(CheckFilterBase):
         self.assert_filter_query(filter,
                                  "WHERE persons.due_date BETWEEN '2010-01-31' AND '2010-12-31'")
 
+    def test_search_expr(self):
+        expr_factory = DateFilter(Person.due_date).get_search_expr()
+        assert callable(expr_factory)
+        expr = expr_factory('foo')
+        assert str(expr) == 'CAST(persons.due_date AS VARCHAR) LIKE :param_1', str(expr)
+        assert expr.right.value == '%foo%'
+
+    def test_search_expr_with_date(self):
+        expr_factory = DateFilter(Person.due_date).get_search_expr()
+        assert callable(expr_factory)
+        expr = expr_factory('6/19/2019')
+        assert str(expr) == (
+            'CAST(persons.due_date AS VARCHAR) LIKE :param_1 OR persons.due_date = :due_date_1'
+        )
+        assert expr.clauses[0].right.value == '%6/19/2019%'
+        assert expr.clauses[1].right.value == dt.datetime(2019, 6, 19)
+
 
 class TestDateTimeFilter(CheckFilterBase):
     between_sql = "WHERE persons.createdts BETWEEN '2012-01-01 00:00:00.000000' AND " \
@@ -859,6 +896,25 @@ class TestDateTimeFilter(CheckFilterBase):
         self.assert_filter_query(filter, self.between_sql)
         eq_(filter.description, 'Jan 2012')
 
+    def test_search_expr(self):
+        expr_factory = DateTimeFilter(Person.due_date).get_search_expr()
+        assert callable(expr_factory)
+        expr = expr_factory('foo')
+        assert str(expr) == 'CAST(persons.due_date AS VARCHAR) LIKE :param_1', str(expr)
+        assert expr.right.value == '%foo%'
+
+    def test_search_expr_with_date(self):
+        expr_factory = DateTimeFilter(Person.due_date).get_search_expr()
+        assert callable(expr_factory)
+        expr = expr_factory('6/19/2019')
+        assert str(expr) == (
+            'CAST(persons.due_date AS VARCHAR) LIKE :param_1 '
+            'OR persons.due_date BETWEEN :due_date_1 AND :due_date_2'
+        ), str(expr)
+        assert expr.clauses[0].right.value == '%6/19/2019%'
+        assert expr.clauses[1].right.clauses[0].value == dt.datetime(2019, 6, 19)
+        assert expr.clauses[1].right.clauses[1].value == dt.datetime(2019, 6, 19, 23, 59, 59, 999999)  # noqa: E501
+
 
 class TestTimeFilter(CheckFilterBase):
     def test_eq(self):
@@ -911,6 +967,13 @@ class TestTimeFilter(CheckFilterBase):
         filter.set('!empty', None)
         self.assert_filter_query(filter, "WHERE persons.start_time IS NOT NULL")
 
+    def test_search_expr(self):
+        expr_factory = TimeFilter(Person.start_time).get_search_expr()
+        assert callable(expr_factory)
+        expr = expr_factory('foo')
+        assert str(expr) == 'CAST(persons.start_time AS VARCHAR) LIKE :param_1', str(expr)
+        assert expr.right.value == '%foo%'
+
 
 class StateFilter(OptionsFilterBase):
     options_from = (('in', 'IN'), ('ky', 'KY'))
@@ -937,6 +1000,19 @@ class BadTypeFilter(OptionsFilterBase):
 
 
 class TestOptionsFilter(CheckFilterBase):
+    def test_search_expr(self):
+        class FooFilter(OptionsFilterBase):
+            options_from = (('foo', 'Foo'), ('bar', 'Bar'), (5, 'Baz'))
+        expr_factory = FooFilter(Person.state).new_instance().get_search_expr()
+        assert callable(expr_factory)
+        expr = expr_factory('foo')
+        assert str(expr) == 'persons.state IN (:state_1)'
+        assert expr.right.clauses[0].value == 'foo'
+
+        expr = expr_factory('ba')
+        assert str(expr) == 'persons.state IN (:state_1, :state_2)'
+        assert expr.right.clauses[0].value == 'bar'
+        assert expr.right.clauses[1].value == 5
 
     def test_is(self):
         filter = StateFilter(Person.state).new_instance()
@@ -1116,3 +1192,15 @@ class TestYesNoFilter(CheckFilterBase):
         filterobj.set('a', None)
         query = filterobj.apply(db.session.query(Person.boolcol))
         self.assert_not_in_query(query, "WHERE persons.boolcol")
+
+    def test_search_expr(self):
+        expr_factory = YesNoFilter(Person.boolcol).get_search_expr()
+        assert callable(expr_factory)
+        expr = expr_factory('Yes')
+        assert str(expr) == 'persons.boolcol = true'
+
+        expr = expr_factory('No')
+        assert str(expr) == 'persons.boolcol = false'
+
+        expr = expr_factory('Foo')
+        assert expr is None

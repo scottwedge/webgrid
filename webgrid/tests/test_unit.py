@@ -11,7 +11,7 @@ import sqlalchemy.sql as sasql
 from werkzeug.datastructures import MultiDict
 
 from webgrid import Column, BoolColumn, YesNoColumn
-from webgrid.filters import TextFilter, IntFilter
+from webgrid.filters import FilterBase, TextFilter, IntFilter
 from webgrid_ta.model.entities import Person, Status, db
 from webgrid_ta.grids import Grid, PeopleGrid
 from .helpers import assert_in_query, assert_not_in_query, query_to_str, inrequest
@@ -381,6 +381,55 @@ class TestGrid(object):
         except ValueError as exc:
             eq_(str(exc), 'No export format set')
 
+    def test_search_expressions_filtering_nones(self):
+        class NonSearchingFilter(FilterBase):
+            def get_search_expr(self):
+                return None
+
+        class CTG(Grid):
+            Column('First Name', Person.firstname, NonSearchingFilter)
+
+        assert len(CTG().search_expression_generators) == 0
+
+    def test_search_expressions_generate_nones(self):
+        class NonSearchingFilter(FilterBase):
+            def get_search_expr(self):
+                return lambda value: None
+
+        class CTG(Grid):
+            Column('First Name', Person.firstname, NonSearchingFilter)
+
+        assert len(CTG().search_expression_generators) == 1
+        g = CTG()
+        g.search_value = 'foo'
+        assert_not_in_query(g, 'WHERE')
+
+    def test_search_expressions_uncallable(self):
+        class BadFilter(FilterBase):
+            def get_search_expr(self):
+                return 'foo'
+
+        class CTG(Grid):
+            Column('First Name', Person.firstname, BadFilter)
+
+        try:
+            CTG().search_expression_generators
+            assert False, 'expected exception'
+        except Exception as exc:
+            if 'bad filter search expression: foo is not callable' not in str(exc):
+                raise
+
+    def test_search_query(self):
+        class CTG(Grid):
+            Column('First Name', Person.firstname, TextFilter)
+            Column('Last Name', Person.lastname, TextFilter)
+
+        g = CTG()
+        g.search_value = 'foo'
+        search_where = ("WHERE lower(persons.firstname) LIKE lower('%foo%')"
+                        " OR lower(persons.last_name) LIKE lower('%foo%')")
+        assert_in_query(g, search_where)
+
 
 class TestQueryStringArgs(object):
 
@@ -678,3 +727,27 @@ class TestQueryStringArgs(object):
         g = TGrid()
         g.apply_qs_args()
         eq_(g.user_warnings[0], 'T: Please enter an integer value')
+
+    @inrequest('/foo?search=bar')
+    def test_qs_search(self):
+        g = PeopleGrid()
+        g.enable_search = True
+        g.apply_qs_args()
+        eq_(g.search_value, 'bar')
+
+    @inrequest('/foo?search=bar')
+    def test_qs_search_disabled(self):
+        g = PeopleGrid()
+        g.enable_search = False
+        g.apply_qs_args()
+        assert g.search_value is None
+
+    @inrequest('/foo?search=bar')
+    def test_qs_no_searchable_columns(self):
+        class TG(Grid):
+            Column('First Name', Person.firstname)
+
+        g = TG()
+        g.enable_search = True
+        g.apply_qs_args()
+        assert g.search_value is None
