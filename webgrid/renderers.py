@@ -613,13 +613,9 @@ class HTML(Renderer):
         return _HTML.tr(
             _HTML.th(_('Search')),
             _HTML.td(
-                _HTML.select(_HTML.option('', value='contains', selected=True)),
-                style='display: none;',
-                class_='operator'
-            ),
-            _HTML.td(
                 _HTML.input(name='search', type='text', value=self.grid.search_value,
-                            id='search_input')
+                            id='search_input'),
+                colspan=2
             ),
             class_='search'
         )
