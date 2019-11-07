@@ -1,6 +1,14 @@
 Changelog
 =========
 
+0.2.1 released 2019-11-07
+-------------------------
+
+- layout fix for the search box in the filter block (71c5d56_)
+
+.. _71c5d56: https://github.com/level12/webgrid/commit/71c5d56
+
+
 0.2.0 released 2019-11-06
 -------------------------
 
