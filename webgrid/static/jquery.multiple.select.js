@@ -1,7 +1,7 @@
 /**
  * @author zhixin wen <wenzhixin2010@gmail.com>
  * @version 1.1.0
- * 
+ *
  * http://wenzhixin.net.cn/p/multiple-select/
  */
 
@@ -17,7 +17,7 @@ if (typeof _ === "undefined") {
 
     'use strict';
 
-    function MultipleSelect($el, options) {
+    function WebGridMultipleSelect($el, options) {
         var that = this,
             name = $el.attr('name') || options.name || '',
             elWidth = $el.width();
@@ -25,13 +25,9 @@ if (typeof _ === "undefined") {
         this.$el = $el.hide();
         this.options = options;
 
-        this.$parent = $('<div class="ms-parent"></div>');
-        this.$choice = $('<button type="button" class="ms-choice"><span class="placeholder">' +
-            options.placeholder + '</span><div></div></button>');
-        this.$drop = $('<div class="ms-drop ' + options.position + '"></div>');
-        this.$el.after(this.$parent);
-        this.$parent.append(this.$choice);
-        this.$parent.append(this.$drop);
+        this.$parent = this.$el.siblings('.ms-parent');
+        this.$choice = this.$parent.children('.ms-choice');
+        this.$drop = this.$parent.children('.ms-drop');
 
         if (this.$el.prop('disabled')) {
             this.$choice.addClass('disabled');
@@ -60,36 +56,10 @@ if (typeof _ === "undefined") {
         this.selectItemName = 'name="selectItem' + name + '"';
     }
 
-    MultipleSelect.prototype = {
-        constructor : MultipleSelect,
+    WebGridMultipleSelect.prototype = {
+        constructor : WebGridMultipleSelect,
 
         init: function() {
-            var that = this,
-                html = [];
-            if (this.options.filter) {
-                html.push(
-                    '<div class="ms-search">',
-                        '<input type="text" autocomplete="off" autocorrect="off" autocapitilize="off" spellcheck="false">',
-                    '</div>'
-                );
-            }
-            html.push('<ul>');
-            if (this.options.selectAll && !this.options.single) {
-                html.push(
-                    '<li>',
-                        '<label>',
-                            '<input type="checkbox" ' + this.selectAllName + ' /> ',
-                            '[' + this.options.selectAllText + ']',
-                        '</label>',
-                    '</li>'
-                );
-            }
-            $.each(this.$el.children(), function(i, elm) {
-                html.push(that.optionToHtml(i, elm));
-            });
-            html.push('<li class="ms-no-results">' + _('No matches found', 'webgrid') + '</li>');
-            html.push('</ul>');
-            this.$drop.html(html.join(''));
             this.$drop.find('ul').css('max-height', this.options.maxHeight + 'px');
             this.$drop.find('.multiple').css('width', this.options.multipleWidth + 'px');
 
@@ -105,53 +75,6 @@ if (typeof _ === "undefined") {
             if (this.options.isOpen) {
                 this.open();
             }
-        },
-
-        optionToHtml: function(i, elm, group, groupDisabled) {
-            var that = this,
-                $elm = $(elm),
-                html = [],
-                multiple = this.options.multiple,
-                disabled,
-                type = this.options.single ? 'radio' : 'checkbox';
-
-            if ($elm.is('option')) {
-                var value = $elm.val(),
-                    text = $elm.text(),
-                    selected = $elm.prop('selected'),
-                    style = this.options.styler(value) ? ' style="' + this.options.styler(value) + '"' : '';
-
-                disabled = groupDisabled || $elm.prop('disabled');
-                html.push(
-                    '<li' + (multiple ? ' class="multiple"' : '') + style + '>',
-                        '<label' + (disabled ? ' class="disabled"' : '') + '>',
-                            '<input type="' + type + '" ' + this.selectItemName + ' value="' + value + '"' +
-                                (selected ? ' checked="checked"' : '') +
-                                (disabled ? ' disabled="disabled"' : '') +
-                                (group ? ' data-group="' + group + '"' : '') +
-                                '/> ',
-                            text,
-                        '</label>',
-                    '</li>'
-                );
-            } else if (!group && $elm.is('optgroup')) {
-                var _group = 'group_' + i,
-                    label = $elm.attr('label');
-
-                disabled = $elm.prop('disabled');
-                html.push(
-                    '<li class="group">',
-                        '<label class="optgroup' + (disabled ? ' disabled' : '') + '" data-group="' + _group + '">',
-                            '<input type="checkbox" ' + this.selectGroupName +
-                                (disabled ? ' disabled="disabled"' : '') + ' /> ',
-                            label,
-                        '</label>',
-                    '</li>');
-                $.each($elm.children(), function(i, elm) {
-                    html.push(that.optionToHtml(i, elm, _group, disabled));
-                });
-            }
-            return html.join('');
         },
 
         events: function() {
@@ -218,15 +141,12 @@ if (typeof _ === "undefined") {
             }
             this.options.isOpen = true;
             this.$choice.find('>div').addClass('open');
+            this.$drop.find('input').show();
             this.$drop.show();
             if (this.options.container) {
                 var offset = this.$drop.offset();
                 this.$drop.appendTo($(this.options.container));
                 this.$drop.offset({ top: offset.top, left: offset.left });
-            }
-            if (this.options.filter) {
-                this.$searchInput.val('');
-                this.filter();
             }
             this.options.onOpen();
         },
@@ -404,7 +324,7 @@ if (typeof _ === "undefined") {
         }
     };
 
-    $.fn.multipleSelect = function() {
+    $.fn.webgridMultipleSelect = function() {
         var option = arguments[0],
             args = arguments,
 
@@ -420,11 +340,11 @@ if (typeof _ === "undefined") {
         this.each(function() {
             var $this = $(this),
                 data = $this.data('multipleSelect'),
-                options = $.extend({}, $.fn.multipleSelect.defaults,
+                options = $.extend({}, $.fn.webgridMultipleSelect.defaults,
                     $this.data(), typeof option === 'object' && option);
 
             if (!data) {
-                data = new MultipleSelect($this, options);
+                data = new WebGridMultipleSelect($this, options);
                 $this.data('multipleSelect', data);
             }
 
@@ -441,7 +361,7 @@ if (typeof _ === "undefined") {
         return value ? value : this;
     };
 
-    $.fn.multipleSelect.defaults = {
+    $.fn.webgridMultipleSelect.defaults = {
         name: '',
         isOpen: false,
         placeholder: '',

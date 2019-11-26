@@ -40,15 +40,10 @@ function datagrid_activate_mselect_ui(jq_select) {
     if ( use_all_opt ) {
         $(all_opt).detach();
     }
-    if (jq_select.siblings('.ms-parent').length > 0) {
+    if (jq_select.data('multipleSelect')) {
         jq_select.hide();
-        jq_select.siblings('.ms-parent').show();
     } else {
-        jq_select.multipleSelect({
-            container: 'body',
-            onOpen: function() {
-                $('.ms-drop input').show();
-            },
+        jq_select.webgridMultipleSelect({
             minumimCountSelected: 2,
             filter: true
         });
@@ -56,6 +51,7 @@ function datagrid_activate_mselect_ui(jq_select) {
             $(this).css('width', $(this).width() + 60);
         });
     }
+    jq_select.siblings('.ms-parent').show();
     jq_select.attr('multiple', 'multiple');
     if ( use_all_opt ) {
         $(all_opt).prependTo(jq_select);

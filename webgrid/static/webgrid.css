@@ -272,6 +272,7 @@ table.datagrid td a.delete_link {
 /* multipleselect style overrides */
 div.ms-parent input[type="checkbox"] {
     top: auto;
+    margin-right: 0.25em;
 }
 
 .ms-choice {
