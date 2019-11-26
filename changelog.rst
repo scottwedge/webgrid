@@ -1,6 +1,14 @@
 Changelog
 =========
 
+0.2.2 released 2019-11-26
+-------------------------
+
+- improve multiselect filter UI performance for large data sets (8b4fde7_)
+
+.. _8b4fde7: https://github.com/level12/webgrid/commit/8b4fde7
+
+
 0.2.1 released 2019-11-07
 -------------------------
 
