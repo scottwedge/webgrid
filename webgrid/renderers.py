@@ -223,7 +223,50 @@ class HTML(Renderer):
             multiple = 'multiple' if filter.receives_list else ''
             inputs += tags.select(field_name, current_selected,
                                   self.filtering_filter_options(filter), multiple=multiple)
+            if filter.receives_list:
+                inputs += self.filtering_multiselect(
+                    field_name, current_selected,
+                    self.filtering_filter_options_multi(filter, field_name))
         return inputs
+
+    def filtering_multiselect(self, field_name, current_selected, options):
+        return _HTML.div(
+            _HTML.button(
+                _HTML.span(
+                    class_='placeholder'
+                ),
+                _HTML.div(),
+                type='button',
+                class_='ms-choice',
+            ),
+            _HTML.div(
+                _HTML.div(
+                    _HTML.input(
+                        type='text',
+                        autocomplete='off',
+                        autocorrect='off',
+                        autocapitalize='off',
+                        spellcheck='false',
+                    ),
+                    class_='ms-search',
+                ),
+                _HTML.ul(
+                    _HTML.li(
+                        _HTML.label(
+                            _HTML.input(
+                                type='checkbox',
+                                name='selectAll{}'.format(field_name)
+                            ),
+                            '[' + _('Select all') + ']'
+                        )
+                    ),
+                    *options,
+                    _HTML.li(_('No matches found'), class_='ms-no-results'),
+                ),
+                class_='ms-drop bottom'
+            ),
+            class_='ms-parent',
+        )
 
     def filtering_filter_options(self, filter):
         # webhelpers2 doesn't allow options to be lists or tuples anymore. If this is the case,
@@ -234,6 +277,21 @@ class HTML(Renderer):
                 value=option[0]
             ) if isinstance(option, (tuple, list)) else option) for option in filter.options_seq
         ]
+
+    def filtering_filter_options_multi(self, filter, field_name):
+        return (
+            _HTML.li(
+                _HTML.label(
+                    _HTML.input(
+                        type='checkbox',
+                        value=option[0],
+                        checked=(option[0] in (filter.value1 or [])),
+                        name='selectItem{}'.format(field_name)
+                    ),
+                    option[1],
+                )
+            ) for option in filter.options_seq
+        )
 
     def filtering_col_inputs2(self, col):
         filter = col.filter
