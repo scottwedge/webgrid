@@ -17,7 +17,7 @@ if (typeof _ === "undefined") {
 
     'use strict';
 
-    function MultipleSelect($el, options) {
+    function WebGridMultipleSelect($el, options) {
         var that = this,
             name = $el.attr('name') || options.name || '',
             elWidth = $el.width();
@@ -56,8 +56,8 @@ if (typeof _ === "undefined") {
         this.selectItemName = 'name="selectItem' + name + '"';
     }
 
-    MultipleSelect.prototype = {
-        constructor : MultipleSelect,
+    WebGridMultipleSelect.prototype = {
+        constructor : WebGridMultipleSelect,
 
         init: function() {
             this.$drop.find('ul').css('max-height', this.options.maxHeight + 'px');
@@ -324,7 +324,7 @@ if (typeof _ === "undefined") {
         }
     };
 
-    $.fn.multipleSelect = function() {
+    $.fn.webgridMultipleSelect = function() {
         var option = arguments[0],
             args = arguments,
 
@@ -340,11 +340,11 @@ if (typeof _ === "undefined") {
         this.each(function() {
             var $this = $(this),
                 data = $this.data('multipleSelect'),
-                options = $.extend({}, $.fn.multipleSelect.defaults,
+                options = $.extend({}, $.fn.webgridMultipleSelect.defaults,
                     $this.data(), typeof option === 'object' && option);
 
             if (!data) {
-                data = new MultipleSelect($this, options);
+                data = new WebGridMultipleSelect($this, options);
                 $this.data('multipleSelect', data);
             }
 
@@ -361,7 +361,7 @@ if (typeof _ === "undefined") {
         return value ? value : this;
     };
 
-    $.fn.multipleSelect.defaults = {
+    $.fn.webgridMultipleSelect.defaults = {
         name: '',
         isOpen: false,
         placeholder: '',

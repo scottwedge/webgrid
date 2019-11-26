@@ -43,7 +43,7 @@ function datagrid_activate_mselect_ui(jq_select) {
     if (jq_select.data('multipleSelect')) {
         jq_select.hide();
     } else {
-        jq_select.multipleSelect({
+        jq_select.webgridMultipleSelect({
             minumimCountSelected: 2,
             filter: true
         });
