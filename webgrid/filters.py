@@ -259,8 +259,6 @@ class OptionsFilterBase(FilterBase):
                 if 'is not callable' not in str(e):
                     raise
                 self._options_seq = self.options_from
-            if self.default_op:
-                self._options_seq = [(-1, _('-- All --'))] + list(self._options_seq)
         return self._options_seq
 
     @property
