@@ -1,6 +1,14 @@
 Changelog
 =========
 
+0.2.3 released 2019-11-27
+-------------------------
+
+- resolve bad option in multiselect filters (36fc18c_)
+
+.. _36fc18c: https://github.com/level12/webgrid/commit/36fc18c
+
+
 0.2.2 released 2019-11-26
 -------------------------
 
