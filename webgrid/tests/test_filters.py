@@ -692,6 +692,16 @@ class TestDateTimeFilter(CheckFilterBase):
         eq_(filter.value1_set_with, '01/31/2010 12:00 AM')
         eq_(filter.value2_set_with, '12/31/2010 11:59 PM')
 
+    def test_between_missing_date(self):
+        filter = DateTimeFilter(Person.createdts,
+                                _now=dt.datetime(2018, 12, 15, 1, 2, 3, 5))
+        filter.set('between', '12/31/2010', '')
+        self.assert_filter_query(
+            filter,
+            "WHERE persons.createdts BETWEEN '2010-12-31 00:00:00.000000' "
+            "AND '2018-12-15 01:02:03.000005'"
+        )
+
     def test_between_blank(self):
         filter = DateTimeFilter(Person.createdts)
         with assert_raises(formencode.Invalid):

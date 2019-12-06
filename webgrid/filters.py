@@ -725,6 +725,8 @@ class DateFilter(_DateMixin, FilterBase):
             last_day = dt.date(today.year, 12, 31)
             first_day = dt.date(today.year, 1, 1)
         elif self.op in (ops.between, ops.not_between):
+            if not self.value1 or not self.value2:
+                return
             if self.value1 <= self.value2:
                 first_day = self.value1
                 last_day = self.value2
@@ -868,7 +870,7 @@ class DateFilter(_DateMixin, FilterBase):
         except ValueError:
             # allow open ranges when blanks are submitted as a second value
             if is_value2 and not value:
-                return dt.date.today()
+                return self._get_today()
 
             raise formencode.Invalid(gettext('invalid date'), value, self)
 
@@ -906,7 +908,13 @@ class DateTimeFilter(DateFilter):
                 self.value2_set_with = self.value2.strftime('%m/%d/%Y 11:59 PM')
 
     def process(self, value, is_value2):
-        if value is None or (value == '' and is_value2):
+        if value is None and self.op in (ops.between, ops.not_between):
+            if is_value2:
+                value = ''
+            else:
+                raise formencode.Invalid(gettext('invalid date'), value, self)
+
+        if value is None:
             return None
 
         if self.op == self.default_op and not value:
@@ -944,6 +952,9 @@ class DateTimeFilter(DateFilter):
         try:
             dt_value = parse(value)
         except ValueError:
+            # allow open ranges when blanks are submitted as a second value
+            if is_value2 and not value:
+                return self._get_now()
             raise formencode.Invalid(gettext('invalid date'), value, self)
 
         if is_value2:
