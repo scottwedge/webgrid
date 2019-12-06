@@ -1,6 +1,16 @@
 Changelog
 =========
 
+0.2.4 released 2019-12-06
+-------------------------
+
+- split filter key matching for search to a separate method for easier override (95032d2_)
+- fix DateTimeFilter between operation when missing second operand (acfc86b_)
+
+.. _95032d2: https://github.com/level12/webgrid/commit/95032d2
+.. _acfc86b: https://github.com/level12/webgrid/commit/acfc86b
+
+
 0.2.3 released 2019-11-27
 -------------------------
 
