@@ -341,17 +341,20 @@ class OptionsFilterBase(FilterBase):
                 return _NoValue
         return value
 
+    def match_keys_for_value(self, value):
+        return [
+            key for (key, _) in filter(
+                lambda item: value.lower() in str(item[1]).lower(),
+                self.options_seq
+            )
+        ]
+
     def get_search_expr(self):
         # The important thing to remember here is that a user will be searching for the displayed
         # value, not the key that generated it. We need to do some prep work to search options
         # to get the keys needed for lookup into the data source.
         def search(value):
-            matching_keys = [
-                key for (key, _) in filter(
-                    lambda item: value.lower() in str(item[1]).lower(),
-                    self.options_seq
-                )
-            ]
+            matching_keys = self.match_keys_for_value(value)
             return self.sa_col.in_(matching_keys)
         return search
 
