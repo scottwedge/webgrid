@@ -878,6 +878,9 @@ class DateFilter(_DateOpQueryMixin, _DateMixin, FilterBase):
             else:
                 raise formencode.Invalid(gettext('invalid date'), value, self)
 
+        if value is None and not is_value2 and self.op not in self.no_value_operators:
+            raise formencode.Invalid(gettext('invalid date'), value, self)
+
         if value is None or self.op in self.no_value_operators or (
             self.op == self.default_op and not value
         ):
@@ -1020,6 +1023,9 @@ class DateTimeFilter(DateFilter):
                 value = ''
             else:
                 raise formencode.Invalid(gettext('invalid date'), value, self)
+
+        if value is None and not is_value2 and self.op not in self.no_value_operators:
+            raise formencode.Invalid(gettext('invalid date'), value, self)
 
         if value is None or (self.op == self.default_op and not value):
             return None
