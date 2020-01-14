@@ -1,11 +1,20 @@
 Changelog
 =========
 
+0.2.6 released 2020-01-14
+-------------------------
+
+- fix DateFilter/DateTimeFilter default op bugs introduced in 0.2.5 (edeb74e_)
+
+.. _edeb74e: https://github.com/level12/webgrid/commit/edeb74e
+
+
 0.2.5 released 2020-01-10
 -------------------------
 
 - reduce code complexity (e588630_)
 - handle missing filter values for DateFilter an DateTimeFilter (b0e614b_)
+- note: this release has some bugs in DateFilter/DateTimeFilter for handling default op
 
 .. _e588630: https://github.com/level12/webgrid/commit/e588630
 .. _b0e614b: https://github.com/level12/webgrid/commit/b0e614b
