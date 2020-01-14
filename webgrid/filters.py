@@ -549,18 +549,18 @@ class _DateMixin(object):
         ops.less_than_days_ago: lambda self, today: (
             today - dt.timedelta(days=self.value1),
             today,
-        ),
+        ) if self.value1 is not None else (None, None),
         ops.in_less_than_days: lambda self, today: (
             today,
             today + dt.timedelta(days=self.value1),
-        ),
+        ) if self.value1 is not None else (None, None),
         ops.days_ago: lambda self, today: (
             today - dt.timedelta(days=self.value1),
             today - dt.timedelta(days=self.value1),
-        ),
+        ) if self.value1 is not None else (None, None),
         ops.more_than_days_ago: lambda self, today: (
             None, today - dt.timedelta(days=self.value1)
-        ),
+        ) if self.value1 is not None else (None, None),
         ops.in_days: lambda self, today: self._in_days(today),
         ops.in_more_than_days: lambda self, today: self._in_days(today),
         ops.eq: lambda self, today: self._equality(),
@@ -595,6 +595,8 @@ class _DateMixin(object):
             self.value2_set_with = self.value2.strftime('%m/%d/%Y')
 
     def _between_range(self):
+        if self.value1 is None:
+            return None, None
         if self.value1 <= self.value2:
             first_day, last_day = self.value1, self.value2
         else:
@@ -602,6 +604,8 @@ class _DateMixin(object):
         return first_day, last_day
 
     def _in_days(self, today):
+        if self.value1 is None:
+            return None, None
         return today + dt.timedelta(days=self.value1), None
 
     def _equality(self):
@@ -872,19 +876,23 @@ class DateFilter(_DateOpQueryMixin, _DateMixin, FilterBase):
             raise formencode.Invalid(gettext('invalid date'), value, self)
 
     def process(self, value, is_value2):
-        if value is None and self.op in (ops.between, ops.not_between):
+        # None is ok for default_ops
+        if self.op == self.default_op and not value:
+            return None
+
+        # Subclass ops that do not require a value should be added to no_value_operators
+        # to ensure empty values do not trigger a validation error
+        if self.op in self.no_value_operators:
+            return None
+
+        if value is None:
             if is_value2:
-                value = ''
+                if self.op in (ops.between, ops.not_between):
+                    value = ''
+                else:
+                    return None
             else:
                 raise formencode.Invalid(gettext('invalid date'), value, self)
-
-        if value is None and not is_value2 and self.op not in self.no_value_operators:
-            raise formencode.Invalid(gettext('invalid date'), value, self)
-
-        if value is None or self.op in self.no_value_operators or (
-            self.op == self.default_op and not value
-        ):
-            return None
 
         if self.op == ops.select_month:
             if is_value2:
@@ -1017,29 +1025,7 @@ class DateTimeFilter(DateFilter):
         right_side = ensure_datetime(self.value1.date(), time_part=dt.time(23, 59, 59, 999999))
         return self.sa_col.between(left_side, right_side)
 
-    def process(self, value, is_value2):  # noqa: C901
-        if value is None and self.op in (ops.between, ops.not_between):
-            if is_value2:
-                value = ''
-            else:
-                raise formencode.Invalid(gettext('invalid date'), value, self)
-
-        if value is None and not is_value2 and self.op not in self.no_value_operators:
-            raise formencode.Invalid(gettext('invalid date'), value, self)
-
-        if value is None or (self.op == self.default_op and not value):
-            return None
-
-        if self.op == ops.select_month:
-            if is_value2:
-                return feval.Int(not_empty=False, min=1900, max=9999).to_python(value)
-            return feval.Int(not_empty=False).to_python(value)
-
-        if self.op in self.days_operators:
-            return self._process_days_operator(value, is_value2)
-        elif value == '' and self.op in self.no_value_operators:
-            return None
-
+    def _process_datetime(self, value, is_value2):
         try:
             dt_value = parse(value)
         except ValueError:
@@ -1054,6 +1040,35 @@ class DateTimeFilter(DateFilter):
             self._has_date_only1 = self._has_date_only(dt_value, value)
 
         return dt_value
+
+    def process(self, value, is_value2):
+        # None is ok for default_ops
+        if self.op == self.default_op and not value:
+            return None
+
+        # Subclass ops that do not require a value should be added to no_value_operators
+        # to ensure empty values do not trigger a validation error
+        if self.op in self.no_value_operators:
+            return None
+
+        if value is None:
+            if is_value2:
+                if self.op in (ops.between, ops.not_between):
+                    value = ''
+                else:
+                    return None
+            else:
+                raise formencode.Invalid(gettext('invalid date'), value, self)
+
+        if self.op == ops.select_month:
+            if is_value2:
+                return feval.Int(not_empty=False, min=1900, max=9999).to_python(value)
+            return feval.Int(not_empty=False).to_python(value)
+
+        if self.op in self.days_operators:
+            return self._process_days_operator(value, is_value2)
+
+        return self._process_datetime(value, is_value2)
 
     def _has_date_only(self, dt_value, value):
         return bool(
