@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 import datetime as dt
+from collections import namedtuple
 from decimal import Decimal as D
 
 from blazeutils.testing import raises
@@ -732,6 +733,28 @@ class TestDateFilter(CheckFilterBase):
         assert str(expr) == 'CAST(persons.due_date AS VARCHAR) LIKE :param_1', str(expr)
         assert expr.right.value == '%foo%'
 
+    def test_search_expr_with_numeric(self):
+        fake_dialect = namedtuple('dialect', 'name')
+
+        # mssql within range
+        filter = DateFilter(Person.due_date).new_instance(dialect=fake_dialect('mssql'))
+        expr_factory = filter.get_search_expr()
+        assert callable(expr_factory)
+        expr = expr_factory('1753')
+        assert str(expr) == (
+            'CAST(persons.due_date AS VARCHAR) LIKE :param_1 OR persons.due_date = :due_date_1'
+        )
+        assert expr.clauses[0].right.value == '%1753%', expr.clauses[0].right.value
+        assert expr.clauses[1].right.value.year == 1753
+
+        # mssql out of range
+        filter = DateFilter(Person.due_date).new_instance(dialect=fake_dialect('mssql'))
+        expr_factory = filter.get_search_expr()
+        assert callable(expr_factory)
+        expr = expr_factory('1752')
+        assert str(expr) == 'CAST(persons.due_date AS VARCHAR) LIKE :param_1'
+        assert expr.right.value == '%1752%'
+
     def test_search_expr_with_date(self):
         expr_factory = DateFilter(Person.due_date).get_search_expr()
         assert callable(expr_factory)
@@ -741,6 +764,42 @@ class TestDateFilter(CheckFilterBase):
         )
         assert expr.clauses[0].right.value == '%6/19/2019%'
         assert expr.clauses[1].right.value == dt.datetime(2019, 6, 19)
+
+    def test_valid_date_for_backend(self):
+        fake_dialect = namedtuple('dialect', 'name')
+
+        filter = DateFilter(Person.due_date)
+        assert filter.valid_date_for_backend(dt.date(1, 1, 1)) is True
+
+        filter = DateFilter(Person.due_date).new_instance()
+        assert filter.valid_date_for_backend('foo') is True
+
+        filter = DateFilter(Person.due_date).new_instance(dialect=fake_dialect('postgresql'))
+        assert filter.valid_date_for_backend(dt.date(1, 1, 1)) is True
+        assert filter.valid_date_for_backend(dt.date(9999, 12, 31)) is True
+        assert filter.valid_date_for_backend(dt.datetime(1, 1, 1)) is True
+        assert filter.valid_date_for_backend(dt.datetime(9999, 12, 31, 23, 59, 59)) is True
+
+        filter = DateFilter(Person.due_date).new_instance(dialect=fake_dialect('sqlite'))
+        assert filter.valid_date_for_backend(dt.date(1, 1, 1)) is True
+        assert filter.valid_date_for_backend(dt.date(9999, 12, 31)) is True
+        assert filter.valid_date_for_backend(dt.datetime(1, 1, 1)) is True
+        assert filter.valid_date_for_backend(dt.datetime(9999, 12, 31, 23, 59, 59)) is True
+
+        filter = DateFilter(Person.due_date).new_instance(dialect=fake_dialect('mssql'))
+        assert filter.valid_date_for_backend(dt.date(1, 1, 1)) is False
+        assert filter.valid_date_for_backend(dt.date(1752, 12, 31)) is False
+        assert filter.valid_date_for_backend(dt.date(1753, 1, 1)) is True
+        assert filter.valid_date_for_backend(dt.date(9999, 12, 31)) is True
+
+        assert filter.valid_date_for_backend(dt.datetime(1, 1, 1)) is False
+        assert filter.valid_date_for_backend(dt.datetime(1752, 12, 31, 23, 59, 59)) is False
+        assert filter.valid_date_for_backend(dt.datetime(1753, 1, 1)) is True
+        assert filter.valid_date_for_backend(dt.datetime(9999, 12, 31, 23, 59, 59)) is True
+        assert filter.valid_date_for_backend(dt.datetime(9999, 12, 31, 23, 59, 59, 9999)) is False
+
+        filter = DateFilter(Person.due_date).new_instance(dialect=fake_dialect('foo'))
+        assert filter.valid_date_for_backend(dt.date(1, 1, 1)) is True
 
 
 class TestDateTimeFilter(CheckFilterBase):
@@ -1244,6 +1303,16 @@ class TestDateTimeFilter(CheckFilterBase):
         assert expr.clauses[0].right.value == '%6/19/2019%'
         assert expr.clauses[1].right.clauses[0].value == dt.datetime(2019, 6, 19)
         assert expr.clauses[1].right.clauses[1].value == dt.datetime(2019, 6, 19, 23, 59, 59, 999999)  # noqa: E501
+
+    def test_search_expr_invalid_date(self):
+        fake_dialect = namedtuple('dialect', 'name')
+        filter = DateTimeFilter(Person.due_date).new_instance(dialect=fake_dialect('mssql'))
+
+        expr_factory = filter.get_search_expr()
+        assert callable(expr_factory)
+        expr = expr_factory('6/19/1752')
+        assert str(expr) == 'CAST(persons.due_date AS VARCHAR) LIKE :param_1', str(expr)
+        assert expr.right.value == '%6/19/1752%'
 
 
 class TestTimeFilter(CheckFilterBase):
