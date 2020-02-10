@@ -1,6 +1,14 @@
 Changelog
 =========
 
+0.2.7 released 2020-02-10
+-------------------------
+
+- fix issue searching date(time) fields for values that are out of bounds (3d33663_)
+
+.. _3d33663: https://github.com/level12/webgrid/commit/3d33663
+
+
 0.2.6 released 2020-01-14
 -------------------------
 
