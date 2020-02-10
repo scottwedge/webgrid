@@ -13,7 +13,7 @@ import formencode.validators as feval
 from sqlalchemy.sql import or_, and_
 import sqlalchemy as sa
 import six
-from werkzeug import ImmutableDict
+from werkzeug.datastructures import ImmutableDict
 
 from .extensions import (
     gettext,
@@ -695,6 +695,41 @@ class _DateMixin(object):
                      descriptor=prefix,
                      date=target_date.strftime('%m/%d/%Y'))
 
+    def valid_date_for_backend(self, value):
+        """
+        Returns false if the given date or datetime is out of bounds for the backend dialect.
+        If for any reason the value cannot be validated the value is presumed to be valid..
+        """
+        if not self.dialect:
+            return True
+
+        if not isinstance(value, (dt.datetime, dt.date)):
+            return True
+
+        def min_dt(*args):
+            m = dt.datetime.min
+            parts = [m.year, m.month, m.day, m.hour, m.minute, m.second, m.microsecond]
+            return dt.datetime(*(max(a, m) for a, m in zip(args, parts)))
+
+        def max_dt(*args):
+            m = dt.datetime.max
+            parts = [m.year, m.month, m.day, m.hour, m.minute, m.second, m.microsecond]
+            return dt.datetime(*(min(a, m) for a, m in zip(args, parts)))
+
+        if not isinstance(value, dt.datetime):
+            value = dt.datetime.combine(value, dt.time.min)
+
+        if self.dialect.name == 'postgresql':
+            # https://www.enterprisedb.com/edb-docs/d/edb-postgres-advanced-server/user-guides/database-compatibility-for-oracle-developers-guide/9.4/Database_Compatibility_for_Oracle_Developers_Guide.1.038.html  # noqa
+            return min_dt(-4713, 1, 1) <= value <= max_dt(294276, 12, 31, 23, 59, 59)
+        elif self.dialect.name == 'sqlite':
+            # https://www.sqlite.org/lang_datefunc.html
+            return min_dt(0, 1, 1) <= value <= max_dt(9999, 12, 31, 23, 59, 59)
+        elif self.dialect.name == 'mssql':
+            # https://docs.microsoft.com/en-us/sql/t-sql/data-types/datetime-transact-sql?view=sql-server-ver15#datetime-description  # noqa
+            return min_dt(1753, 1, 1) <= value <= max_dt(9999, 12, 31, 23, 59, 59, 997)
+        return True
+
     def get_search_expr(self, date_comparator=None):
         # This is a naive implementation that simply converts the date/time column to string and
         # uses a LIKE. Only addition is to support a common month/day/year format, but only if
@@ -705,6 +740,8 @@ class _DateMixin(object):
             base_expr = sa.sql.cast(self.sa_col, sa.Unicode).like('%{}%'.format(value))
             try:
                 date_value = parse(value)
+                if not self.valid_date_for_backend(date_value):
+                    return base_expr
                 return or_(
                     base_expr,
                     date_comparator(date_value)
