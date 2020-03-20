@@ -1,6 +1,14 @@
 Changelog
 =========
 
+0.2.8 released 2020-03-20
+-------------------------
+
+- fix session persistence for flask (5ed62b8_)
+
+.. _5ed62b8: https://github.com/level12/webgrid/commit/5ed62b8
+
+
 0.2.7 released 2020-02-10
 -------------------------
 
