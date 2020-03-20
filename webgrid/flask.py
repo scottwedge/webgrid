@@ -37,6 +37,9 @@ class WebGrid(object):
     def web_session(self):
         return session
 
+    def persist_web_session(self):
+        session.modified = True
+
     def flash_message(self, category, message):
         flash(message, category)
 

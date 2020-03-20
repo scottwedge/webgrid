@@ -40,6 +40,9 @@ class WebGrid(object):
     def web_session(self):
         return user
 
+    def persist_web_session(self):
+        pass
+
     def flash_message(self, category, message):
         user.add_message(category, message)
 

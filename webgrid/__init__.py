@@ -1098,6 +1098,9 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
         dgsessions[self.session_key] = args_json
         dgsessions['_{0}'.format(self.__class__.__name__)] = args_json
 
+        # some frameworks/sessions need these changes manually persisted
+        self.manager.persist_web_session()
+
     def __repr__(self):
         return '<Grid "{0}">'.format(self.__class__.__name__)
 
