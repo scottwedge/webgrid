@@ -153,9 +153,9 @@ class Column(object):
         grid_cls_cols = grid_locals.setdefault('__cls_cols__', [])
         grid_cls_cols.append(self)
 
-    def __init__(self, label, key=None, filter=None, can_sort=True, group=None,
+    def __init__(self, label, key=None, filter=None, can_sort=True,  # noqa: C901
                  xls_width=None, xls_style=None, xls_num_format=None,
-                 render_in=_None, has_subtotal=False, visible=True, **kwargs):
+                 render_in=_None, has_subtotal=False, visible=True, group=None, **kwargs):
         self.label = label
         self.key = key
         self.filter = filter
@@ -212,7 +212,7 @@ class Column(object):
 
     def new_instance(self, grid):
         cls = self.__class__
-        column = cls(self.label, self.key, None, self.can_sort, self.group, _dont_assign=True)
+        column = cls(self.label, self.key, None, self.can_sort, group=self.group, _dont_assign=True)
         column.grid = grid
         column.expr = self.expr
 
@@ -339,12 +339,12 @@ class Column(object):
 class LinkColumnBase(Column):
     link_attrs = {}
 
-    def __init__(self, label, key=None, filter=None, can_sort=True, group=None,
+    def __init__(self, label, key=None, filter=None, can_sort=True,
                  link_label=None, xls_width=None, xls_style=None, xls_num_format=None,
-                 render_in=_None, has_subtotal=False, visible=True, **kwargs):
+                 render_in=_None, has_subtotal=False, visible=True, group=None, **kwargs):
         super().__init__(label, key, filter, can_sort, xls_width,
                          xls_style, xls_num_format, render_in,
-                         has_subtotal, visible, **kwargs)
+                         has_subtotal, visible, group=group, **kwargs)
         self.link_label = link_label
 
     def render_html(self, record, hah):
@@ -361,13 +361,13 @@ class LinkColumnBase(Column):
 
 class BoolColumn(Column):
 
-    def __init__(self, label, key_or_filter=None, key=None, can_sort=True, group=None,
+    def __init__(self, label, key_or_filter=None, key=None, can_sort=True,
                  reverse=False, true_label=_('True'), false_label=_('False'),
                  xls_width=None, xls_style=None, xls_num_format=None,
-                 render_in=_None, has_subtotal=False, visible=True, **kwargs):
+                 render_in=_None, has_subtotal=False, visible=True, group=None, **kwargs):
         super().__init__(label, key_or_filter, key, can_sort, xls_width,
                          xls_style, xls_num_format, render_in,
-                         has_subtotal, visible, **kwargs)
+                         has_subtotal, visible, group=group, **kwargs)
         self.reverse = reverse
         self.true_label = true_label
         self.false_label = false_label
@@ -382,22 +382,22 @@ class BoolColumn(Column):
 
 class YesNoColumn(BoolColumn):
 
-    def __init__(self, label, key_or_filter=None, key=None, can_sort=True, group=None,
+    def __init__(self, label, key_or_filter=None, key=None, can_sort=True,
                  reverse=False, xls_width=None, xls_style=None, xls_num_format=None,
-                 render_in=_None, has_subtotal=False, visible=True, **kwargs):
+                 render_in=_None, has_subtotal=False, visible=True, group=None, **kwargs):
         super().__init__(label, key_or_filter, key, can_sort, reverse,
                          _('Yes'), _('No'), xls_width, xls_style, xls_num_format,
-                         render_in, has_subtotal, visible, **kwargs)
+                         render_in, has_subtotal, visible, group=group, **kwargs)
 
 
 class DateColumnBase(Column):
 
-    def __init__(self, label, key_or_filter=None, key=None, can_sort=True, group=None,
+    def __init__(self, label, key_or_filter=None, key=None, can_sort=True,
                  html_format=None, xls_width=None, xls_style=None, xls_num_format=None,
-                 render_in=_None, has_subtotal=False, visible=True, **kwargs):
+                 render_in=_None, has_subtotal=False, visible=True, group=None, **kwargs):
         super().__init__(label, key_or_filter, key, can_sort, xls_width,
                          xls_style, xls_num_format, render_in, has_subtotal,
-                         visible, **kwargs)
+                         visible, group=group, **kwargs)
         if html_format:
             self.html_format = html_format
 
@@ -475,14 +475,14 @@ class NumericColumn(Column):
                          ';_($* "-"??_);_(@_)'
     xls_fmt_percent = '0{dec_places}%;{neg_prefix}-0{dec_places}%'
 
-    def __init__(self, label, key_or_filter=None, key=None, can_sort=True, group=None,
+    def __init__(self, label, key_or_filter=None, key=None, can_sort=True,
                  reverse=False, xls_width=None, xls_style=None, xls_num_format=None,
                  render_in=_None, format_as='general', places=2, curr='',
                  sep=',', dp='.', pos='', neg='-', trailneg='',
-                 xls_neg_red=True, has_subtotal=False, visible=True, **kwargs):
+                 xls_neg_red=True, has_subtotal=False, visible=True, group=None, **kwargs):
         super().__init__(label, key_or_filter, key, can_sort, xls_width,
                          xls_style, xls_num_format, render_in,
-                         has_subtotal, visible, **kwargs)
+                         has_subtotal, visible, group=group, **kwargs)
         self.places = places
         self.curr = curr
         self.sep = sep
