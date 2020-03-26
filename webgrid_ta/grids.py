@@ -113,6 +113,7 @@ class StopwatchGrid(Grid):
         class_ = 'lap-1'
 
     lap_group_2 = ColumnGroup('Lap 2', class_='lap-2')
+    lap_group_3 = ColumnGroup('Lap 3', class_='lap-3')
 
     Column('ID', Stopwatch.id)
     Column('Label', Stopwatch.label, TextFilter)
@@ -121,6 +122,8 @@ class StopwatchGrid(Grid):
     Column('Category', Stopwatch.category, TextFilter)
     DateTimeColumn('Start Time', Stopwatch.start_time_lap2, group=lap_group_2)
     DateTimeColumn('Stop Time', Stopwatch.stop_time_lap2, group=lap_group_2)
+    DateTimeColumn('Start Time', Stopwatch.start_time_lap3, group=lap_group_3)
+    DateTimeColumn('Stop Time', Stopwatch.stop_time_lap3, group=lap_group_3)
 
     def query_prep(self, query, has_sort, has_filters):
         # default sort

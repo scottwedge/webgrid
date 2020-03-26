@@ -129,3 +129,5 @@ class Stopwatch(db.Model, DefaultMixin):
     stop_time_lap1 = sa.Column(sa.DateTime)
     start_time_lap2 = sa.Column(sa.DateTime)
     stop_time_lap2 = sa.Column(sa.DateTime)
+    start_time_lap3 = sa.Column(sa.DateTime)
+    stop_time_lap3 = sa.Column(sa.DateTime)

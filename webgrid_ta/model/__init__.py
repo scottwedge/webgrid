@@ -46,6 +46,8 @@ def load_db():
         s.stop_time_lap1 = base_date + dt.timedelta(hours=x + 1)
         s.start_time_lap2 = base_date + dt.timedelta(hours=x + 2)
         s.stop_time_lap2 = base_date + dt.timedelta(hours=x + 3)
+        s.start_time_lap3 = base_date + dt.timedelta(hours=x + 4)
+        s.stop_time_lap3 = base_date + dt.timedelta(hours=x + 5)
         db.session.add(s)
 
     db.session.commit()
