@@ -16,6 +16,11 @@
 
     <div class="links">
         <input type="submit" value={{ _('Apply') }} />
+        <!--
+        Webgrid can be configured to load filters from the session.
+        The hidden input is a flag to prevent session loading when the form is submitted.
+        -->
+        <input type="hidden" name="apply" value="" />
         <a href="{{renderer.reset_url()}}">{{ _('reset') }}</a>
     </div>
 </form>
