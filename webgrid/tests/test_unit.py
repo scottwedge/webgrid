@@ -670,6 +670,19 @@ class TestQueryStringArgs(object):
         eq_(pg2.column('createdts').filter.op, '!eq')
         eq_(pg2.column('createdts').filter.value1, datetime(2017, 5, 6))
 
+    @inrequest('/foo?op(firstname)=eq&v1(firstname)=bob&perpage=1&onpage=100')
+    def test_qs_apply_prevents_session_load(self):
+        pg = PeopleGrid()
+        pg.apply_qs_args()
+        flask.request.args = MultiDict([
+            ('session_key', pg.session_key),
+            ('apply', None),
+        ])
+        pg2 = PeopleGrid()
+        pg2.apply_qs_args()
+        assert not pg2.column('firstname').filter.op
+        assert not pg2.column('firstname').filter.value1
+
     @inrequest('/foo?op(firstname)=&v1(firstname)=foo&op(status)=&v1(status)=1')
     def test_qs_blank_operator(self):
         pg = PeopleGrid()

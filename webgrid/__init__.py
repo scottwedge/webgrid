@@ -926,7 +926,10 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
                 self.session_key
             )
             session_override = self.args_have_session_override(args)
-            if not self.args_have_op(args) or session_override:
+            # apply arg indicates that filtering/paging/sorting form was submitted
+            apply = self.prefix_qs_arg_key('apply') in args
+            args.pop(self.prefix_qs_arg_key('apply'), None)
+            if (not self.args_have_op(args) and not apply) or session_override:
                 session_args = self.get_session_store(args, session_override)
                 # override paging if it exists in the query
                 if self.args_have_page(args):
