@@ -365,3 +365,7 @@ class TestColumn(object):
 
         g = TG()
         assert g.column('numericcol').render_in == ('foo',)
+
+    @raises(ValueError, 'expected group to be a subclass of ColumnGroup')
+    def test_group_attr_error(self):
+        Column('label', Person.id, group='not a ColumnGroup')

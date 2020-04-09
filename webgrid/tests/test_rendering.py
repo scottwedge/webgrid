@@ -1,33 +1,46 @@
 from __future__ import absolute_import
 
+import csv
 import datetime as dt
 import json
 import warnings
 from io import BytesIO
-import six
 
 import arrow
+import six
+import xlrd
+import xlsxwriter
 from nose.tools import eq_, raises
 from six.moves import range
-import xlrd
-import csv
-import xlsxwriter
 
 from webgrid import (
+    BoolColumn,
     Column,
     LinkColumnBase,
+    NumericColumn,
     YesNoColumn,
-    BoolColumn,
-    row_styler,
     col_filter,
     col_styler,
-    NumericColumn,
+    row_styler,
 )
 from webgrid.filters import TextFilter
-from webgrid.renderers import RenderLimitExceeded, HTML, XLS, XLSX, CSV
-from webgrid_ta.model.entities import ArrowRecord, Person, Status, Email, db, AccountType
+from webgrid.renderers import CSV, HTML, XLS, XLSX, RenderLimitExceeded
+from webgrid_ta.grids import (
+    ArrowCSVGrid,
+    ArrowGrid,
+    Grid,
+    PeopleGrid as PG,
+    StopwatchGrid,
+)
+from webgrid_ta.model.entities import (
+    AccountType,
+    ArrowRecord,
+    Email,
+    Person,
+    Status,
+    db,
+)
 
-from webgrid_ta.grids import ArrowGrid, Grid, PeopleGrid as PG, ArrowCSVGrid
 from .helpers import eq_html, inrequest, render_in_grid
 
 
@@ -180,6 +193,12 @@ class TestHtmlRenderer(object):
     def test_people_html(self):
         pg = render_in_grid(PeopleGrid, 'html')()
         eq_html(pg.html.table(), 'people_table.html')
+
+    @inrequest('/')
+    def test_stopwatch_html(self):
+        # Test Stopwatch grid with column groups.
+        grid = StopwatchGrid()
+        eq_html(grid.html.table(), 'stopwatch_table.html')
 
     @inrequest('/')
     def test_default_jinja_env(self):
@@ -694,6 +713,28 @@ class TestXLSXRenderer(object):
         eq_(sh.cell_value(3, 0), 'fn001')
         eq_(sh.cell_value(3, 7), 'st001')
         eq_(sh.nrows, 4)
+
+    def test_group_headings(self):
+        grid = StopwatchGrid()
+        wb = grid.xlsx()
+        wb.filename.seek(0)
+
+        book = xlrd.open_workbook(file_contents=wb.filename.getvalue())
+        sheet = book.sheet_by_index(0)
+        # A [ 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 ]
+        #   [       | Lap 1 |   | Lap 2 | Lap 3 ]
+        eq_(sheet.row_values(0), ['', '', 'Lap 1', '', '', 'Lap 2', '', 'Lap 3', ''])
+        eq_(sheet.row_values(0), ['', '', 'Lap 1', '', '', 'Lap 2', '', 'Lap 3', ''])
+        eq_(sheet.cell_value(1, 1), 'Label')
+        eq_(sheet.cell_value(2, 1), 'Watch 1')
+        eq_(sheet.merged_cells, [
+            (0, 1, 0, 2),  # Buffer A1:A2
+            (0, 1, 2, 4),  # Lap 1  A3:A4
+            #              # Buffer A5
+            (0, 1, 5, 7),  # Lap 2  A6:A7
+            (0, 1, 7, 9),  # Lap 3  A8:A9
+        ])
+        eq_(sheet.ncols, 9)
 
     def test_subtotals_with_no_records(self):
         g = PGGrandTotals()

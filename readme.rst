@@ -84,6 +84,14 @@ The column is visible when `visible` is `True`.
 - a boolean
 - a lambda which accepts the column instance and returns a boolean
 
+Column Groups
+=============
+
+Columns can be grouped under a common header by passing a  ``group`` (a ``ColumnGroup`` subclass
+or an instance of ``ColumnGroup``) to ``Column`` constructors. See
+``webgrid_ta.grids.StopwatchGrid`` for an example. View ``/groups`` endpoint to see column groups
+in action.
+
 Questions & Comments
 ---------------------
 

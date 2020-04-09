@@ -206,6 +206,10 @@ table.datagrid th {
     border-top: solid 1px white;
 }
 
+.datagrid table.records th.buffer {
+    background-color: transparent;
+}
+
 .datagrid table.records th a,
 table.datagrid th a {
     color: #ececec;

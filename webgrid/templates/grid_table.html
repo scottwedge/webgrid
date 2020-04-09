@@ -1,5 +1,10 @@
 {{ renderer.table_otag() }}
     <thead>
+        {%- if renderer.has_groups() %}
+        <tr>
+            {{ renderer.table_group_headings().lstrip() }}
+        </tr>
+        {%- endif %}
         <tr>
             {{ renderer.table_column_headings().lstrip() }}
         </tr>

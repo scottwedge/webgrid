@@ -9,7 +9,7 @@ db = SQLAlchemy()
 
 
 def load_db():
-    from webgrid_ta.model.entities import Status, Person, Email
+    from webgrid_ta.model.entities import Status, Person, Email, Stopwatch
 
     db.create_all()
 
@@ -36,5 +36,18 @@ def load_db():
             p.status = None
         else:
             p.status = stat_closed
+
+    for x in range(1, 10):
+        s = Stopwatch()
+        s.label = 'Watch {}'.format(x)
+        s.category = 'Sports'
+        base_date = dt.datetime(year=2019, month=1, day=1)
+        s.start_time_lap1 = base_date + dt.timedelta(hours=x)
+        s.stop_time_lap1 = base_date + dt.timedelta(hours=x + 1)
+        s.start_time_lap2 = base_date + dt.timedelta(hours=x + 2)
+        s.stop_time_lap2 = base_date + dt.timedelta(hours=x + 3)
+        s.start_time_lap3 = base_date + dt.timedelta(hours=x + 4)
+        s.stop_time_lap3 = base_date + dt.timedelta(hours=x + 5)
+        db.session.add(s)
 
     db.session.commit()

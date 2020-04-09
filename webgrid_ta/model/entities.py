@@ -117,3 +117,17 @@ class Status(db.Model, DefaultMixin):
     def testing_create(cls, label=None):
         label = label or randchars()
         return cls.add(label=label)
+
+
+class Stopwatch(db.Model, DefaultMixin):
+    __tablename__ = 'stopwatches'
+
+    id = sa.Column(sa.Integer, primary_key=True)
+    label = sa.Column(sa.String(20))
+    category = sa.Column(sa.String(20))
+    start_time_lap1 = sa.Column(sa.DateTime)
+    stop_time_lap1 = sa.Column(sa.DateTime)
+    start_time_lap2 = sa.Column(sa.DateTime)
+    stop_time_lap2 = sa.Column(sa.DateTime)
+    start_time_lap3 = sa.Column(sa.DateTime)
+    stop_time_lap3 = sa.Column(sa.DateTime)

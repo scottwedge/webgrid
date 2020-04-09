@@ -85,7 +85,46 @@ class Renderer(ABC):
         pass
 
 
-class HTML(Renderer):
+class GroupMixin:
+    def has_groups(self):
+        for col in self.columns:
+            if col.group:
+                return True
+
+        return False
+
+    def get_group_heading_colspans(self):
+        heading_colspans = []
+        buffer_colspan = 0
+        group_colspan = 0
+        current_group = None
+        for col in self.columns:
+            if col.group:
+                if buffer_colspan:
+                    heading_colspans.append((None, buffer_colspan))
+                    buffer_colspan = 0
+
+                if current_group and current_group != col.group:
+                    heading_colspans.append((current_group, group_colspan))
+                    group_colspan = 1
+                    current_group = None
+                else:
+                    current_group = col.group
+                    group_colspan += 1
+            else:
+                buffer_colspan += 1
+                if current_group:
+                    heading_colspans.append((current_group, group_colspan))
+                    group_colspan = 0
+                    current_group = None
+
+        if current_group:
+            heading_colspans.append((current_group, group_colspan))
+
+        return heading_colspans
+
+
+class HTML(GroupMixin, Renderer):
     # by default, the renderer will use the display value from the operator,
     # but that can be overriden by subclassing and setting this dictionary
     # like:
@@ -451,6 +490,26 @@ class HTML(Renderer):
         th_str = '\n'.join(headings)
         th_str = reindent(th_str, 12)
         return literal(th_str)
+
+    def table_group_headings(self):
+        group_headings = [
+            self.group_th(group, colspan)
+            for group, colspan in self.get_group_heading_colspans()
+        ]
+        th_str = '\n'.join(group_headings)
+        th_str = reindent(th_str, 12)
+        return literal(th_str)
+
+    def buffer_th(self, colspan, **kwargs):
+        kwargs.setdefault('class_', 'buffer')
+        return _HTML.th('', **HTMLAttributes(colspan=colspan, **kwargs))
+
+    def group_th(self, group, colspan, **kwargs):
+        if group is None:
+            return self.buffer_th(colspan)
+
+        kwargs.setdefault('class_', group.class_)
+        return _HTML.th(group.label, **HTMLAttributes(colspan=colspan, **kwargs))
 
     def table_th(self, col):
         label = col.label
@@ -837,7 +896,7 @@ class XLS(Renderer):
         return self.grid.manager.file_as_response(buffer, self.file_name(), self.mime_type)
 
 
-class XLSX(Renderer):
+class XLSX(GroupMixin, Renderer):
     mime_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
     @property
@@ -932,6 +991,26 @@ class XLSX(Renderer):
 
     def body_headings(self, xlh, wb):
         heading_style = wb.add_format({'bold': True})
+
+        # Render group labels above column headings.
+        if self.has_groups():
+            col_index = 0
+            for group, colspan in self.get_group_heading_colspans():
+                data = fix_xls_value(group.label) if group else None
+                if colspan == 1:
+                    xlh.awrite(data, heading_style)
+                    xlh.ws.write(0, col_index, data, heading_style)
+                else:
+                    xlh.ws.merge_range(
+                        0, col_index, 0, col_index + (colspan - 1),
+                        data,
+                        heading_style
+                    )
+
+                col_index += colspan
+
+            xlh.nextrow()
+
         for col in self.columns:
             xlh.awrite(fix_xls_value(col.label), heading_style)
             self.update_column_width(col, col.label)
