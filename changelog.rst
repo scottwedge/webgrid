@@ -1,6 +1,16 @@
 Changelog
 =========
 
+0.2.9 released 2020-04-09
+-------------------------
+
+- Allow columns to be grouped in the UI with an additional header (HTML, XLSX targets) (3a9e64a_)
+- Fix bug clearing single filter when sessions are enabled (c14c708_)
+
+.. _3a9e64a: https://github.com/level12/webgrid/commit/3a9e64a
+.. _c14c708: https://github.com/level12/webgrid/commit/c14c708
+
+
 0.2.8 released 2020-03-20
 -------------------------
 
