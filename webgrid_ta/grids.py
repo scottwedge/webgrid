@@ -72,6 +72,18 @@ class PeopleGrid(Grid):
         return query
 
 
+class PeopleGridByConfig(PeopleGrid):
+    query_outer_joins = (Person.status, )
+    query_default_sort = (Person.id, )
+
+    def query_prep(self, query, has_sort, has_filters):
+        query = query.add_columns(
+            Person.id, Person.lastname, Person.due_date, Person.account_type,
+        ).add_entity(Person)
+
+        return query
+
+
 class DefaultOpGrid(Grid):
     session_on = True
 
