@@ -588,6 +588,19 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
     # filter at once
     enable_search = False
 
+    # List of joins to bring the query together for all columns. May have just the join object,
+    # or also conditions
+    # e.g. [Blog], ([Blog.category], ), or [(Blog, Blog.active == sa.true())]
+    # note: relationship attributes must be referenced within tuples, due to SQLAlchemy magic
+    query_joins = None
+    query_outer_joins = None
+    # Filter parameter(s) tuple to be used on the query
+    # note: relationship attributes must be referenced within tuples, due to SQLAlchemy magic
+    query_filter = None
+    # Parameter(s) tuple to be passed to order_by if sort options are not set on the grid
+    # note: relationship attributes must be referenced within tuples, due to SQLAlchemy magic
+    query_default_sort = None
+
     # Will ask for confirmation before exporting more than this many records.
     # Set to None to disable this check
     unconfirmed_export_limit = 10000
@@ -848,7 +861,21 @@ class BaseGrid(six.with_metaclass(_DeclarativeMeta, object)):
 
     def query_base(self, has_sort, has_filters):
         cols = [col.expr for col in self.columns if col.expr is not None]
-        return self.manager.sa_query(*cols)
+        query = self.manager.sa_query(*cols)
+
+        for join_terms in (tolist(self.query_joins) or tuple()):
+            query = query.join(*tolist(join_terms))
+
+        for join_terms in (tolist(self.query_outer_joins) or tuple()):
+            query = query.outerjoin(*tolist(join_terms))
+
+        if self.query_filter:
+            query = query.filter(*tolist(self.query_filter))
+
+        if not has_sort and self.query_default_sort is not None:
+            query = query.order_by(*tolist(self.query_default_sort))
+
+        return query
 
     def query_prep(self, query, has_sort, has_filters):
         return query

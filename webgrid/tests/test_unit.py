@@ -13,7 +13,7 @@ from werkzeug.datastructures import MultiDict
 from webgrid import Column, BoolColumn, YesNoColumn
 from webgrid.filters import FilterBase, TextFilter, IntFilter
 from webgrid_ta.model.entities import Person, Status, db
-from webgrid_ta.grids import Grid, PeopleGrid
+from webgrid_ta.grids import Grid, PeopleGrid, PeopleGridByConfig
 from .helpers import assert_in_query, assert_not_in_query, query_to_str, inrequest
 from webgrid.renderers import CSV
 
@@ -445,10 +445,11 @@ class TestQueryStringArgs(object):
 
     @inrequest('/foo?dg_perpage=1&dg_onpage=2')
     def test_qs_prefix(self):
-        pg = PeopleGrid(qs_prefix='dg_')
-        pg.apply_qs_args()
-        eq_(pg.on_page, 2)
-        eq_(pg.per_page, 1)
+        for grid_cls in (PeopleGrid, PeopleGridByConfig):
+            pg = grid_cls(qs_prefix='dg_')
+            pg.apply_qs_args()
+            eq_(pg.on_page, 2)
+            eq_(pg.per_page, 1)
 
     @inrequest('/foo?perpage=1&onpage=2')
     def test_qs_paging(self):
