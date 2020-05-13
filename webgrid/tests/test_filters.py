@@ -482,7 +482,7 @@ class TestDateFilter(CheckFilterBase):
         filter.set('ltda', '10')
         self.assert_filter_query(
             filter,
-            "WHERE persons.due_date > '2011-12-22' AND persons.due_date < '2012-01-01'"
+            "WHERE persons.due_date > '2011-12-22' AND persons.due_date <= '2012-01-01'"
         )
         eq_(filter.description, '12/22/2011 - 01/01/2012')
 
@@ -1044,12 +1044,12 @@ class TestDateTimeFilter(CheckFilterBase):
         filter.set('da', '10000000')
 
     def test_less_than_days_ago(self):
-        filter = DateTimeFilter(Person.createdts, _now=dt.date(2012, 1, 1))
+        filter = DateTimeFilter(Person.createdts, _now=dt.datetime(2012, 1, 1, 1, 1, 1, 1))
         filter.set('ltda', '10')
         self.assert_filter_query(
             filter,
             "WHERE persons.createdts > '2011-12-22 23:59:59.999999' AND "
-            "persons.createdts < '2012-01-01 00:00:00.000000'")
+            "persons.createdts <= '2012-01-01 01:01:01.000001'")
 
     def test_less_than_days_ago_default(self):
         filter = DateTimeFilter(Person.createdts, default_op='ltda')

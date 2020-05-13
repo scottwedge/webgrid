@@ -774,7 +774,7 @@ class _DateOpQueryMixin:
         ),
         ops.less_than_days_ago: lambda self, query, today: query.filter(and_(
             self.sa_col > today - dt.timedelta(days=self.value1),
-            self.sa_col < today,
+            self.sa_col <= today,
         )),
         ops.more_than_days_ago: lambda self, query, today: query.filter(
             self.sa_col < today - dt.timedelta(days=self.value1)
@@ -982,7 +982,7 @@ class DateTimeFilter(DateFilter):
         ops.less_than_days_ago: lambda self, query, today: query.filter(and_(
             self.sa_col > ensure_datetime(today - dt.timedelta(days=self.value1),
                                           time_part=dt.time(23, 59, 59, 999999)),
-            self.sa_col < ensure_datetime(today)
+            self.sa_col <= self._get_now()
         )),
         ops.more_than_days_ago: lambda self, query, today: query.filter(
             self.sa_col < ensure_datetime(today - dt.timedelta(days=self.value1))
