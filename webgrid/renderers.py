@@ -1,11 +1,15 @@
 from __future__ import absolute_import
 
+import re
 from abc import ABC, abstractmethod
 import io
 from operator import itemgetter
 import warnings
 from collections import defaultdict
+
 import six
+from blazeutils.functional import identity
+from markupsafe import Markup
 from six.moves import range
 
 from blazeutils.containers import HTMLAttributes, LazyDict
@@ -15,7 +19,6 @@ from blazeutils.jsonh import jsonmod
 from blazeutils.spreadsheets import Writer, WriterX, xlsxwriter
 from blazeutils.strings import reindent, randnumerics
 import jinja2 as jinja
-from webhelpers2.html import HTML as _HTML, literal, tags
 from werkzeug.datastructures import MultiDict
 from werkzeug.urls import Href
 
@@ -124,6 +127,34 @@ class GroupMixin:
         return heading_colspans
 
 
+def _safe_id(idstring):
+    """
+    From webhelpers2.html.tags. This is included for backwards compatibility
+    TODO: Set IDs explicitly and don't rely on this being applied to name attributes
+    """
+    # Transform all whitespace to underscore
+    idstring = re.sub(r'\s', "_", '%s' % idstring)
+    # Remove everything that is not a hyphen or a member of \w
+    idstring = re.sub(r'(?!-)\W', "", idstring).lower()
+    return idstring
+
+
+def render_html_attributes(attrs):
+    if not attrs:
+        return Markup('')
+
+    def render_attr(key, value):
+        if value is True:
+            return Markup.escape(key)
+        elif value is False or value is None:
+            return Markup('')
+        return Markup('{}="{}"'.format(Markup.escape(key), Markup.escape(value)))
+
+    attrs = sorted(attrs.items(), key=itemgetter(0))
+    rendered_attrs = filter(identity, (render_attr(k, v) for k, v in attrs))
+    return Markup(' ' + ' '.join(rendered_attrs))
+
+
 class HTML(GroupMixin, Renderer):
     # by default, the renderer will use the display value from the operator,
     # but that can be overriden by subclassing and setting this dictionary
@@ -145,11 +176,18 @@ class HTML(GroupMixin, Renderer):
             # cycle and used only for render), fall back to a default jinja environment
             self.jinja_env = jinja.Environment(
                 loader=jinja.PackageLoader('webgrid', 'templates'),
+                finalize=lambda x: x if x is not None else '',
                 autoescape=True
             )
         self.jinja_env.filters['wg_safe'] = jinja.filters.do_mark_safe
+        self.jinja_env.filters['wg_attributes'] = render_html_attributes
+        self.jinja_env.filters['wg_gettext'] = _
 
         configure_jinja_environment(self.jinja_env, translation_manager)
+
+    def _render_jinja(self, source, **kwargs):
+        template = self.jinja_env.from_string(source)
+        return Markup(template.render(**kwargs))
 
     def __call__(self):
         return self.render()
@@ -162,19 +200,20 @@ class HTML(GroupMixin, Renderer):
             raise RenderLimitExceeded('Unable to render HTML table')
         return self.load_content('grid.html')
 
-    def grid_otag(self):
-        return _HTML.div(_closed=False, **self.grid.hah)
-
-    def grid_ctag(self):
-        return literal('</div>')
+    def grid_attrs(self):
+        return self.grid.hah
 
     def header(self):
         if self.grid.hide_controls_box:
             return ''
         return self.load_content('grid_header.html')
 
-    def header_form_otag(self, **kwargs):
-        return _HTML.form(_closed=False, method='get', action=self.form_action_url(), **kwargs)
+    def header_form_attrs(self, **kwargs):
+        return {
+            'method': 'get',
+            'action': self.form_action_url(),
+            **kwargs
+        }
 
     def form_action_url(self):
         return self.reset_url(session_reset=False)
@@ -182,15 +221,14 @@ class HTML(GroupMixin, Renderer):
     def header_filtering(self):
         return self.load_content('header_filtering.html')
 
-    def filtering_table_otag(self, **kwargs):
+    def filtering_table_attrs(self, **kwargs):
         kwargs.setdefault('cellpadding', 1)
         kwargs.setdefault('cellspacing', 0)
-        return _HTML.table(_closed=False, **kwargs)
+        return kwargs
 
     def filtering_session_key(self):
-        return _HTML.input(
-            name='session_key',
-            type='hidden',
+        return self._render_jinja(
+            '<input type="hidden" name="session_key" value="{{value}}" />',
             value=self.grid.session_key
         )
 
@@ -198,40 +236,38 @@ class HTML(GroupMixin, Renderer):
         rows = []
         for col in six.itervalues(self.grid.filtered_cols):
             rows.append(self.filtering_table_row(col))
-        rows = literal('\n'.join(rows))
+        rows = Markup('\n'.join(rows))
 
         search_row = ''
         if self.grid.can_search():
             search_row = self.get_search_row()
 
-        return literal('\n'.join([search_row, rows]))
+        return Markup('\n'.join([search_row, rows]))
 
     def filtering_table_row(self, col):
         extra = getattr(col.filter, 'html_extra', {})
-        return _HTML.tr(
-            _HTML.th(self.filtering_col_label(col), class_='filter-label')
-            + _HTML.td(self.filtering_col_op_select(col), class_='operator')
-            + _HTML.td(
-                _HTML.div(self.filtering_col_inputs1(col), class_='inputs1')
-                + _HTML.div(self.filtering_col_inputs2(col), class_='inputs2')
-            ),
-            # Added _filter to address CSS collision with Bootstrap
-            # Ref: https://github.com/level12/webgrid/issues/28
-            class_=col.key + '_filter',
-            **extra
+        return self._render_jinja(
+            '''
+            <tr class="{{col.key}}_filter" {{- extra|wg_attributes }}>
+                <th class="filter-label">{{renderer.filtering_col_label(col)}}</th>
+                <td class="operator">{{renderer.filtering_col_op_select(col)}}</td>
+                <td>
+                    <div class="inputs1">
+                        {{ renderer.filtering_col_inputs1(col) }}
+                    </div>
+                    <div class="inputs2">
+                        {{ renderer.filtering_col_inputs2(col) }}
+                    </div>
+                </td>
+            </tr>
+            ''',
+            renderer=self,
+            col=col,
+            extra=extra,
         )
 
     def filtering_col_label(self, col):
         return col.label
-
-    def filtering_col_op_select_options(self, filter):
-        options = [tags.Option(literal('&nbsp;'), value='')]
-        for op in filter.operators:
-            options.append(tags.Option(
-                self.filtering_operator_labels.get(op.key, op.display),
-                value=op.key,
-            ))
-        return options
 
     def filtering_col_op_select(self, col):
         filter = col.filter
@@ -243,93 +279,103 @@ class HTML(GroupMixin, Renderer):
         field_name = 'op({0})'.format(col.key)
         field_name = self.grid.prefix_qs_arg_key(field_name)
 
-        return tags.select(field_name, current_selected,
-                           self.filtering_col_op_select_options(filter))
+        return self.render_select(
+            [(op.key, op.display) for op in filter.operators],
+            current_selected,
+            name=field_name
+        )
 
     def filtering_col_inputs1(self, col):
         filter = col.filter
         field_name = 'v1({0})'.format(col.key)
         field_name = self.grid.prefix_qs_arg_key(field_name)
 
-        inputs = ''
+        inputs = Markup()
+
         if 'input' in filter.input_types:
             ident = '{0}_input1'.format(col.key)
-            inputs += _HTML.input(name=field_name, type='text', value=filter.value1_set_with,
-                                  id=ident)
+            inputs += self._render_jinja(
+                '<input{{attrs|wg_attributes}} />',
+                attrs=dict(
+                    name=field_name,
+                    value=filter.value1_set_with,
+                    id=ident,
+                    type='text',
+                )
+            )
         if 'select' in filter.input_types:
-            ident = '{0}_select1'.format(col.key)
             current_selected = tolist(filter.value1) or []
-            multiple = 'multiple' if filter.receives_list else ''
-            inputs += tags.select(field_name, current_selected,
-                                  self.filtering_filter_options(filter), multiple=multiple)
+            inputs += self.render_select(
+                filter.options_seq,
+                current_selection=current_selected,
+                placeholder=None,
+                multiple=filter.receives_list,
+                name=field_name
+            )
             if filter.receives_list:
                 inputs += self.filtering_multiselect(
-                    field_name, current_selected,
-                    self.filtering_filter_options_multi(filter, field_name))
+                    field_name,
+                    current_selected,
+                    self.filtering_filter_options_multi(filter, field_name)
+                )
         return inputs
 
     def filtering_multiselect(self, field_name, current_selected, options):
-        return _HTML.div(
-            _HTML.button(
-                _HTML.span(
-                    class_='placeholder'
-                ),
-                _HTML.div(),
-                type='button',
-                class_='ms-choice',
-            ),
-            _HTML.div(
-                _HTML.div(
-                    _HTML.input(
-                        type='text',
-                        autocomplete='off',
-                        autocorrect='off',
-                        autocapitalize='off',
-                        spellcheck='false',
-                    ),
-                    class_='ms-search',
-                ),
-                _HTML.ul(
-                    _HTML.li(
-                        _HTML.label(
-                            _HTML.input(
-                                type='checkbox',
-                                name='selectAll{}'.format(field_name)
-                            ),
-                            '[' + _('Select all') + ']'
-                        )
-                    ),
-                    *options,
-                    _HTML.li(_('No matches found'), class_='ms-no-results'),
-                ),
-                class_='ms-drop bottom'
-            ),
-            class_='ms-parent',
+        return self._render_jinja(
+            '''
+            <div class="ms-parent">
+                <button type="button" class="ms-choice">
+                    <span class="placeholder"></span>
+                    <div></div>
+                </button>
+                <div class="ms-drop bottom">
+                    <div class="ms-search">
+                        <input type="text"
+                            autocomplete="off"
+                            autocorrect="off"
+                            autocapitalize="off"
+                            spellcheck="false"
+                        />
+                    </div>
+                    <ul>
+                        <li>
+                            <label>
+                                <input type="checkbox" name="selectAll{{field_name}}" />
+                                [{{ 'Select all'|wg_gettext }}]
+                            </label>
+                        </li>
+                        {{options}}
+                        <li class="ms-no-results">
+                            {{'No matches found'|wg_gettext}}
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            ''',
+            field_name=field_name,
+            current_selected=current_selected,
+            options=options,
         )
 
-    def filtering_filter_options(self, filter):
-        # webhelpers2 doesn't allow options to be lists or tuples anymore. If this is the case,
-        # turn it into an Option list
-        return [
-            (tags.Option(
-                option[1],
-                value=option[0]
-            ) if isinstance(option, (tuple, list)) else option) for option in filter.options_seq
-        ]
-
     def filtering_filter_options_multi(self, filter, field_name):
-        return (
-            _HTML.li(
-                _HTML.label(
-                    _HTML.input(
-                        type='checkbox',
-                        value=option[0],
-                        checked=(option[0] in (filter.value1 or [])),
-                        name='selectItem{}'.format(field_name)
-                    ),
-                    option[1],
-                )
-            ) for option in filter.options_seq
+        selected = filter.value1 or []
+        return self._render_jinja(
+            '''
+            {% for value, label in filter.options_seq %}
+                <label>
+                    <input
+                        {% if value in selected %}checked{% endif %}
+                        type="checkbox"
+                        value="{{value}}"
+                        name="selectItem{{field_name}}"
+                    />
+                    {{label}}
+                </label>
+            {% endfor %}
+            ''',
+            filter=filter,
+            field_name=field_name,
+            selected=selected,
         )
 
     def filtering_col_inputs2(self, col):
@@ -337,19 +383,26 @@ class HTML(GroupMixin, Renderer):
         field_name = 'v2({0})'.format(col.key)
         field_name = self.grid.prefix_qs_arg_key(field_name)
 
+        if 'input2' not in filter.input_types:
+            return Markup('')
+
         # field will get modified by JS
-        inputs = ''
-        if 'input2' in filter.input_types:
-            ident = '{0}_input2'.format(col.key)
-            inputs += _HTML.input(name=field_name, type='text', value=filter.value2_set_with,
-                                  id=ident)
-        return inputs
+        ident = '{0}_input2'.format(col.key)
+        return self._render_jinja(
+            '<input{{attrs|wg_attributes}} />',
+            attrs=dict(
+                name=field_name,
+                value=filter.value2_set_with,
+                id=ident,
+                type='text'
+            )
+        )
 
     def filtering_add_filter_select(self):
-        options = [tags.Option(literal('&nbsp;'), value='')]
-        for col in six.itervalues(self.grid.filtered_cols):
-            options.append(tags.Option(col.label, value=col.key))
-        return tags.select('datagrid-add-filter', None, options)
+        return self.render_select(
+            [(col.key, col.label) for col in self.grid.filtered_cols.values()],
+            name='datagrid-add-filter'
+        )
 
     def filtering_json_data(self):
         for_js = {}
@@ -379,13 +432,44 @@ class HTML(GroupMixin, Renderer):
     def header_sorting(self):
         return self.load_content('header_sorting.html')
 
+    def render_select(self, options, current_selection=None, placeholder=('', Markup('&nbsp;')),
+                      name=None, id=None, **kwargs):
+        current_selection = tolist(current_selection) if current_selection is not None else []
+        if placeholder:
+            options = [placeholder, *options]
+
+        if name is not None:
+            kwargs['name'] = name
+        if id is None and kwargs.get('name'):
+            id = _safe_id(kwargs.get('name'))
+        kwargs['id'] = id
+
+        return self._render_jinja(
+            '''
+            <select{{attrs|wg_attributes}}>
+                {% for value, label in options %}
+                    <option value="{{value}}"
+                        {%- if value in current_selection %} selected {%- endif -%}
+                    >
+                        {{- label -}}
+                    </option>
+                {% endfor %}
+            </select>
+            ''',
+            options=options,
+            current_selection=current_selection,
+            placeholder=placeholder,
+            attrs=kwargs,
+        )
+
     def sorting_select_options(self):
-        options = [tags.Option(literal('&nbsp;'), value='')]
+        options = []
         for col in self.grid.columns:
             if col.can_sort:
-                options.append(tags.Option(col.label, value=col.key))
-                options.append(tags.Option(_('{label} DESC', label=col.label),
-                                           value='-' + col.key))
+                options.extend([
+                    (col.key, col.label),
+                    ('-{}'.format(col.key), _('{label} DESC', label=col.label))
+                ])
         return options
 
     def sorting_select(self, number):
@@ -398,7 +482,13 @@ class HTML(GroupMixin, Renderer):
             currently_selected, flag_desc = self.grid.order_by[number - 1]
             if flag_desc:
                 currently_selected = '-' + currently_selected
-        return tags.select(sort_qsk, currently_selected, self.sorting_select_options())
+
+        return self.render_select(
+            self.sorting_select_options(),
+            currently_selected,
+            name=sort_qsk,
+            id=sort_qsk,
+        )
 
     def sorting_select1(self):
         return self.sorting_select(1)
@@ -416,27 +506,46 @@ class HTML(GroupMixin, Renderer):
         options = []
         for page in range(1, self.grid.page_count + 1):
             label = _('{page} of {page_count}', page=page, page_count=self.grid.page_count)
-            options.append(tags.Option(label, value=page))
+            options.append((page, label))
         return options
 
     def paging_select(self):
         op_qsk = self.grid.prefix_qs_arg_key('onpage')
-        return tags.select(op_qsk, self.grid.on_page, self.paging_select_options())
+        return self.render_select(
+            self.paging_select_options(),
+            self.grid.on_page,
+            placeholder=None,
+            name=op_qsk,
+            id=op_qsk,
+        )
 
     def paging_input(self):
         pp_qsk = self.grid.prefix_qs_arg_key('perpage')
-        return _HTML.input(type='text', name=pp_qsk, value=self.grid.per_page)
+        return self._render_jinja(
+            '<input type="text" name="{{name}}" value="{{value}}" />',
+            name=pp_qsk,
+            value=self.grid.per_page
+        )
 
     def paging_url_first(self):
         return self.current_url(onpage=1, perpage=self.grid.per_page)
 
+    def _page_image(self, url, width, height, alt):
+        return self._render_jinja(
+            '<img src="{{url}}" width="{{width}}" height="{{height}}" alt="{{alt}}" />',
+            url=url,
+            width=width,
+            height=height,
+            alt=alt,
+        )
+
     def paging_img_first(self):
         img_url = self.manager.static_url('b_firstpage.png')
-        return _HTML.img(src=img_url, width=16, height=13, alt='<<')
+        return self._page_image(img_url, width=16, height=13, alt='<<')
 
     def paging_img_first_dead(self):
         img_url = self.manager.static_url('bd_firstpage.png')
-        return _HTML.img(src=img_url, width=16, height=13, alt='<<')
+        return self._page_image(img_url, width=16, height=13, alt='<<')
 
     def paging_url_prev(self):
         prev_page = self.grid.on_page - 1
@@ -444,11 +553,11 @@ class HTML(GroupMixin, Renderer):
 
     def paging_img_prev(self):
         img_url = self.manager.static_url('b_prevpage.png')
-        return _HTML.img(src=img_url, width=8, height=13, alt='<')
+        return self._page_image(img_url, width=8, height=13, alt='<')
 
     def paging_img_prev_dead(self):
         img_url = self.manager.static_url('bd_prevpage.png')
-        return _HTML.img(src=img_url, width=8, height=13, alt='<')
+        return self._page_image(img_url, width=8, height=13, alt='<')
 
     def paging_url_next(self):
         next_page = self.grid.on_page + 1
@@ -456,32 +565,35 @@ class HTML(GroupMixin, Renderer):
 
     def paging_img_next(self):
         img_url = self.manager.static_url('b_nextpage.png')
-        return _HTML.img(src=img_url, width=8, height=13, alt='>')
+        return self._page_image(img_url, width=8, height=13, alt='>')
 
     def paging_img_next_dead(self):
         img_url = self.manager.static_url('bd_nextpage.png')
-        return _HTML.img(src=img_url, width=8, height=13, alt='>')
+        return self._page_image(img_url, width=8, height=13, alt='>')
 
     def paging_url_last(self):
         return self.current_url(onpage=self.grid.page_count, perpage=self.grid.per_page)
 
     def paging_img_last(self):
         img_url = self.manager.static_url('b_lastpage.png')
-        return _HTML.img(src=img_url, width=16, height=13, alt='>>')
+        return self._page_image(img_url, width=16, height=13, alt='>>')
 
     def paging_img_last_dead(self):
         img_url = self.manager.static_url('bd_lastpage.png')
-        return _HTML.img(src=img_url, width=16, height=13, alt='>>')
+        return self._page_image(img_url, width=16, height=13, alt='>>')
 
     def table(self):
         return self.load_content('grid_table.html')
 
     def no_records(self):
-        return _HTML.p(_('No records to display'), class_='no-records')
+        return self._render_jinja(
+            '<p class="no-records">{{msg}}</p>',
+            msg=_('No records to display')
+        )
 
-    def table_otag(self, **kwargs):
-        kwargs.setdefault('class_', 'records')
-        return _HTML.table(_closed=False, **kwargs)
+    def table_attrs(self, **kwargs):
+        kwargs.setdefault('class', 'records')
+        return kwargs
 
     def table_column_headings(self):
         headings = []
@@ -489,7 +601,7 @@ class HTML(GroupMixin, Renderer):
             headings.append(self.table_th(col))
         th_str = '\n'.join(headings)
         th_str = reindent(th_str, 12)
-        return literal(th_str)
+        return Markup(th_str)
 
     def table_group_headings(self):
         group_headings = [
@@ -498,18 +610,27 @@ class HTML(GroupMixin, Renderer):
         ]
         th_str = '\n'.join(group_headings)
         th_str = reindent(th_str, 12)
-        return literal(th_str)
+        return Markup(th_str)
 
     def buffer_th(self, colspan, **kwargs):
-        kwargs.setdefault('class_', 'buffer')
-        return _HTML.th('', **HTMLAttributes(colspan=colspan, **kwargs))
+        kwargs.setdefault('class', 'buffer')
+        kwargs['colspan'] = colspan
+        return self._render_jinja(
+            '<th{{ attrs|wg_attributes }}></th>',
+            attrs=kwargs
+        )
 
     def group_th(self, group, colspan, **kwargs):
         if group is None:
             return self.buffer_th(colspan)
 
-        kwargs.setdefault('class_', group.class_)
-        return _HTML.th(group.label, **HTMLAttributes(colspan=colspan, **kwargs))
+        kwargs.setdefault('class', group.class_)
+        kwargs['colspan'] = colspan
+        return self._render_jinja(
+            '<th {{- attrs|wg_attributes }}>{{label}}</th>',
+            label=group.label,
+            attrs=kwargs
+        )
 
     def table_th(self, col):
         label = col.label
@@ -518,23 +639,28 @@ class HTML(GroupMixin, Renderer):
             url_args['dgreset'] = None
             url_args['sort2'] = None
             url_args['sort3'] = None
-            cls = None
+            link_attrs = {}
             if self.grid.order_by and len(self.grid.order_by) == 1:
                 current_sort, flag_desc = self.grid.order_by[0]
                 if current_sort == col.key:
-                    cls = 'sort-' + ('desc' if flag_desc else 'asc')
+                    link_attrs['class'] = 'sort-' + ('desc' if flag_desc else 'asc')
                 if current_sort != col.key or flag_desc:
                     url_args['sort1'] = col.key
                 else:
                     url_args['sort1'] = '-{0}'.format(col.key)
             else:
                 url_args['sort1'] = col.key
-            label = _HTML.a(
-                label,
+            label = self._render_jinja(
+                '<a href="{{href}}" {{- attrs|wg_attributes }}>{{label}}</a>',
                 href=self.current_url(**url_args),
-                class_=cls
+                attrs=link_attrs,
+                label=label,
             )
-        return _HTML.th(label, **col.head.hah)
+        return self._render_jinja(
+            '<th{{attrs|wg_attributes}}>{{label}}</th>',
+            attrs=col.head.hah,
+            label=label
+        )
 
     def table_rows(self):
         rows = []
@@ -553,7 +679,7 @@ class HTML(GroupMixin, Renderer):
                 self.table_grandtotals(rownum + 2, self.grid.grand_totals)
             )
         rows_str = '\n        '.join(rows)
-        return literal(rows_str)
+        return Markup(rows_str)
 
     def table_tr_styler(self, rownum, record):
         # handle row styling
@@ -576,7 +702,11 @@ class HTML(GroupMixin, Renderer):
         tds_str = reindent(tds_str, 12)
         tds_str = u'\n{0}\n        '.format(tds_str)
 
-        return _HTML.tr(literal(tds_str), **row_hah)
+        return self._render_jinja(
+            '<tr{{attrs|wg_attributes}}>{{tds}}</tr>',
+            attrs=row_hah,
+            tds=Markup(tds_str),
+        )
 
     def table_tr(self, rownum, record):
         row_hah = self.table_tr_styler(rownum, record)
@@ -601,19 +731,23 @@ class HTML(GroupMixin, Renderer):
                 if firstcol:
                     colspan += 1
                 else:
-                    cells.append(_HTML.td(literal('&nbsp;')))
+                    cells.append(Markup('<td>&nbsp;</td>'))
                 continue
             if firstcol:
                 bufferval = ngettext('{label} ({num} record):',
                                      '{label} ({num} records):',
                                      numrecords,
                                      label=label)
-                buffer_hah = HTMLAttributes(
-                    colspan=colspan,
-                    class_='totals-label'
-                )
+                buffer_hah = {
+                    'colspan': colspan,
+                    'class': 'totals-label'
+                }
                 if colspan:
-                    cells.append(_HTML.td(bufferval, **buffer_hah))
+                    cells.append(self._render_jinja(
+                        '<td{{attrs|wg_attributes}}>{{val}}</td>',
+                        attrs=buffer_hah,
+                        val=bufferval
+                    ))
                 firstcol = False
                 colspan = 0
             cells.append(self.table_td(col, record))
@@ -642,13 +776,17 @@ class HTML(GroupMixin, Renderer):
         # turn empty values into a non-breaking space so table cells don't
         # collapse
         if col_value is None:
-            styled_value = literal('&nbsp;')
+            styled_value = Markup('&nbsp;')
         elif isinstance(col_value, six.string_types) and col_value.strip() == '':
-            styled_value = literal('&nbsp;')
+            styled_value = Markup('&nbsp;')
         else:
             styled_value = col_value
 
-        return _HTML.td(styled_value, **col_hah)
+        return self._render_jinja(
+            '<td{{attrs|wg_attributes}}>{{value}}</td>',
+            attrs=col_hah,
+            value=styled_value
+        )
 
     def footer(self):
         return self.load_content('grid_footer.html')
@@ -727,14 +865,17 @@ class HTML(GroupMixin, Renderer):
         return self.export_url('xls')
 
     def get_search_row(self):
-        return _HTML.tr(
-            _HTML.th(_('Search')),
-            _HTML.td(
-                _HTML.input(name='search', type='text', value=self.grid.search_value,
-                            id='search_input'),
-                colspan=2
-            ),
-            class_='search'
+        return self._render_jinja(
+            '''
+            <tr class="search">
+                <th>{{label}}</th>
+                <td colspan="2">
+                    <input name="search" type="text" value="{{search_value}}" id="search_input" />
+                </td>
+            </tr>
+            ''',
+            label=_('Search'),
+            search_value=self.grid.search_value
         )
 
 

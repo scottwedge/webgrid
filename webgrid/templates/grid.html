@@ -2,7 +2,7 @@
     var datagrid_data = {{ renderer.filtering_json_data()|safe }};
     var datagrid_confirm_export = {{ renderer.confirm_export()|safe }};
 </script>
-{{ renderer.grid_otag()|safe }}
+<div {{ renderer.grid_attrs()|wg_attributes }}>
     {% if not grid.hide_controls_box %}
         {{ renderer.header()|wg_safe }}
     {% endif %}
@@ -14,4 +14,4 @@
     {% if not grid.hide_controls_box %}
         {{ renderer.footer()|wg_safe }}
     {% endif %}
-{{ renderer.grid_ctag()|safe }}
+</div>

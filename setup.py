@@ -22,6 +22,7 @@ develop_requires = [
     'Flask-Script',
     'Flask-SQLAlchemy',
     'Flask-WebTest',
+    'pyquery',
     'sqlalchemy_utils',
     'sqlalchemybwc',
     'wrapt',
@@ -75,7 +76,6 @@ setup(
         'SQLAlchemy',
         'jinja2',
         'python-dateutil',
-        'webhelpers2',
         'Werkzeug',
     ],
     entry_points="""
