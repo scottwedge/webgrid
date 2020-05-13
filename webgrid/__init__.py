@@ -393,23 +393,30 @@ class YesNoColumn(BoolColumn):
 class DateColumnBase(Column):
 
     def __init__(self, label, key_or_filter=None, key=None, can_sort=True,
-                 html_format=None, xls_width=None, xls_style=None, xls_num_format=None,
-                 render_in=_None, has_subtotal=False, visible=True, group=None, **kwargs):
+                 html_format=None, csv_format=None, xls_width=None, xls_style=None,
+                 xls_num_format=None, render_in=_None, has_subtotal=False, visible=True, group=None,
+                 **kwargs):
         super().__init__(label, key_or_filter, key, can_sort, xls_width,
                          xls_style, xls_num_format, render_in, has_subtotal,
                          visible, group=group, **kwargs)
         if html_format:
             self.html_format = html_format
 
+        if csv_format:
+            self.csv_format = csv_format
+
+    def _format_datetime(self, data, format):
+        # if we have an arrow date, allow html_format to use that functionality
+        if arrow and isinstance(data, arrow.Arrow):
+            if data.strftime(format) == format:
+                return data.format(format)
+        return data.strftime(format)
+
     def render_html(self, record, hah):
         data = self.extract_and_format_data(record)
         if not data:
             return data
-        # if we have an arrow date, allow html_format to use that functionality
-        if arrow and isinstance(data, arrow.Arrow):
-            if data.strftime(self.html_format) == self.html_format:
-                return data.format(self.html_format)
-        return data.strftime(self.html_format)
+        return self._format_datetime(data, self.html_format)
 
     def render_xls(self, record):
         data = self.extract_and_format_data(record)
@@ -431,9 +438,7 @@ class DateColumnBase(Column):
         data = self.extract_and_format_data(record)
         if not data:
             return data
-        if arrow and isinstance(data, arrow.Arrow):
-            data = data.datetime
-        return data
+        return self._format_datetime(data, self.csv_format)
 
     def xls_width_calc(self, value):
         if self.xls_width:
@@ -453,18 +458,21 @@ class DateColumnBase(Column):
 class DateColumn(DateColumnBase):
     # !!!: localize
     html_format = '%m/%d/%Y'
+    csv_format = '%Y-%m-%d'
     xls_num_format = 'm/dd/yyyy'
 
 
 class DateTimeColumn(DateColumnBase):
     # !!!: localize
     html_format = '%m/%d/%Y %I:%M %p'
+    csv_format = '%Y-%m-%d %H:%M:%S%z'
     xls_num_format = 'mm/dd/yyyy hh:mm am/pm'
 
 
 class TimeColumn(DateColumnBase):
     # !!!: localize
     html_format = '%I:%M %p'
+    csv_format = '%H:%M'
     xls_num_format = 'hh:mm am/pm'
 
 
