@@ -54,6 +54,18 @@ def serve():
     flask.current_app.run(debug=True)
 
 
+@manager.command
+def verify_translations():
+    from pathlib import Path
+    from morphi.messages.validation import check_translations
+
+    root_path = Path(__file__).resolve().parent.parent
+    check_translations(
+        root_path,
+        'webgrid',
+    )
+
+
 def script_entry():
     manager.run()
 
