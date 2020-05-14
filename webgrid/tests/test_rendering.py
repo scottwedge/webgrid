@@ -16,6 +16,7 @@ from six.moves import range
 from webgrid import (
     BoolColumn,
     Column,
+    DateTimeColumn,
     LinkColumnBase,
     NumericColumn,
     YesNoColumn,
@@ -881,7 +882,28 @@ class TestCSVRenderer(object):
         for row in reader:
             data.append(row)
         assert data[0][0] == 'Created'
-        assert data[1][0] == '2016-08-10 01:02:03+00:00'
+        assert data[1][0] == '2016-08-10 01:02:03+0000'
+
+    def test_it_renders_date_time_with_custom_format(self):
+        class CSVGrid(Grid):
+            session_on = True
+            allowed_export_targets = {'csv': CSV}
+            DateTimeColumn('Created', ArrowRecord.created_utc, csv_format='%m/%d/%Y %I:%M %p')
+
+        ArrowRecord.query.delete()
+        ArrowRecord.testing_create(
+            created_utc=arrow.Arrow(2016, 8, 10, 1, 2, 3)
+        )
+        g = CSVGrid()
+        csv_data = g.csv.build_csv()
+        csv_data.seek(0)
+        byte_str = six.StringIO(csv_data.read().decode('utf-8'))
+        reader = csv.reader(byte_str, delimiter=',', quotechar='"')
+        data = []
+        for row in reader:
+            data.append(row)
+        assert data[0][0] == 'Created'
+        assert data[1][0] == '08/10/2016 01:02 AM'
 
 
 class TestHideSection(object):
