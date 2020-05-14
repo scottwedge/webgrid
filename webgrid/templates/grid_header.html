@@ -4,7 +4,7 @@
     {%- endmacro %}
 {%- endif -%}
 
-{{ renderer.header_form_otag(class='header')|safe }}
+<form {{ renderer.header_form_attrs(class='header')|wg_attributes }}>
     <div>
         {{ renderer.header_filtering()|wg_safe }}
     </div>

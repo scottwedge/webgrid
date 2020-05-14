@@ -22,6 +22,7 @@ class WebGrid(object):
         self.init_db(db)
         self.jinja_environment = jinja.Environment(
             loader=self.jinja_loader,
+            finalize=lambda x: x if x is not None else '',
             autoescape=True
         )
 

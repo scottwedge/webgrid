@@ -19,7 +19,6 @@ from formencode import Invalid
 import formencode.validators as fev
 import sqlalchemy as sa
 import sqlalchemy.sql as sasql
-from webhelpers2.html.tags import link_to
 from werkzeug.datastructures import MultiDict
 
 from .extensions import gettext as _
@@ -347,13 +346,21 @@ class LinkColumnBase(Column):
                          has_subtotal, visible, group=group, **kwargs)
         self.link_label = link_label
 
+    def link_to(self, label, url, **kwargs):
+        return self.grid.html._render_jinja(
+            '<a href="{{url}}" {{- attrs|wg_attributes }}>{{label}}</a>',
+            url=url,
+            attrs=kwargs,
+            label=label
+        )
+
     def render_html(self, record, hah):
         url = self.create_url(record)
         if self.link_label is not None:
             label = self.link_label
         else:
             label = self.extract_and_format_data(record)
-        return link_to(label, url, **self.link_attrs)
+        return self.link_to(label, url, **self.link_attrs)
 
     def create_url(self, record):
         raise NotImplementedError('create_url() must be defined on a subclass')

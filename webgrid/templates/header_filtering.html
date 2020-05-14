@@ -5,7 +5,7 @@
 {%- endif -%}
 
 {% if renderer.grid.filtered_cols -%}
-{{renderer.filtering_table_otag(class='filters')}}
+<table {{renderer.filtering_table_attrs(class='filters')|wg_attributes}}>
 {{renderer.filtering_session_key()}}
     <tbody>
         {{ renderer.filtering_fields() }}

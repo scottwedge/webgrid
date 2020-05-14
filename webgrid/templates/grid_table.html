@@ -1,4 +1,4 @@
-{{ renderer.table_otag() }}
+<table{{ renderer.table_attrs()|wg_attributes }}>
     <thead>
         {%- if renderer.has_groups() %}
         <tr>

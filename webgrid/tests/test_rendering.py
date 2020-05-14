@@ -10,7 +10,9 @@ import arrow
 import six
 import xlrd
 import xlsxwriter
+from markupsafe import Markup
 from nose.tools import eq_, raises
+from pyquery import PyQuery
 from six.moves import range
 
 from webgrid import (
@@ -25,7 +27,14 @@ from webgrid import (
     row_styler,
 )
 from webgrid.filters import TextFilter
-from webgrid.renderers import CSV, HTML, XLS, XLSX, RenderLimitExceeded
+from webgrid.renderers import (
+    CSV,
+    HTML,
+    XLS,
+    XLSX,
+    RenderLimitExceeded,
+    render_html_attributes,
+)
 from webgrid_ta.grids import (
     ArrowCSVGrid,
     ArrowGrid,
@@ -168,6 +177,32 @@ class CarGrid(Grid):
         return value
 
 
+def find_tag(html, tag, id_=None, class_=None, **attrs):
+    selector = tag
+    if id_:
+        selector += '#{}'.format(id_)
+    if class_:
+        selector += '.{}'.format(class_)
+    for k, v in attrs.items():
+        if v is None:
+            selector += '[{}]'.format(k)
+        else:
+            selector += '[{}="{}"]'.format(k, v)
+
+    return PyQuery(html)(selector)
+
+
+def assert_tag(html, tag, text=None, **kwargs):
+    results = find_tag(html, tag, **kwargs)
+    assert results
+
+    if text is not None:
+        assert (
+            any(i.text(squash_space=False) == text for i in results.items())
+        ), '{} not found in {}'.format(text, results)
+    return results
+
+
 class TestHtmlRenderer(object):
     key_data = (
         {'id': 1, 'name': 'one'},
@@ -217,6 +252,22 @@ class TestHtmlRenderer(object):
             {'id': 1, 'value': 'foo'},
         ])
         tg.html()
+
+    def test_render_html_attributes(self):
+        result = render_html_attributes({})
+        assert isinstance(result, Markup)
+        eq_(result, '')
+
+        result = render_html_attributes({
+            'text': 'abc',
+            'empty': '',
+            'bool1': True,
+            'bool2': False,
+            'none': None,
+            'esc&': '<>"'
+        })
+        assert isinstance(result, Markup)
+        eq_(result, ' bool1 empty="" esc&amp;="&lt;&gt;&#34;" text="abc"')
 
     @inrequest('/')
     def test_no_filters(self):
@@ -317,46 +368,49 @@ class TestHtmlRenderer(object):
         g = self.get_grid()
 
         select_html = g.html.paging_select()
-        assert '<select' in select_html
-        assert 'name="onpage"' in select_html
-        assert '<option value="1">1 of 5</option>' in select_html
-        assert '<option selected="selected" value="2">2 of 5</option>' in select_html, select_html
-        assert '<option value="5">5 of 5</option>' in select_html
+        assert_tag(select_html, 'select', id_='onpage', name='onpage')
+        assert_tag(select_html, 'select', name='onpage')
+        tag = assert_tag(select_html, 'option', text='1 of 5', value='1')
+        assert tag.attr('selected') is None
+
+        assert_tag(select_html, 'option', text='2 of 5', value='2', selected=None)
+        tag = assert_tag(select_html, 'option', text='5 of 5', value='5')
+        assert tag.attr('selected') is None
 
         input_html = g.html.paging_input()
-        eq_(input_html, '<input name="perpage" type="text" value="1" />')
+        assert_tag(input_html, 'input', name='perpage', type='text', value='1')
 
         img_html = g.html.paging_img_first()
-        eq_(img_html,
-            '<img alt="&lt;&lt;" height="13" src="/static/webgrid/b_firstpage.png" width="16" />')
+        assert_tag(img_html, 'img', alt='<<', width='16', height='13',
+                   src='/static/webgrid/b_firstpage.png')
 
         img_html = g.html.paging_img_first_dead()
-        eq_(img_html,
-            '<img alt="&lt;&lt;" height="13" src="/static/webgrid/bd_firstpage.png" width="16" />')
+        assert_tag(img_html, 'img', alt='<<', width='16', height='13',
+                   src='/static/webgrid/bd_firstpage.png')
 
         img_html = g.html.paging_img_prev()
-        eq_(img_html,
-            '<img alt="&lt;" height="13" src="/static/webgrid/b_prevpage.png" width="8" />')
+        assert_tag(img_html, 'img', alt='<', width='8', height='13',
+                   src='/static/webgrid/b_prevpage.png')
 
         img_html = g.html.paging_img_prev_dead()
-        eq_(img_html,
-            '<img alt="&lt;" height="13" src="/static/webgrid/bd_prevpage.png" width="8" />')
+        assert_tag(img_html, 'img', alt='<', width='8', height='13',
+                   src='/static/webgrid/bd_prevpage.png')
 
         img_html = g.html.paging_img_next()
-        eq_(img_html,
-            '<img alt="&gt;" height="13" src="/static/webgrid/b_nextpage.png" width="8" />')
+        assert_tag(img_html, 'img', alt='>', width='8', height='13',
+                   src='/static/webgrid/b_nextpage.png')
 
         img_html = g.html.paging_img_next_dead()
-        eq_(img_html,
-            '<img alt="&gt;" height="13" src="/static/webgrid/bd_nextpage.png" width="8" />')
+        assert_tag(img_html, 'img', alt='>', width='8', height='13',
+                   src='/static/webgrid/bd_nextpage.png')
 
         img_html = g.html.paging_img_last()
-        eq_(img_html,
-            '<img alt="&gt;&gt;" height="13" src="/static/webgrid/b_lastpage.png" width="16" />')
+        assert_tag(img_html, 'img', alt='>>', width='16', height='13',
+                   src='/static/webgrid/b_lastpage.png')
 
         img_html = g.html.paging_img_last_dead()
-        eq_(img_html,
-            '<img alt="&gt;&gt;" height="13" src="/static/webgrid/bd_lastpage.png" width="16" />')
+        assert_tag(img_html, 'img', alt='>>', width='16', height='13',
+                   src='/static/webgrid/bd_lastpage.png')
 
         # since we are on page 2, all links should be live
         footer_html = g.html.footer()
@@ -384,19 +438,19 @@ class TestHtmlRenderer(object):
         g = self.get_grid()
 
         select_html = g.html.sorting_select1()
-        assert '<select id="sort1" name="sort1">' in select_html
-        assert '<option value="">&nbsp;</option>' in select_html, select_html
-        assert '<option selected="selected" value="name">Name</option>' in select_html
-        assert '<option value="-name">Name DESC</option>' in select_html
-        assert '<option value="id">ID</option>' in select_html
-        assert '<option value="emails">Emails</option>' not in select_html
+        assert_tag(select_html, 'select', id_='sort1', name='sort1')
+        assert_tag(select_html, 'option', value='', text='\N{NO-BREAK SPACE}')
+        assert_tag(select_html, 'option', text='Name', selected=None, value='name')
+        assert_tag(select_html, 'option', text='Name DESC', value='-name')
+        assert_tag(select_html, 'option', text='ID', value='id')
+        assert not find_tag(select_html, 'option', value='emails')
 
         select_html = g.html.sorting_select2()
-        assert '<option selected="selected" value="name">Name</option>' not in select_html
-        assert '<option selected="selected" value="-id">ID DESC</option>' in select_html
+        assert find_tag(select_html, 'option', text='Name', value='name').attr('selected') is None
+        assert_tag(select_html, 'option', text='ID DESC', selected=None, value='-id')
 
         select_html = g.html.sorting_select3()
-        assert '<option selected="selected" value="">&nbsp;</option>' in select_html
+        assert_tag(select_html, 'option', selected=None, value='', text='\N{NO-BREAK SPACE}')
 
         heading_row = g.html.table_column_headings()
         assert 'sort-asc' not in heading_row
@@ -406,13 +460,13 @@ class TestHtmlRenderer(object):
     def test_sorting_headers_asc(self):
         g = self.get_grid()
         heading_row = g.html.table_column_headings()
-        assert '<th><a class="sort-asc" href="/thepage?sort1=-name">Name</a></th>' in heading_row
+        assert_tag(heading_row, 'a', text='Name', class_='sort-asc', href='/thepage?sort1=-name')
 
     @inrequest('/thepage?sort1=-name')
     def test_sorting_headers_desc(self):
         g = self.get_grid()
         heading_row = g.html.table_column_headings()
-        assert '<th><a class="sort-desc" href="/thepage?sort1=name">Name</a></th>' in heading_row
+        assert_tag(heading_row, 'a', text='Name', class_='sort-desc', href='/thepage?sort1=name')
 
     @inrequest('/thepage?op(firstname)=eq&v1(firstname)=foo&op(createdts)=between&v1(createdts)='
                '2%2F15%2F12&&v2(createdts)=2012-02-16')
@@ -517,11 +571,12 @@ class TestHtmlRenderer(object):
         g.enable_search = True
 
         filter_html = g.html.filtering_fields()
-        assert '<input id="search_input" name="search" type="text" />' in filter_html
+        tag = assert_tag(filter_html, 'input', id='search_input', name='search', type='text')
+        assert tag.val() == ''
 
         g.apply_qs_args()
         filter_html = g.html.filtering_fields()
-        assert '<input id="search_input" name="search" type="text" value="foo" />' in filter_html
+        assert_tag(filter_html, 'input', id='search_input', name='search', type='text', value='foo')
 
     def test_search_disabled(self):
         class PeopleGrid2(PeopleGrid):
@@ -550,9 +605,10 @@ class TestPageTotals(object):
     @inrequest('/')
     def test_people_html(self):
         g = PGPageTotals()
-        g.html
-        assert '<td class="totals-label" colspan="7">Page Totals (3 records):</td>' in g.html()
-        assert '<td class="totals-label" colspan="7">Grand Totals (3 records):</td>' not in g.html()
+        html = g.html()
+        elem = find_tag(html, 'td', class_='totals-label', colspan='7')
+        eq_(len(elem), 1)
+        eq_(elem.text(), 'Page Totals (3 records):')
 
 
 class PGGrandTotals(PeopleGrid):
@@ -575,7 +631,7 @@ class TestFooterRendersCorrectly(object):
         g.html
         assert '<a class="export-link" href="/?export_to=xlsx">XLSX</a>' in g.html()
         assert '<a class="export-link" href="/?export_to=xls">XLS</a>' in g.html()
-        # make sure we are rendering the seperator
+        # make sure we are rendering the separator
         assert '&nbsp;|' in g.html()
 
     @inrequest('/')
@@ -595,8 +651,8 @@ class TestAllTotals(object):
     def test_people_html(self):
         g = PGAllTotals()
         html = g.html()
-        assert '<td class="totals-label" colspan="7">Grand Totals (3 records):</td>' in html
-        assert '<td class="totals-label" colspan="7">Page Totals (3 records):</td>' in html
+        assert_tag(html, 'td', text='Grand Totals (3 records):', class_='totals-label', colspan='7')
+        assert_tag(html, 'td', text='Page Totals (3 records):', class_='totals-label', colspan='7')
 
 
 class PGTotalsStringExpr(PeopleGrid):
@@ -614,8 +670,8 @@ class TestStringExprTotals(PeopleGrid):
         g = PGTotalsStringExpr()
         html = g.html()
 
-        assert '<td class="totals-label" colspan="7">Grand Totals (3 records):</td>' in html
-        assert '<td class="totals-label" colspan="7">Page Totals (3 records):</td>' in html
+        assert_tag(html, 'td', text='Grand Totals (3 records):', class_='totals-label', colspan='7')
+        assert_tag(html, 'td', text='Page Totals (3 records):', class_='totals-label', colspan='7')
 
 
 class TestXLSRenderer(object):
