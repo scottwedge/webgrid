@@ -10,7 +10,6 @@ from collections import defaultdict
 import six
 from blazeutils.functional import identity
 from markupsafe import Markup
-from six.moves import range
 
 from blazeutils.containers import HTMLAttributes, LazyDict
 from blazeutils.datastructures import BlankObject
@@ -502,21 +501,17 @@ class HTML(GroupMixin, Renderer):
     def header_paging(self):
         return self.load_content('header_paging.html')
 
-    def paging_select_options(self):
-        options = []
-        for page in range(1, self.grid.page_count + 1):
-            label = _('{page} of {page_count}', page=page, page_count=self.grid.page_count)
-            options.append((page, label))
-        return options
-
     def paging_select(self):
         op_qsk = self.grid.prefix_qs_arg_key('onpage')
-        return self.render_select(
-            self.paging_select_options(),
-            self.grid.on_page,
-            placeholder=None,
+        return self._render_jinja(
+            '''
+            <input name="{{name}}" id="{{name}}" type="number" value="{{page}}"
+                min="1" max="{{page_count}}" /> {{text}}
+            ''',
             name=op_qsk,
-            id=op_qsk,
+            page_count=self.grid.page_count,
+            page=self.grid.on_page,
+            text=_('of {page_count}', page_count=self.grid.page_count)
         )
 
     def paging_input(self):

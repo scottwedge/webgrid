@@ -113,6 +113,7 @@
     flex-grow: 1;
     flex-shrink: 0;
     flex-basis: 33.333%;
+    text-align: center;
 }
 
 .datagrid .paging dl dt {
@@ -124,7 +125,7 @@
     margin: 0;
 }
 
-.datagrid .paging .perpage input {
+.datagrid .paging input {
     width: 50px;
 }
 

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WebGrid 0.1.36\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-05-13 15:23-0400\n"
+"POT-Creation-Date: 2020-05-15 12:16-0400\n"
 "PO-Revision-Date: 2018-08-03 20:49-0400\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -18,11 +18,11 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.8.0\n"
 
-#: webgrid/__init__.py:186
+#: webgrid/__init__.py:185
 msgid "expected group to be a subclass of ColumnGroup"
 msgstr "grupo esperado para ser una subclase de ColumnGroup"
 
-#: webgrid/__init__.py:200
+#: webgrid/__init__.py:199
 msgid ""
 "expected filter to be a SQLAlchemy column-like object, but it did not "
 "have a \"key\" or \"name\" attribute"
@@ -30,7 +30,7 @@ msgstr ""
 "se esperaba que el filtro fuera un objeto tipo columna SQLAlchemy, pero "
 "no tenía un atributo \"key\" o \"name\""
 
-#: webgrid/__init__.py:208
+#: webgrid/__init__.py:207
 msgid ""
 "the filter was a class type, but no column-like object is available from "
 "\"key\" to pass in as as the first argument"
@@ -38,31 +38,31 @@ msgstr ""
 "el filtro era un tipo de clase, pero no hay ningún objeto similar a una "
 "columna en \"key\" para pasar como primer argumento"
 
-#: webgrid/__init__.py:287
+#: webgrid/__init__.py:286
 msgid "key \"{key}\" not found in record"
 msgstr "clave \"{key}\" no encontrada en el registro"
 
-#: webgrid/__init__.py:365
+#: webgrid/__init__.py:372
 msgid "True"
 msgstr "Cierto"
 
-#: webgrid/__init__.py:365
+#: webgrid/__init__.py:372
 msgid "False"
 msgstr "Falso"
 
-#: webgrid/__init__.py:389
+#: webgrid/__init__.py:396
 msgid "Yes"
 msgstr "Sí"
 
-#: webgrid/__init__.py:389
+#: webgrid/__init__.py:396
 msgid "No"
 msgstr "No"
 
-#: webgrid/__init__.py:725
+#: webgrid/__init__.py:753
 msgid "can't sort on invalid key \"{key}\""
 msgstr "no se puede ordenar en clave no válida \"{key}\""
 
-#: webgrid/__init__.py:1056
+#: webgrid/__init__.py:1098
 msgid "\"{arg}\" grid argument invalid, ignoring"
 msgstr "\"{arg}\" argumento de la grilla no válido, ignorando"
 
@@ -302,49 +302,45 @@ msgstr "sí"
 msgid "no"
 msgstr "no"
 
-#: webgrid/renderers.py:299 webgrid/static/jquery.multiple.select.js:369
-msgid "Select all"
-msgstr "Seleccionar todo"
-
-#: webgrid/renderers.py:303
-msgid "No matches found"
-msgstr "No se encontraron coincidencias"
-
-#: webgrid/renderers.py:387
+#: webgrid/renderers.py:470
 msgid "{label} DESC"
 msgstr "{label} DESC"
 
-#: webgrid/renderers.py:418
-msgid "{page} of {page_count}"
-msgstr "{page} de {page_count}"
+#: webgrid/renderers.py:514
+msgid "of {page_count}"
+msgstr "de {page_count}"
 
-#: webgrid/renderers.py:480
+#: webgrid/renderers.py:586
 msgid "No records to display"
 msgstr "No hay registros que mostrar"
 
-#: webgrid/renderers.py:607
+#: webgrid/renderers.py:732
 msgid "{label} ({num} record):"
 msgid_plural "{label} ({num} records):"
 msgstr[0] "{label} ({num} record):"
 msgstr[1] "{label} ({num} records):"
 
-#: webgrid/renderers.py:624
+#: webgrid/renderers.py:753
 msgid "Page Totals"
 msgstr "Total de Páginas"
 
-#: webgrid/renderers.py:628
+#: webgrid/renderers.py:757
 msgid "Grand Totals"
 msgstr "Totales Generales"
 
-#: webgrid/renderers.py:731
+#: webgrid/renderers.py:872
 msgid "Search"
 msgstr "Buscar"
 
-#: webgrid/renderers.py:857
+#: webgrid/renderers.py:993
 msgid "Totals ({num} record):"
 msgid_plural "Totals ({num} records):"
 msgstr[0] "Totals ({num} record):"
 msgstr[1] "Totals ({num} records):"
+
+#: webgrid/static/jquery.multiple.select.js:369
+msgid "Select all"
+msgstr "Seleccionar todo"
 
 #: webgrid/static/jquery.multiple.select.js:370
 msgid "All selected"
@@ -401,4 +397,10 @@ msgstr "Por Página"
 #: webgrid/templates/header_sorting.html:9
 msgid "Sort By"
 msgstr "Ordenar Por"
+
+#~ msgid "No matches found"
+#~ msgstr "No se encontraron coincidencias"
+
+#~ msgid "{page} of {page_count}"
+#~ msgstr "{page} de {page_count}"
 
