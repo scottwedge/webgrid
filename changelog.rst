@@ -1,6 +1,24 @@
 Changelog
 =========
 
+0.2.10 released 2020-05-15
+--------------------------
+
+- simplify page selection to use input instead of select (900abdd_)
+- remove webhelpers2 usage in favor of inline jinja template strings (0d27fec_)
+- change date filter "less than days ago" to include today (2e67da0_)
+- allow custom CSV date formatting (1fb7d03_)
+- provide query prep by grid configuration (77f68df_)
+- verify i18n translations in CI and add helper for development (75c0ec0_)
+
+.. _900abdd: https://github.com/level12/webgrid/commit/900abdd
+.. _0d27fec: https://github.com/level12/webgrid/commit/0d27fec
+.. _2e67da0: https://github.com/level12/webgrid/commit/2e67da0
+.. _1fb7d03: https://github.com/level12/webgrid/commit/1fb7d03
+.. _77f68df: https://github.com/level12/webgrid/commit/77f68df
+.. _75c0ec0: https://github.com/level12/webgrid/commit/75c0ec0
+
+
 0.2.9 released 2020-04-09
 -------------------------
 
