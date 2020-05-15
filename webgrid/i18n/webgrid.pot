@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WebGrid 0.2.9\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-05-13 15:23-0400\n"
+"POT-Creation-Date: 2020-05-15 12:16-0400\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,47 +17,47 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.8.0\n"
 
-#: webgrid/__init__.py:186
+#: webgrid/__init__.py:185
 msgid "expected group to be a subclass of ColumnGroup"
 msgstr ""
 
-#: webgrid/__init__.py:200
+#: webgrid/__init__.py:199
 msgid ""
 "expected filter to be a SQLAlchemy column-like object, but it did not "
 "have a \"key\" or \"name\" attribute"
 msgstr ""
 
-#: webgrid/__init__.py:208
+#: webgrid/__init__.py:207
 msgid ""
 "the filter was a class type, but no column-like object is available from "
 "\"key\" to pass in as as the first argument"
 msgstr ""
 
-#: webgrid/__init__.py:287
+#: webgrid/__init__.py:286
 msgid "key \"{key}\" not found in record"
 msgstr ""
 
-#: webgrid/__init__.py:365
+#: webgrid/__init__.py:372
 msgid "True"
 msgstr ""
 
-#: webgrid/__init__.py:365
+#: webgrid/__init__.py:372
 msgid "False"
 msgstr ""
 
-#: webgrid/__init__.py:389
+#: webgrid/__init__.py:396
 msgid "Yes"
 msgstr ""
 
-#: webgrid/__init__.py:389
+#: webgrid/__init__.py:396
 msgid "No"
 msgstr ""
 
-#: webgrid/__init__.py:725
+#: webgrid/__init__.py:753
 msgid "can't sort on invalid key \"{key}\""
 msgstr ""
 
-#: webgrid/__init__.py:1056
+#: webgrid/__init__.py:1098
 msgid "\"{arg}\" grid argument invalid, ignoring"
 msgstr ""
 
@@ -290,49 +290,45 @@ msgstr ""
 msgid "no"
 msgstr ""
 
-#: webgrid/renderers.py:299 webgrid/static/jquery.multiple.select.js:369
-msgid "Select all"
-msgstr ""
-
-#: webgrid/renderers.py:303
-msgid "No matches found"
-msgstr ""
-
-#: webgrid/renderers.py:387
+#: webgrid/renderers.py:470
 msgid "{label} DESC"
 msgstr ""
 
-#: webgrid/renderers.py:418
-msgid "{page} of {page_count}"
+#: webgrid/renderers.py:514
+msgid "of {page_count}"
 msgstr ""
 
-#: webgrid/renderers.py:480
+#: webgrid/renderers.py:586
 msgid "No records to display"
 msgstr ""
 
-#: webgrid/renderers.py:607
+#: webgrid/renderers.py:732
 msgid "{label} ({num} record):"
 msgid_plural "{label} ({num} records):"
 msgstr[0] ""
 msgstr[1] ""
 
-#: webgrid/renderers.py:624
+#: webgrid/renderers.py:753
 msgid "Page Totals"
 msgstr ""
 
-#: webgrid/renderers.py:628
+#: webgrid/renderers.py:757
 msgid "Grand Totals"
 msgstr ""
 
-#: webgrid/renderers.py:731
+#: webgrid/renderers.py:872
 msgid "Search"
 msgstr ""
 
-#: webgrid/renderers.py:857
+#: webgrid/renderers.py:993
 msgid "Totals ({num} record):"
 msgid_plural "Totals ({num} records):"
 msgstr[0] ""
 msgstr[1] ""
+
+#: webgrid/static/jquery.multiple.select.js:369
+msgid "Select all"
+msgstr ""
 
 #: webgrid/static/jquery.multiple.select.js:370
 msgid "All selected"

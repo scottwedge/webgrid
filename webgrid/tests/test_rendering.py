@@ -363,20 +363,31 @@ class TestHtmlRenderer(object):
             g.html.form_action_url()
         )
 
+    def test_paging_select(self):
+        def check_paging(expected):
+            g = self.get_grid()
+            select_html = g.html.paging_select()
+            eq_(PyQuery(select_html).text().strip(), 'of 5')
+            assert_tag(select_html, 'input', id_='onpage', name='onpage', type='number',
+                       value=expected, min='1', max='5')
+
+        values = [
+            (1, '1'),
+            (2, '2'),
+            (3, '3'),
+            (4, '4'),
+            (5, '5'),
+            (0, '1'),
+            (6, '5'),
+            ('abc', '1'),
+        ]
+        for page, expect in values:
+            decorator = inrequest('/thepage?onpage={}'.format(page))
+            yield decorator(check_paging), expect
+
     @inrequest('/thepage?onpage=2')
     def test_paging_html(self):
         g = self.get_grid()
-
-        select_html = g.html.paging_select()
-        assert_tag(select_html, 'select', id_='onpage', name='onpage')
-        assert_tag(select_html, 'select', name='onpage')
-        tag = assert_tag(select_html, 'option', text='1 of 5', value='1')
-        assert tag.attr('selected') is None
-
-        assert_tag(select_html, 'option', text='2 of 5', value='2', selected=None)
-        tag = assert_tag(select_html, 'option', text='5 of 5', value='5')
-        assert tag.attr('selected') is None
-
         input_html = g.html.paging_input()
         assert_tag(input_html, 'input', name='perpage', type='text', value='1')
 

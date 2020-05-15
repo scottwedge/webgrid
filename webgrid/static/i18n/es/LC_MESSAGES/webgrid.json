@@ -25,7 +25,6 @@
     "False": "Falso",
     "Grand Totals": "Totales Generales",
     "No": "No",
-    "No matches found": "No se encontraron coincidencias",
     "No records to display": "No hay registros que mostrar",
     "Page": "P\u00e1gina",
     "Page Totals": "Total de P\u00e1ginas",
@@ -77,6 +76,7 @@
     "no": "no",
     "not between": "no entre",
     "not empty": "no vac\u00edo",
+    "of {page_count}": "de {page_count}",
     "previous": "anterior",
     "reset": "reiniciar",
     "select month": "seleccione mes",
@@ -97,6 +97,5 @@
         "{label} ({num} record):",
         "{label} ({num} records):"
     ],
-    "{label} DESC": "{label} DESC",
-    "{page} of {page_count}": "{page} de {page_count}"
+    "{label} DESC": "{label} DESC"
 }
